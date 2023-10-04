@@ -1,8 +1,10 @@
-FROM golang:1.21.1-alpine as buld
+FROM golang:1.21.1-alpine as build
 COPY . /srv
-RUN go build -o /srv/bin/UPSMon /srv/cmd/main.go
+WORKDIR /srv
+RUN mkdir -p ./bin
+RUN go build -o ./bin/UPSWake ./
 
 FROM scratch
-COPY --from=build /srv/bin/UPSMon /srv/bin/UPSMon
+COPY --from=build /srv/bin/UPSWake /srv/bin/
 WORKDIR /srv
-ENTRYPOINT ["/srv/bin/UPSMon"]
+ENTRYPOINT ["/srv/bin/UPSWake"]
