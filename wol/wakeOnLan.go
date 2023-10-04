@@ -19,15 +19,15 @@ func Wake(mac string) error {
 		}
 		client, err := wol.NewRawClient(&iface)
 		if err != nil {
-			log.Fatalln("failed to create raw client:", err)
+			log.Fatalf("failed to create raw client on %s: %q\n", iface.Name, err)
 		}
 		err = client.Wake(hwMac)
 		if err != nil {
-			log.Fatalln("failed to send magic packet:", err)
+			log.Fatalf("failed to send magic packet on %s: %q\n", iface.Name, err)
 		}
 		err = client.Close()
 		if err != nil {
-			log.Fatalln("failed to close raw client:", err)
+			log.Fatalf("failed to close raw client on %s: %q", iface.Name, err)
 		}
 	}
 	return nil
