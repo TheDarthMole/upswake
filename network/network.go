@@ -83,7 +83,7 @@ func IPsToStrings(input []net.IP) []string {
 	for i, ip := range input {
 		ips[i] = ip.String()
 	}
-	return nil
+	return ips
 }
 
 func StringsToIPs(ips []string) ([]net.IP, error) {

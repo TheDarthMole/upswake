@@ -7,7 +7,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "UPSWake",
+	Use:   "upsWake",
 	Short: "UPSWake sends WoL packets based on a UPS's status",
 	Long:  `TODO: Add a long description here`, // TODO: Add a long description here
 	Run: func(cmd *cobra.Command, args []string) {

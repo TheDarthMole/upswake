@@ -18,9 +18,13 @@ func init() {
 		panic(err)
 	}
 	stringBroadcasts := network.IPsToStrings(bc)
-	serveCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packet to")
+	serveCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packet to, e.g. 192.168.1.255,172.16.0.255")
 	serveCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
-	serveCmd.MarkFlagRequired("mac")
+	err = serveCmd.MarkFlagRequired("mac")
+	if err != nil {
+		log.Println("baffled")
+		return
+	}
 	rootCmd.AddCommand(serveCmd)
 }
 
