@@ -17,11 +17,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println(bc)
-	log.Println("hehe")
 	stringBroadcasts := network.IPsToStrings(bc)
 	serveCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packet to")
 	serveCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
+	serveCmd.MarkFlagRequired("mac")
 	rootCmd.AddCommand(serveCmd)
 }
 
