@@ -1,34 +1,48 @@
 package wol
 
 import (
-	wol "github.com/mdlayher/wol"
+	"fmt"
+	"github.com/sabhiram/go-wol/wol"
 	"log"
 	"net"
-	"upsWake/network"
 )
 
-func Wake(mac string) error {
-	interfaces, err := network.GetNetworkInterfaces()
-	if err != nil {
-		return err
+func Wake(mac string, broadcasts []net.IP) error {
+	if _, err := net.ParseMAC(mac); err != nil {
+		return fmt.Errorf("invalid MAC address: %s", mac)
 	}
-	for _, iface := range interfaces {
-		hwMac, err := net.ParseMAC(mac)
+
+	mp, err := wol.New(mac)
+	if err != nil {
+		return fmt.Errorf("failed to create magic packet: %w", err)
+	}
+
+	bs, err := mp.Marshal()
+	if err != nil {
+		return fmt.Errorf("failed to marshal magic packet: %w", err)
+	}
+
+	for _, broadcast := range broadcasts {
+
+		conn, err := net.DialUDP(
+			"udp",
+			&net.UDPAddr{IP: nil},
+			&net.UDPAddr{IP: broadcast, Port: 9})
+
 		if err != nil {
-			log.Fatalln("failed to parse MAC:", err)
+			log.Printf("failed to dial UDP: %s", err)
+			continue
 		}
-		client, err := wol.NewRawClient(&iface)
+		defer conn.Close()
+		write, err := conn.Write(bs)
+		if err == nil && write != 102 {
+			err = fmt.Errorf("magic packet sent was %d bytes (expected 102 bytes sent)", write)
+		}
 		if err != nil {
-			log.Fatalf("failed to create raw client on %s: %q\n", iface.Name, err)
+			log.Printf("failed to write UDP: %s", err)
+			continue
 		}
-		err = client.Wake(hwMac)
-		if err != nil {
-			log.Fatalf("failed to send magic packet on %s: %q\n", iface.Name, err)
-		}
-		err = client.Close()
-		if err != nil {
-			log.Fatalf("failed to close raw client on %s: %q", iface.Name, err)
-		}
+		log.Printf("sent WoL packet to %s", broadcast)
 	}
 	return nil
 }

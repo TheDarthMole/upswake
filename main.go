@@ -1,10 +1,7 @@
 package main
 
-import "upsWake/wol"
+import "upsWake/cmd"
 
 func main() {
-	err := wol.Wake("00:00:00:00:00:00")
-	if err != nil {
-		return
-	}
+	cmd.Execute()
 }

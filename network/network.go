@@ -1,21 +1,12 @@
 package network
 
 import (
+	"fmt"
 	"net"
 )
 
-func GetNetworkInterfaces() ([]net.Interface, error) {
-	return net.Interfaces()
-}
-
-/**
-type InterfaceIP struct {
-	Interface net.Interface
-	IPs       []net.Addr
-}
-
-func getAllInterfaceAddresses() ([]InterfaceIP, error) {
-	var interfaceBroadcasts []InterfaceIP
+func getAllInterfaceAddresses() ([]net.Addr, error) {
+	var validAddresses []net.Addr
 	// Get a list of network interfaces
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -28,33 +19,36 @@ func getAllInterfaceAddresses() ([]InterfaceIP, error) {
 			fmt.Printf("Error getting addresses for interface %s: %v\n", iface.Name, err)
 			continue
 		}
-
-		interfaceIp := InterfaceIP{
-			Interface: iface,
-			IPs:       addrs,
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				if v.IP.To4() != nil && !v.IP.IsLoopback() {
+					// This is an IPv4 address that isn't a loopback
+					validAddresses = append(validAddresses, addr)
+				}
+			}
 		}
-		interfaceBroadcasts = append(interfaceBroadcasts, interfaceIp)
+		if validAddresses == nil {
+			continue
+		}
 	}
-	return interfaceBroadcasts, nil
+	return validAddresses, nil
 }
 
-// GetAllBroadcastAddresses TODO:This could be simplified by not getting the broadcast address for each interface
-// but instead feed the interface and mac to the wol NewRawClient function
 func GetAllBroadcastAddresses() ([]net.IP, error) {
 	var broadcastAddresses []net.IP
-	interfaceBroadcasts, err := getAllInterfaceAddresses()
+	interfaceAddresses, err := getAllInterfaceAddresses()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, interfaceBroadcast := range interfaceBroadcasts {
-		for _, addr := range interfaceBroadcast.IPs {
-			broadcast := getIPBroadcast(addr)
-			if broadcast != nil {
-				broadcastAddresses = append(broadcastAddresses, broadcast)
-			}
+	for _, address := range interfaceAddresses {
+		broadcast := getIPBroadcast(address)
+		if broadcast != nil {
+			broadcastAddresses = append(broadcastAddresses, broadcast)
 		}
 	}
+
 	return broadcastAddresses, nil
 }
 
@@ -80,4 +74,26 @@ func calculateIPv4Broadcast(ipNet *net.IPNet) net.IP {
 	}
 	return broadcast
 }
-*/
+
+func IPsToStrings(input []net.IP) []string {
+	if input == nil || len(input) == 0 {
+		return nil
+	}
+	ips := make([]string, len(input))
+	for i, ip := range input {
+		ips[i] = ip.String()
+	}
+	return nil
+}
+
+func StringsToIPs(ips []string) ([]net.IP, error) {
+	var parsedIps []net.IP
+	for _, ip := range ips {
+		parsedIp := net.ParseIP(ip)
+		if parsedIp == nil {
+			return nil, fmt.Errorf("invalid ip address: %s", ip)
+		}
+		parsedIps = append(parsedIps, parsedIp)
+	}
+	return parsedIps, nil
+}
