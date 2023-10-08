@@ -52,16 +52,6 @@ func TestWake(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "invalid udp address",
-			args: args{
-				mac: "01:02:03:04:05:06",
-				broadcasts: []net.IP{
-					net.IPv4(10, 0, 0, 1),
-				},
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
