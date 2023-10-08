@@ -3,6 +3,7 @@ module upsWake
 go 1.21
 
 require (
+	github.com/robbiet480/go.nut v0.0.0-20220219091450-bd8f121e1fa1
 	github.com/sabhiram/go-wol v0.0.0-20211224004021-c83b0c2f887d
 	github.com/spf13/cobra v1.7.0
 )

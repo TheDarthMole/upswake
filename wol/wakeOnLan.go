@@ -8,8 +8,8 @@ import (
 )
 
 func Wake(mac string, broadcasts []net.IP) error {
-	if _, err := net.ParseMAC(mac); err != nil {
-		return fmt.Errorf("invalid MAC address: %s", mac)
+	if broadcasts == nil || len(broadcasts) == 0 {
+		return fmt.Errorf("no broadcast addresses specified")
 	}
 
 	mp, err := wol.New(mac)
@@ -23,6 +23,9 @@ func Wake(mac string, broadcasts []net.IP) error {
 	}
 
 	for _, broadcast := range broadcasts {
+		if broadcast == nil {
+			return fmt.Errorf("the broadcast address cannot be nil")
+		}
 
 		conn, err := net.DialUDP(
 			"udp",

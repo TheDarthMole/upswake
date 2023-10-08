@@ -7,6 +7,8 @@ import (
 	"upsWake/wol"
 )
 
+var mac string
+
 func init() {
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
@@ -30,7 +32,7 @@ var wakeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ipBroadcasts, err := network.StringsToIPs(broadcasts)
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 		err = wol.Wake(mac, ipBroadcasts)
 		if err != nil {
