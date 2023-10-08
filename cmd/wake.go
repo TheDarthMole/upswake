@@ -17,7 +17,7 @@ func init() {
 	wakeCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
 	err = wakeCmd.MarkFlagRequired("mac")
 	if err != nil {
-		log.Println("baffled")
+		log.Panicf("not sure what happened here: %s", err)
 		return
 	}
 	rootCmd.AddCommand(wakeCmd)
@@ -25,8 +25,8 @@ func init() {
 
 var wakeCmd = &cobra.Command{
 	Use:   "wake -b [mac address]",
-	Short: "Run the UPSWake server",
-	Long:  `All software has versions. This is Hugo's`,
+	Short: "Manually wake a computer",
+	Long:  `Manually wake a computer without using a UPS's status`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ipBroadcasts, err := network.StringsToIPs(broadcasts)
 		if err != nil {
