@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"log"
 	"upsWake/ups"
@@ -34,7 +33,13 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			log.Panicf("could not connect to UPS: %s", err)
 		}
-		fmt.Println("we didn't error out!")
+
+		charge, err := client.GetBatteryCharge("cyberpower900")
+		if err != nil {
+			return
+		}
+		log.Printf("Battery charge: %d", charge)
+
 		client.Help()
 
 	},
