@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"log"
+	"upsWake/rego"
 	"upsWake/ups"
 )
 
@@ -34,11 +35,16 @@ var serveCmd = &cobra.Command{
 			log.Panicf("could not connect to UPS: %s", err)
 		}
 
-		charge, err := client.GetBatteryCharge("cyberpower900")
+		rawjson, err := client.ToJson()
 		if err != nil {
-			return
+			log.Panicf("could not get UPS list: %s", err)
 		}
-		log.Printf("Battery charge: %d", charge)
+
+		allowed, err := rego.EvaluateExpression(rawjson)
+		if err != nil {
+			log.Panicf("could not evaluate expression: %s", err)
+		}
+		log.Printf("Allowed: %t", allowed)
 
 		client.Help()
 
