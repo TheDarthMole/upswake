@@ -2,16 +2,18 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"io/fs"
 	"log"
+	"os"
 	"upsWake/rego"
 	"upsWake/ups"
+	"upsWake/util"
 )
 
 var (
-	host       string
-	username   string
-	password   string
-	broadcasts []string
+	host, username, password string
+	broadcasts               []string
+	regoFiles                fs.FS
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 	serveCmd.MarkFlagRequired("password")
 
 	rootCmd.AddCommand(serveCmd)
+	regoFiles = os.DirFS("rules")
 }
 
 var serveCmd = &cobra.Command{
@@ -35,12 +38,22 @@ var serveCmd = &cobra.Command{
 			log.Panicf("could not connect to UPS: %s", err)
 		}
 
-		rawjson, err := client.ToJson()
+		inputJson, err := client.ToJson()
 		if err != nil {
 			log.Panicf("could not get UPS list: %s", err)
 		}
 
-		allowed, err := rego.EvaluateExpression(rawjson)
+		files, err := util.ListFiles(regoFiles, ".")
+		if err != nil {
+			log.Panicf("could not list files: %s", err)
+		}
+		log.Println(files)
+		regoRule, err := util.GetFile(regoFiles, "80percentOn.rego")
+		if err != nil {
+			log.Fatalf("could not get file: %s", err)
+		}
+
+		allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
 		if err != nil {
 			log.Panicf("could not evaluate expression: %s", err)
 		}

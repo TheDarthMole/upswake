@@ -8,31 +8,24 @@ import (
 	"github.com/open-policy-agent/opa/rego"
 )
 
-func EvaluateExpression(raw1 string) (bool, error) {
+func EvaluateExpression(rawJson, regoRule string) (bool, error) {
+	var input interface{}
 	ctx := context.Background()
-
-	raw := raw1
-
-	d := json.NewDecoder(bytes.NewBufferString(raw))
+	d := json.NewDecoder(bytes.NewBufferString(rawJson))
 
 	// Numeric values must be represented using json.Number.
 	d.UseNumber()
-
-	var input interface{}
+	//d.DisallowUnknownFields() // TODO: does this work?
 
 	if err := d.Decode(&input); err != nil {
-		panic(err)
+		return false, fmt.Errorf("failed to decode input: %w", err)
 	}
 	// Create query that returns a single boolean value.
 	rego := rego.New(
 		rego.Query("data.authz.allow"),
-		rego.Module("example.rego",
-			`package authz
-
-default allow = false
-allow = true {
-	input[_].Name == "cyberpower900"
-}`,
+		rego.Module(
+			"example.rego",
+			regoRule,
 		),
 		rego.Input(input),
 	)
@@ -42,9 +35,6 @@ allow = true {
 	if err != nil {
 		panic(err)
 	}
-
-	// Inspect result.
-	fmt.Println("allowed:", rs.Allowed())
 
 	return rs.Allowed(), nil
 }
