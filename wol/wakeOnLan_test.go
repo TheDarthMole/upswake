@@ -87,7 +87,7 @@ func TestWake(t *testing.T) {
 					broadcast = net.IPv4(127, 0, 0, 1)
 				}
 				responseMap[testNumber][i] = udpResponse{
-					bs:       make([]byte, MAGIC_PACKET_SIZE),
+					bs:       make([]byte, MagicPacketSize),
 					received: make(chan int),
 				}
 
@@ -189,7 +189,7 @@ func Test_newMagicPacket(t *testing.T) {
 }
 
 func Test_sendWoLPacket(t *testing.T) {
-	wolSizedPacket := make([]byte, MAGIC_PACKET_SIZE)
+	wolSizedPacket := make([]byte, MagicPacketSize)
 	type args struct {
 		ip net.IP
 		bs []byte
