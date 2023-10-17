@@ -27,7 +27,7 @@ func Wake(mac string, broadcasts []net.IP, port int) error {
 			return fmt.Errorf("failed to send WoL packet: %w", err)
 		}
 
-		log.Printf("sent WoL packet to %s", broadcast)
+		log.Printf("sent magic packet to %s:%d", broadcast, port)
 	}
 	return nil
 }

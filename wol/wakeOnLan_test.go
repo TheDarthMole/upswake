@@ -75,18 +75,21 @@ func TestWake(t *testing.T) {
 			port:    0,
 		},
 	}
-	var responseMap map[int][]udpResponse
-	responseMap = make(map[int][]udpResponse)
+	responseMap := make(map[int][]udpResponse)
 
 	for testNumber, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			responseMap[testNumber] = make([]udpResponse, len(tt.args.broadcasts))
+
 			for i, broadcast := range tt.args.broadcasts {
 				// we can't create a listener on a nil broadcast, default to localhost
 				if broadcast == nil {
 					broadcast = net.IPv4(127, 0, 0, 1)
 				}
-				responseMap[testNumber][i] = *makeUDPResponse()
+				responseMap[testNumber][i] = udpResponse{
+					bs:       make([]byte, MAGIC_PACKET_SIZE),
+					received: make(chan int),
+				}
 
 				if len(tt.conns) != 0 {
 					defer tt.conns[i].Close()
@@ -101,14 +104,13 @@ func TestWake(t *testing.T) {
 
 			for _, response := range responseMap[testNumber] {
 
+				// if we don't expect a packet, don't wait for one
 				select {
 				case <-response.received:
-					//time.Sleep(1 * time.Second)
-					log.Printf("out command: %p", response.bs)
 					if !reflect.DeepEqual(response.bs, tt.args.expectedPacket) {
 						t.Errorf("Wake() got = %v, want %v", response.bs, tt.args.expectedPacket)
 					}
-				case <-time.After(5 * time.Second):
+				case <-time.After(25 * time.Millisecond):
 					if !tt.wantErr {
 						t.Errorf("failed to recieve UDP packet on %s", tt.conns[0].LocalAddr().String())
 					}
@@ -248,14 +250,6 @@ func listenOnConn(conn *net.UDPConn, response *udpResponse) {
 	if err != nil {
 		log.Fatalf("failed to read UDP: %v", err)
 	}
-	log.Printf("in command: %p", response.bs)
-
+	// signal that we received a packet
 	response.received <- 1
-}
-
-func makeUDPResponse() *udpResponse {
-	return &udpResponse{
-		bs:       make([]byte, MAGIC_PACKET_SIZE),
-		received: make(chan int),
-	}
 }
