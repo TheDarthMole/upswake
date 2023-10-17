@@ -91,6 +91,7 @@ func TestWake(t *testing.T) {
 				if len(tt.conns) != 0 {
 					defer tt.conns[i].Close()
 					go listenOnConn(tt.conns[i], &responseMap[testNumber][i])
+					time.Sleep(1 * time.Second)
 				}
 			}
 
@@ -102,8 +103,9 @@ func TestWake(t *testing.T) {
 
 				select {
 				case <-response.received:
+					//time.Sleep(1 * time.Second)
+					log.Printf("out command: %p", response.bs)
 					if !reflect.DeepEqual(response.bs, tt.args.expectedPacket) {
-						log.Printf("main address: %p", &response.bs)
 						t.Errorf("Wake() got = %v, want %v", response.bs, tt.args.expectedPacket)
 					}
 				case <-time.After(5 * time.Second):
@@ -185,7 +187,7 @@ func Test_newMagicPacket(t *testing.T) {
 }
 
 func Test_sendWoLPacket(t *testing.T) {
-	wolSizedPacket := make([]byte, 102)
+	wolSizedPacket := make([]byte, MAGIC_PACKET_SIZE)
 	type args struct {
 		ip net.IP
 		bs []byte
@@ -242,22 +244,18 @@ func createUDPListener(address string, port int) *net.UDPConn {
 }
 
 func listenOnConn(conn *net.UDPConn, response *udpResponse) {
-	bs := make([]byte, 1024)
-	_, _, err := conn.ReadFromUDP(bs)
+	_, _, err := conn.ReadFromUDP(response.bs)
 	if err != nil {
 		log.Fatalf("failed to read UDP: %v", err)
 	}
-	log.Println("received UDP packet")
-	log.Println(bs)
-	log.Printf("in func addr: %p", &bs)
-	response.bs = bs
-	log.Println(response.bs)
+	log.Printf("in command: %p", response.bs)
+
 	response.received <- 1
 }
 
 func makeUDPResponse() *udpResponse {
 	return &udpResponse{
-		bs:       []byte{},
+		bs:       make([]byte, MAGIC_PACKET_SIZE),
 		received: make(chan int),
 	}
 }

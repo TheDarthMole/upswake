@@ -7,6 +7,8 @@ import (
 	"net"
 )
 
+const MAGIC_PACKET_SIZE = 102
+
 func Wake(mac string, broadcasts []net.IP, port int) error {
 	if broadcasts == nil || len(broadcasts) == 0 {
 		return fmt.Errorf("no broadcast addresses specified")
@@ -61,7 +63,7 @@ func sendWoLPacket(ip net.IP, port int, bs []byte) error {
 	log.Printf("sending magic packet to %s:%d\n", ip, port)
 
 	write, err := conn.Write(bs)
-	if err == nil && write != 102 {
+	if err == nil && write != MAGIC_PACKET_SIZE {
 		err = fmt.Errorf("magic packet sent was %d bytes (expected 102 bytes sent)", write)
 	}
 
