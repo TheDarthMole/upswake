@@ -93,7 +93,7 @@ func TestWake(t *testing.T) {
 
 				if len(tt.conns) != 0 {
 					defer tt.conns[i].Close()
-					go listenOnConn(tt.conns[i], &responseMap[testNumber][i])
+					go listenOnConn(t, tt.conns[i], &responseMap[testNumber][i])
 					time.Sleep(1 * time.Second)
 				}
 			}
@@ -245,10 +245,10 @@ func createUDPListener(address string, port int) *net.UDPConn {
 	return conn
 }
 
-func listenOnConn(conn *net.UDPConn, response *udpResponse) {
+func listenOnConn(t *testing.T, conn *net.UDPConn, response *udpResponse) {
 	_, _, err := conn.ReadFromUDP(response.bs)
 	if err != nil {
-		log.Fatalf("failed to read UDP: %v", err)
+		t.Errorf("failed to read UDP: %v", err)
 	}
 	// signal that we received a packet
 	response.received <- 1
