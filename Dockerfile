@@ -4,8 +4,7 @@ WORKDIR /srv
 RUN go get
 RUN go build -o ./UPSWake ./
 
-FROM golang:1.21.1-alpine
-# scratch
+FROM scratch
 COPY --from=build /srv/UPSWake /srv/UPSWake
 WORKDIR /srv
 ENTRYPOINT ["/srv/bin/UPSWake"]
