@@ -11,8 +11,8 @@ type UPS struct {
 	nut.Client
 }
 
-func Connect(host, username, password string) (UPS, error) {
-	client, err := nut.Connect(host)
+func Connect(host string, port int, username, password string) (UPS, error) {
+	client, err := nut.Connect(host, port)
 	if err != nil {
 		return UPS{}, err
 	}

@@ -31,9 +31,9 @@ var serveCmd = &cobra.Command{
 
 			log.Printf("Connecting to NUT server %s as %s\n", nutHost.Host, nutCreds.Username)
 
-			client, err := ups.Connect(nutHost.Address(), nutCreds.Username, nutCreds.Password)
+			client, err := ups.Connect(nutHost.Host, nutHost.Port, nutCreds.Username, nutCreds.Password)
 			if err != nil {
-				log.Fatalf("could not connect to UPS: %s", err)
+				log.Fatalf("could not connect to NUT server: %s", err)
 			}
 
 			log.Println("Connected to UPS")

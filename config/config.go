@@ -8,7 +8,7 @@ import (
 
 type Host struct {
 	Host        string        `yaml:"host" validate:"required,ip|hostname"`
-	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
+	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"3493"`
 	Name        string        `yaml:"name" validate:"required"`
 	Credentials []Credentials `yaml:"credentials" validate:"required,dive"`
 }
@@ -22,7 +22,7 @@ type WakeHosts struct {
 	Name      string   `yaml:"name" validate:"required"`
 	Mac       string   `yaml:"mac" validate:"required,mac"`
 	Broadcast string   `yaml:"broadcast" validate:"required,ip"`
-	Port      int      `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
+	Port      int      `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
 	NutHost   NutHost  `yaml:"nutHost" validate:"required"`
 	Rules     []string `yaml:"rules" validate:"required,gt=0,dive,required"`
 }
@@ -106,4 +106,37 @@ func (host *Host) Address() string {
 		return fmt.Sprintf("%s:%d", host.Host, host.Port)
 	}
 	return host.Host
+}
+
+func CreateDefaultConfig() Config {
+	return Config{
+		NutHosts: []Host{
+			{
+				Host: "192.168.1.133",
+				Port: 3493,
+				Name: "ups1",
+				Credentials: []Credentials{
+					{
+						Username: "upsmon",
+						Password: "bigsecret",
+					},
+				},
+			},
+		},
+		WakeHosts: []WakeHosts{
+			{
+				Name:      "server1",
+				Mac:       "00:00:00:00:00:00",
+				Broadcast: "192.168.1.255",
+				Port:      9,
+				NutHost: NutHost{
+					Name:     "ups1",
+					Username: "upsmon",
+				},
+				Rules: []string{
+					"80percentOn.rego",
+				},
+			},
+		},
+	}
 }
