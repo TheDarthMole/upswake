@@ -114,3 +114,4 @@ Use "upsWake [command] --help" for more information about a command.
 - [ ] Change app name from UPSWake to something else
 - [ ] Change rego package name from authz to something else
 - [ ] Add more rego examples
+- [ ] Add GitLab CI/CD to test, build and push Docker image
