@@ -112,3 +112,5 @@ Use "upsWake [command] --help" for more information about a command.
 - [ ] Better config validation
 - [ ] Add more examples
 - [ ] Change app name from UPSWake to something else
+- [ ] Change rego package name from authz to something else
+- [ ] Add more rego examples
