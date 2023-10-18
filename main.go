@@ -1,6 +1,6 @@
 package main
 
-import "upsWake/cmd"
+import "github.com/TheDarthMole/UPSWake/cmd"
 
 func main() {
 	cmd.Execute()

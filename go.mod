@@ -1,4 +1,4 @@
-module upsWake
+module github.com/TheDarthMole/UPSWake
 
 go 1.21
 

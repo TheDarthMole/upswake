@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/TheDarthMole/UPSWake/config"
 	"log"
 	"os"
-	"upsWake/config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

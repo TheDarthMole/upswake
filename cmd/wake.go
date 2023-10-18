@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/wol"
 	"github.com/spf13/cobra"
 	"log"
-	"upsWake/util"
-	"upsWake/wol"
 )
 
 var (

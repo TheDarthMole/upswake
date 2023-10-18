@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"github.com/TheDarthMole/UPSWake/rego"
+	"github.com/TheDarthMole/UPSWake/ups"
+	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/spf13/cobra"
 	"io/fs"
 	"log"
 	"os"
-	"upsWake/rego"
-	"upsWake/ups"
-	"upsWake/util"
 )
 
 var regoFiles fs.FS
