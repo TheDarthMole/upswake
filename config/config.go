@@ -134,7 +134,7 @@ func CreateDefaultConfig() Config {
 					Username: "upsmon",
 				},
 				Rules: []string{
-					"server1.rego",
+					"80percentOn.rego",
 				},
 			},
 		},
