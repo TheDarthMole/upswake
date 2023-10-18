@@ -7,7 +7,10 @@ import (
 	"upsWake/wol"
 )
 
-var mac string
+var (
+	mac        string
+	broadcasts []string
+)
 
 func init() {
 	bc, err := util.GetAllBroadcastAddresses()
