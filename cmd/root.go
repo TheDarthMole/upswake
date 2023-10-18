@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"github.com/TheDarthMole/UPSWake/config"
-	"log"
-	"os"
-
+	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+	"log"
+	"os"
 )
 
 var cfgFile string
@@ -57,16 +58,26 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.Printf("Reading config file from %s", viper.ConfigFileUsed())
 	} else {
-		log.Fatalf("No config file found: %s", err)
+		cwd := util.GetCurrentDirectory()
+		cfg := config.CreateDefaultConfig()
+		marshalledConfig, err := yaml.Marshal(cfg)
+		if err != nil {
+			log.Fatalf("Unable to marshal config: %s", err)
+		}
+
+		err = util.CreateFile(cwd+"/config.yaml", marshalledConfig)
+		if err != nil {
+			log.Fatalf("Unable to create new config file: %s", err)
+		}
+		log.Printf("Created new config file at %s", cwd+"/config.yaml")
+		os.Exit(0)
 	}
 
 	err := viper.Unmarshal(&cfg)
 	if err != nil {
-		log.Println("Unable to unmarshal config:", err)
-		os.Exit(1)
+		log.Fatalf("Unable to unmarshal config: %s", err)
 	}
 	if err = cfg.IsValid(); err != nil {
-		log.Println("Invalid config:", err)
-		os.Exit(1)
+		log.Fatalf("Invalid config: %s", err)
 	}
 }
