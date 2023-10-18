@@ -31,11 +31,7 @@ var serveCmd = &cobra.Command{
 
 			log.Printf("Connecting to NUT server %s as %s\n", nutHost.Host, nutCreds.Username)
 
-			address := nutHost.Host
-			if nutHost.Port != 0 {
-				address = address + ":" + string(rune(nutHost.Port))
-			}
-			client, err := ups.Connect(address, nutCreds.Username, nutCreds.Password)
+			client, err := ups.Connect(nutHost.Address(), nutCreds.Username, nutCreds.Password)
 			if err != nil {
 				log.Fatalf("could not connect to UPS: %s", err)
 			}
@@ -61,9 +57,7 @@ var serveCmd = &cobra.Command{
 					log.Fatalf("could not evaluate expression: %s", err)
 				}
 
-				if allowed {
-					log.Printf("Allowed rule %s\n", ruleName)
-				}
+				log.Printf("Rule %s evaluated to %t\n", ruleName, allowed)
 			}
 		}
 	},
