@@ -33,33 +33,74 @@ var serveCmd = &cobra.Command{
 	Short: "Run the UPSWake server",
 	Long:  `All software has versions. This is Hugo's`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := ups.Connect(host, username, password)
-		if err != nil {
-			log.Panicf("could not connect to UPS: %s", err)
-		}
 
-		inputJson, err := client.ToJson()
-		if err != nil {
-			log.Panicf("could not get UPS list: %s", err)
-		}
+		for _, wakeHost := range cfg.WakeHosts {
+			nutHost := cfg.GetHostConfig(wakeHost.NutHost.Name)
+			nutCreds := nutHost.GetCredentials(wakeHost.NutHost.Username)
 
-		files, err := util.ListFiles(regoFiles, ".")
-		if err != nil {
-			log.Panicf("could not list files: %s", err)
-		}
-		log.Println(files)
-		regoRule, err := util.GetFile(regoFiles, "80percentOn.rego")
-		if err != nil {
-			log.Fatalf("could not get file: %s", err)
-		}
+			log.Printf("Connecting to %s as %s\n", nutHost.Host, nutCreds.Username)
 
-		allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
-		if err != nil {
-			log.Panicf("could not evaluate expression: %s", err)
-		}
-		log.Printf("Allowed: %t", allowed)
+			client, err := ups.Connect(nutHost.Host, nutCreds.Username, nutCreds.Password)
+			if err != nil {
+				log.Fatalf("could not connect to UPS: %s", err)
+			}
 
-		client.Help()
+			log.Println("Connected to UPS")
+
+			inputJson, err := client.ToJson()
+			if err != nil {
+				log.Fatalf("could not get UPS list: %s", err)
+			}
+
+			for _, ruleName := range wakeHost.Rules {
+
+				log.Printf("Evaluating rule %s\n", ruleName)
+
+				regoRule, err := util.GetFile(regoFiles, ruleName)
+				if err != nil {
+					log.Fatalf("could not get file: %s", err)
+				}
+
+				allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
+				if err != nil {
+					log.Fatalf("could not evaluate expression: %s", err)
+				}
+
+				if allowed {
+					log.Printf("Allowed rule %s\n", ruleName)
+				}
+			}
+
+		}
+		//
+		//client, err := ups.Connect(host, username, password)
+		//if err != nil {
+		//	log.Panicf("could not connect to UPS: %s", err)
+		//}
+		//
+		//inputJson, err := client.ToJson()
+		//if err != nil {
+		//	log.Panicf("could not get UPS list: %s", err)
+		//}
+		//
+		////files, err := util.ListFiles(regoFiles, ".")
+		////if err != nil {
+		////	log.Panicf("could not list files: %s", err)
+		////}
+		////log.Println(files)
+		//
+		//regoRule, err := util.GetFile(regoFiles, "80percentOn.rego")
+		//if err != nil {
+		//	log.Fatalf("could not get file: %s", err)
+		//}
+		//
+		//allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
+		//if err != nil {
+		//	log.Panicf("could not evaluate expression: %s", err)
+		//}
+		//log.Printf("Allowed: %t", allowed)
+		//
+		//client.Help()
 
 	},
 }
