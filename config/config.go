@@ -1,32 +1,35 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 import "github.com/go-playground/validator/v10"
 
 type Host struct {
-	Host        string        `yaml:"host"`
-	Port        int           `yaml:"port"`
-	Name        string        `yaml:"name"`
-	Credentials []Credentials `yaml:"credentials"`
+	Host        string        `yaml:"host" validate:"required"`
+	Port        int           `yaml:"port" validate:"gte=1,lte=65535"`
+	Name        string        `yaml:"name" validate:"required"`
+	Credentials []Credentials `yaml:"credentials" validate:"required,dive"`
 }
 
 type Credentials struct {
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Username string `yaml:"username" validate:"required"`
+	Password string `yaml:"password" validate:"required"`
 }
 
 type WakeHosts struct {
-	Name      string   `yaml:"name"`
-	Mac       string   `yaml:"mac"`
-	Broadcast string   `yaml:"broadcast"`
+	Name      string   `yaml:"name" validate:"required"`
+	Mac       string   `yaml:"mac" validate:"required"`
+	Broadcast string   `yaml:"broadcast" validate:"required"`
 	Port      int      `yaml:"port"`
-	NutHost   NutHost  `yaml:"nutHost"`
-	Rules     []string `yaml:"rules"`
+	NutHost   NutHost  `yaml:"nutHost" validate:"required"`
+	Rules     []string `yaml:"rules" validate:"required,gt=0,dive,required"`
 }
 
 type NutHost struct {
-	Name     string `yaml:"name"`
-	Username string `yaml:"username"`
+	Name     string `yaml:"name" validate:"required"`
+	Username string `yaml:"username" validate:"required"`
 }
 
 type Config struct {
@@ -53,17 +56,33 @@ func (cfg *Config) GetHostConfig(name string) Host {
 	return host
 }
 
+// IsValid Validate the config
+// ensure all 'wakeHosts' are valid and have a corresponding 'nutHost' that is valid
+// nutHosts that are not used are not used by a wakeHost are not validated
 func (cfg *Config) IsValid() error {
+	validate := validator.New()
+
 	for _, wakeHost := range cfg.WakeHosts {
-		validate := validator.New()
+		log.Println("Validating config")
+
 		err := validate.Struct(wakeHost)
 		if err != nil {
 			return fmt.Errorf("invalid wakeHost: %s", err)
 		}
-		// TODO: add more validation here
-		_, err = cfg.getHostConfig(wakeHost.NutHost.Name)
+
+		if err = validate.Struct(wakeHost.NutHost); err != nil {
+			return fmt.Errorf("invalid nutHost for %s: %s", wakeHost.Name, err)
+		}
+
+		hostCreds, err := cfg.getHostConfig(wakeHost.NutHost.Name)
 		if err != nil {
 			return fmt.Errorf("could not find corresponding NUT host for wakehost %s", wakeHost.Name)
+		}
+
+		for _, cred := range hostCreds.Credentials {
+			if err = validate.Struct(cred); err != nil {
+				return fmt.Errorf("invalid host credentials: %s", err)
+			}
 		}
 
 	}
