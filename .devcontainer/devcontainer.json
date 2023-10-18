@@ -1,0 +1,4 @@
+{
+  "image": "golang:1.21.1-alpine",
+  "name": "upswake devcontainer"
+}

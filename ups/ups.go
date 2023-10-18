@@ -28,14 +28,6 @@ func Connect(host, username, password string) (UPS, error) {
 	return UPS{client}, nil
 }
 
-func (u *UPS) GetBatteryCharge(upsName string) (int64, error) {
-	batteryCharge, err := u.getValueFromUPS(upsName, "battery.charge")
-	if err != nil {
-		return 0, err
-	}
-	return batteryCharge.(int64), nil
-}
-
 func (u *UPS) getValueFromUPS(upsName, variableName string) (interface{}, error) {
 	ups, err := u.getUPSFromList(upsName)
 	if err != nil {
