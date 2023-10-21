@@ -2,15 +2,38 @@ package wol
 
 import (
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
+	"log"
 	"net"
 )
 
 const MagicPacketSize = 102
 
-func Wake(dst *net.UDPConn, mac string) error {
-	return wakeInternal(dst, mac)
+type WoLTarget struct {
+	Broadcast net.IP `validate:"required"`
+	MAC       string `validate:"required,mac"`
+	Port      int    `validate:"min=1,max=65535"`
+}
+
+func (tgt *WoLTarget) Wake() error {
+	if err := validator.New().Struct(tgt); err != nil {
+		log.Println("bugger")
+		return err
+	}
+
+	conn, err := net.DialUDP("udp",
+		nil,
+		&net.UDPAddr{
+			IP:   tgt.Broadcast,
+			Port: tgt.Port,
+		})
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	return wakeInternal(conn, tgt.MAC)
 }
 
 func wakeInternal(dst io.ReadWriteCloser, mac string) error {
