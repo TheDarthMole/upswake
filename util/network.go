@@ -87,7 +87,7 @@ func IPsToStrings(input []net.IP) []string {
 }
 
 func StringsToIPs(ips []string) ([]net.IP, error) {
-	parsedIps := make([]net.IP, 0, len(ips))
+	parsedIps := make([]net.IP, len(ips))
 	for i, ip := range ips {
 		parsedIp := net.ParseIP(ip)
 		if parsedIp == nil {
