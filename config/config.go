@@ -6,9 +6,11 @@ import (
 	"log"
 )
 
+const DefaultNUTPort = 3493
+
 type Host struct {
 	Host        string        `yaml:"host" validate:"required,ip|hostname"`
-	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"3493"`
+	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
 	Name        string        `yaml:"name" validate:"required"`
 	Credentials []Credentials `yaml:"credentials" validate:"required,dive"`
 }
@@ -101,11 +103,11 @@ func (host *Host) GetCredentials(username string) Credentials {
 	return Credentials{}
 }
 
-func (host *Host) Address() string {
-	if host.Port != 0 {
-		return fmt.Sprintf("%s:%d", host.Host, host.Port)
+func (host *Host) GetPort() int {
+	if host.Port == 0 {
+		return DefaultNUTPort
 	}
-	return host.Host
+	return host.Port
 }
 
 func CreateDefaultConfig() Config {
@@ -113,7 +115,7 @@ func CreateDefaultConfig() Config {
 		NutHosts: []Host{
 			{
 				Host: "192.168.1.133",
-				Port: 3493,
+				Port: DefaultNUTPort,
 				Name: "ups1",
 				Credentials: []Credentials{
 					{
