@@ -75,18 +75,18 @@ func (cfg *Config) IsValid() error {
 			return fmt.Errorf("invalid nutHost for %s: %s", wakeHost.Name, err)
 		}
 
-		host, err := cfg.getHostConfig(wakeHost.NutHost.Name)
+		nutServer, err := cfg.getHostConfig(wakeHost.NutHost.Name)
 		if err != nil {
-			return fmt.Errorf("could not find corresponding NUT host for wakehost %s", wakeHost.Name)
+			return fmt.Errorf("could not find corresponding NUT nutServer for wakehost %s", wakeHost.Name)
 		}
 
-		if err = validate.Struct(host); err != nil {
-			return fmt.Errorf("invalid host: %s", err)
+		if err = validate.Struct(nutServer); err != nil {
+			return fmt.Errorf("invalid nutServer: %s", err)
 		}
 
-		for _, cred := range host.Credentials {
+		for _, cred := range nutServer.Credentials {
 			if err = validate.Struct(cred); err != nil {
-				return fmt.Errorf("invalid host credentials: %s", err)
+				return fmt.Errorf("invalid nutServer credentials: %s", err)
 			}
 		}
 
