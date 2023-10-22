@@ -25,12 +25,9 @@ var serveCmd = &cobra.Command{
 	Long:  `All software has versions. This is Hugo's`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, woLTarget := range cfg.WoLTargets {
-			nutServer := cfg.GetHostConfig(woLTarget.NutHost.Name)
-			nutCreds := nutServer.GetCredentials(woLTarget.NutHost.Username)
-
-			log.Printf("Connecting to NUT server %s as %s\n", nutServer.Host, nutCreds.Username)
-
-			client, err := ups.Connect(nutServer.Host, nutServer.GetPort(), nutCreds.Username, nutCreds.Password)
+			ns := woLTarget.NutServer
+			log.Printf("Connecting to NUT server %s as %s\n", ns.Host, ns.Credentials.Username)
+			client, err := ups.Connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
 			if err != nil {
 				log.Fatalf("could not connect to NUT server: %s", err)
 			}
