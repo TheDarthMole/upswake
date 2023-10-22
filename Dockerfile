@@ -5,6 +5,6 @@ RUN go get
 RUN go build -o ./UPSWake ./
 
 FROM scratch
-COPY --from=build /srv/UPSWake /srv/UPSWake
+COPY --from=build /srv/UPSWake /UPSWake
 WORKDIR /srv
-ENTRYPOINT ["/srv/bin/UPSWake"]
+ENTRYPOINT ["/UPSWake"]
