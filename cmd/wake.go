@@ -50,6 +50,7 @@ var wakeCmd = &cobra.Command{
 			if err = tgt.Wake(); err != nil {
 				log.Panicf("failed to wake %s: %s", mac, err)
 			}
+			log.Printf("Sent WoL packet to %s to wake %s", broadcast, mac)
 		}
 
 	},
