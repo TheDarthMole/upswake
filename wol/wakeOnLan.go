@@ -5,7 +5,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
-	"log"
 	"net"
 )
 
@@ -19,7 +18,6 @@ type WoLTarget struct {
 
 func (tgt *WoLTarget) Wake() error {
 	if err := validator.New().Struct(tgt); err != nil {
-		log.Println("bugger")
 		return err
 	}
 
