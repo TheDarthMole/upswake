@@ -2,6 +2,7 @@ package wol
 
 import (
 	"fmt"
+	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/go-playground/validator/v10"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
@@ -10,13 +11,17 @@ import (
 
 const MagicPacketSize = 102
 
-type WoLTarget struct {
-	Broadcast net.IP `validate:"required"`
-	MAC       string `validate:"required,mac"`
-	Port      int    `validate:"min=1,max=65535"`
+type WakeOnLan struct {
+	config.WoLTarget
 }
 
-func (tgt *WoLTarget) Wake() error {
+func NewWoLClient(target config.WoLTarget) *WakeOnLan {
+	return &WakeOnLan{
+		target,
+	}
+}
+
+func (tgt *WakeOnLan) Wake() error {
 	if err := validator.New().Struct(tgt); err != nil {
 		return err
 	}
@@ -24,14 +29,14 @@ func (tgt *WoLTarget) Wake() error {
 	conn, err := net.DialUDP("udp",
 		nil,
 		&net.UDPAddr{
-			IP:   tgt.Broadcast,
+			IP:   net.ParseIP(tgt.Broadcast),
 			Port: tgt.Port,
 		})
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	return wakeInternal(conn, tgt.MAC)
+	return wakeInternal(conn, tgt.Mac)
 }
 
 func wakeInternal(dst io.ReadWriteCloser, mac string) error {

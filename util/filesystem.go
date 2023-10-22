@@ -31,12 +31,12 @@ func removeLastElement(input string, separator string) string {
 	return ""
 }
 
-func GetCurrentDirectory() string {
+func GetCurrentDirectory() (string, error) {
 	cwd, err := os.Executable()
 	if err != nil {
-		log.Fatalf("could not get current working directory: %s", err)
+		return "", fmt.Errorf("could not get current working directory: %s", err)
 	}
-	return removeLastElement(cwd, "/")
+	return removeLastElement(cwd, "/"), nil
 }
 
 func CreateFile(file string, data []byte) error {

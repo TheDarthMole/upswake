@@ -58,7 +58,10 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.Printf("Reading config file from %s", viper.ConfigFileUsed())
 	} else {
-		cwd := util.GetCurrentDirectory()
+		cwd, err := util.GetCurrentDirectory()
+		if err != nil {
+			log.Fatalf("Unable to get current working directory: %s", err)
+		}
 		cfg := config.CreateDefaultConfig()
 		marshalledConfig, err := yaml.Marshal(cfg)
 		if err != nil {
