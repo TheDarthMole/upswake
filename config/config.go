@@ -73,7 +73,7 @@ func CreateDefaultConfig() Config {
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				NutServer: NutServer{
-					Host: "",
+					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
 					Name: "ups1",
 					Credentials: Credentials{

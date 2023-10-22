@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/TheDarthMole/UPSWake/wol"
 	"github.com/spf13/cobra"
@@ -41,13 +42,13 @@ var wakeCmd = &cobra.Command{
 		}
 
 		for _, broadcast := range ipBroadcasts {
-			tgt := wol.WoLTarget{
-				Broadcast: broadcast,
-				MAC:       mac,
+			wolClient := wol.NewWoLClient(config.WoLTarget{
+				Mac:       mac,
+				Broadcast: broadcast.String(),
 				Port:      WoLPort,
-			}
+			})
 
-			if err = tgt.Wake(); err != nil {
+			if err = wolClient.Wake(); err != nil {
 				log.Panicf("failed to wake %s: %s", mac, err)
 			}
 			log.Printf("Sent WoL packet to %s to wake %s", broadcast, mac)
