@@ -24,26 +24,25 @@ var serveCmd = &cobra.Command{
 	Short: "Run the UPSWake server",
 	Long:  `All software has versions. This is Hugo's`,
 	Run: func(cmd *cobra.Command, args []string) {
+		for _, woLTarget := range cfg.WoLTargets {
+			nutServer := cfg.GetHostConfig(woLTarget.NutHost.Name)
+			nutCreds := nutServer.GetCredentials(woLTarget.NutHost.Username)
 
-		for _, wakeHost := range cfg.WakeHosts {
-			nutHost := cfg.GetHostConfig(wakeHost.NutHost.Name)
-			nutCreds := nutHost.GetCredentials(wakeHost.NutHost.Username)
+			log.Printf("Connecting to NUT server %s as %s\n", nutServer.Host, nutCreds.Username)
 
-			log.Printf("Connecting to NUT server %s as %s\n", nutHost.Host, nutCreds.Username)
-
-			client, err := ups.Connect(nutHost.Host, nutHost.GetPort(), nutCreds.Username, nutCreds.Password)
+			client, err := ups.Connect(nutServer.Host, nutServer.GetPort(), nutCreds.Username, nutCreds.Password)
 			if err != nil {
 				log.Fatalf("could not connect to NUT server: %s", err)
 			}
 
-			log.Println("Connected to UPS")
+			log.Println("Getting JSON from NUT server")
 
 			inputJson, err := client.ToJson()
 			if err != nil {
 				log.Fatalf("could not get UPS list: %s", err)
 			}
 
-			for _, ruleName := range wakeHost.Rules {
+			for _, ruleName := range woLTarget.Rules {
 
 				log.Printf("Evaluating rule %s\n", ruleName)
 
