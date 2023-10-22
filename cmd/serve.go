@@ -15,8 +15,8 @@ var regoFiles fs.FS
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
+	initConfig()
 
-	cobra.OnInitialize(initConfig)
 }
 
 var serveCmd = &cobra.Command{
@@ -31,7 +31,7 @@ var serveCmd = &cobra.Command{
 
 			log.Printf("Connecting to NUT server %s as %s\n", nutHost.Host, nutCreds.Username)
 
-			client, err := ups.Connect(nutHost.Host, nutHost.Port, nutCreds.Username, nutCreds.Password)
+			client, err := ups.Connect(nutHost.Host, nutHost.Port(), nutCreds.Username, nutCreds.Password)
 			if err != nil {
 				log.Fatalf("could not connect to NUT server: %s", err)
 			}
