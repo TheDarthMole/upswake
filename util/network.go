@@ -87,13 +87,13 @@ func IPsToStrings(input []net.IP) []string {
 }
 
 func StringsToIPs(ips []string) ([]net.IP, error) {
-	var parsedIps []net.IP
-	for _, ip := range ips {
+	parsedIps := make([]net.IP, len(ips))
+	for i, ip := range ips {
 		parsedIp := net.ParseIP(ip)
 		if parsedIp == nil {
 			return nil, fmt.Errorf("invalid ip address: %s", ip)
 		}
-		parsedIps = append(parsedIps, parsedIp)
+		parsedIps[i] = parsedIp
 	}
 	return parsedIps, nil
 }

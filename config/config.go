@@ -6,9 +6,11 @@ import (
 	"log"
 )
 
-type Host struct {
+const DefaultNUTPort = 3493
+
+type NutServer struct {
 	Host        string        `yaml:"host" validate:"required,ip|hostname"`
-	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"3493"`
+	Port        int           `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
 	Name        string        `yaml:"name" validate:"required"`
 	Credentials []Credentials `yaml:"credentials" validate:"required,dive"`
 }
@@ -18,37 +20,37 @@ type Credentials struct {
 	Password string `yaml:"password" validate:"required"`
 }
 
-type WakeHosts struct {
-	Name      string   `yaml:"name" validate:"required"`
-	Mac       string   `yaml:"mac" validate:"required,mac"`
-	Broadcast string   `yaml:"broadcast" validate:"required,ip"`
-	Port      int      `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
-	NutHost   NutHost  `yaml:"nutHost" validate:"required"`
-	Rules     []string `yaml:"rules" validate:"required,gt=0,dive,required"`
+type WoLTarget struct {
+	Name      string       `yaml:"name" validate:"required"`
+	Mac       string       `yaml:"mac" validate:"required,mac"`
+	Broadcast string       `yaml:"broadcast" validate:"required,ip"`
+	Port      int          `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
+	NutHost   NutServerRef `yaml:"nutHost" validate:"required"`
+	Rules     []string     `yaml:"rules" validate:"required,gt=0,dive,required"`
 }
 
-type NutHost struct {
+type NutServerRef struct {
 	Name     string `yaml:"name" validate:"required"`
 	Username string `yaml:"username" validate:"required"`
 }
 
 type Config struct {
-	NutHosts  []Host      `yaml:"nutHosts"`
-	WakeHosts []WakeHosts `yaml:"wakeHosts"`
+	NutServers []NutServer `yaml:"nutServers"`
+	WoLTargets []WoLTarget `yaml:"wolTargets"`
 }
 
-func (cfg *Config) getHostConfig(name string) (Host, error) {
-	for _, host := range cfg.NutHosts {
+func (cfg *Config) getHostConfig(name string) (NutServer, error) {
+	for _, host := range cfg.NutServers {
 		if host.Name == name {
 			return host, nil
 		}
 	}
-	return Host{}, fmt.Errorf("could not find host '%s' in config", name)
+	return NutServer{}, fmt.Errorf("could not find host '%s' in config", name)
 }
 
 // GetHostConfig Get the host config for a given wakehost name
 // We're assuming that the config.IsValid has been run before this
-func (cfg *Config) GetHostConfig(name string) Host {
+func (cfg *Config) GetHostConfig(name string) NutServer {
 	host, err := cfg.getHostConfig(name)
 	if err != nil {
 		panic(err)
@@ -62,7 +64,7 @@ func (cfg *Config) GetHostConfig(name string) Host {
 func (cfg *Config) IsValid() error {
 	validate := validator.New()
 
-	for _, wakeHost := range cfg.WakeHosts {
+	for _, wakeHost := range cfg.WoLTargets {
 		log.Println("Validating config")
 
 		if err := validate.Struct(wakeHost); err != nil {
@@ -73,18 +75,18 @@ func (cfg *Config) IsValid() error {
 			return fmt.Errorf("invalid nutHost for %s: %s", wakeHost.Name, err)
 		}
 
-		host, err := cfg.getHostConfig(wakeHost.NutHost.Name)
+		nutServer, err := cfg.getHostConfig(wakeHost.NutHost.Name)
 		if err != nil {
-			return fmt.Errorf("could not find corresponding NUT host for wakehost %s", wakeHost.Name)
+			return fmt.Errorf("could not find corresponding NUT nutServer for wakehost %s", wakeHost.Name)
 		}
 
-		if err = validate.Struct(host); err != nil {
-			return fmt.Errorf("invalid host: %s", err)
+		if err = validate.Struct(nutServer); err != nil {
+			return fmt.Errorf("invalid nutServer: %s", err)
 		}
 
-		for _, cred := range host.Credentials {
+		for _, cred := range nutServer.Credentials {
 			if err = validate.Struct(cred); err != nil {
-				return fmt.Errorf("invalid host credentials: %s", err)
+				return fmt.Errorf("invalid nutServer credentials: %s", err)
 			}
 		}
 
@@ -92,7 +94,7 @@ func (cfg *Config) IsValid() error {
 	return nil
 }
 
-func (host *Host) GetCredentials(username string) Credentials {
+func (host *NutServer) GetCredentials(username string) Credentials {
 	for _, credentials := range host.Credentials {
 		if credentials.Username == username {
 			return credentials
@@ -101,19 +103,19 @@ func (host *Host) GetCredentials(username string) Credentials {
 	return Credentials{}
 }
 
-func (host *Host) Address() string {
-	if host.Port != 0 {
-		return fmt.Sprintf("%s:%d", host.Host, host.Port)
+func (host *NutServer) GetPort() int {
+	if host.Port == 0 {
+		return DefaultNUTPort
 	}
-	return host.Host
+	return host.Port
 }
 
 func CreateDefaultConfig() Config {
 	return Config{
-		NutHosts: []Host{
+		NutServers: []NutServer{
 			{
 				Host: "192.168.1.133",
-				Port: 3493,
+				Port: DefaultNUTPort,
 				Name: "ups1",
 				Credentials: []Credentials{
 					{
@@ -123,13 +125,13 @@ func CreateDefaultConfig() Config {
 				},
 			},
 		},
-		WakeHosts: []WakeHosts{
+		WoLTargets: []WoLTarget{
 			{
 				Name:      "server1",
 				Mac:       "00:00:00:00:00:00",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				NutHost: NutHost{
+				NutHost: NutServerRef{
 					Name:     "ups1",
 					Username: "upsmon",
 				},

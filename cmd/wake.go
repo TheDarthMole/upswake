@@ -12,6 +12,8 @@ var (
 	broadcasts []string
 )
 
+const WoLPort = 9
+
 func init() {
 	bc, err := util.GetAllBroadcastAddresses()
 	if err != nil {
@@ -37,9 +39,19 @@ var wakeCmd = &cobra.Command{
 		if err != nil {
 			log.Panic(err)
 		}
-		err = wol.Wake(mac, ipBroadcasts, 9)
-		if err != nil {
-			log.Panic(err)
+
+		for _, broadcast := range ipBroadcasts {
+			tgt := wol.WoLTarget{
+				Broadcast: broadcast,
+				MAC:       mac,
+				Port:      WoLPort,
+			}
+
+			if err = tgt.Wake(); err != nil {
+				log.Panicf("failed to wake %s: %s", mac, err)
+			}
+			log.Printf("Sent WoL packet to %s to wake %s", broadcast, mac)
 		}
+
 	},
 }

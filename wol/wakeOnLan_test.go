@@ -1,123 +1,32 @@
 package wol
 
 import (
-	"fmt"
-	"log"
-	"net"
+	"io"
 	"reflect"
 	"testing"
-	"time"
 )
 
-type udpResponse struct {
-	bs       []byte
-	received chan int
+type readWriteCloser struct {
+	BS []byte
 }
 
-func TestWake(t *testing.T) {
-	type args struct {
-		mac            string
-		broadcasts     []net.IP
-		expectedPacket []byte
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-		conns   []*net.UDPConn
-		port    int
-	}{
-		{
-			name: "invalid MAC",
-			args: args{
-				mac: "invalid",
-				broadcasts: []net.IP{
-					net.IPv4(127, 0, 0, 1)}},
-			wantErr: true,
-			conns:   []*net.UDPConn{},
-			port:    0,
-		},
-		{
-			name: "invalid broadcast",
-			args: args{
-				mac:        "00:00:00:00:00:00",
-				broadcasts: []net.IP{},
-			},
-			wantErr: true,
-			conns:   []*net.UDPConn{},
-			port:    0,
-		},
-		{
-			name: "valid",
-			args: args{
-				mac: "01:02:03:04:05:06",
-				broadcasts: []net.IP{
-					net.IPv4(127, 0, 0, 1),
-				},
-				expectedPacket: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
-			},
-			wantErr: false,
-			conns: []*net.UDPConn{
-				createUDPListener("127.0.0.1", 6422),
-			},
-			port: 6422,
-		},
-		{
-			name: "invalid udp address",
-			args: args{
-				mac: "01:02:03:04:05:06",
-				broadcasts: []net.IP{
-					nil,
-				},
-			},
-			wantErr: true,
-			conns:   []*net.UDPConn{},
-			port:    0,
-		},
-	}
-	responseMap := make(map[int][]udpResponse)
+func (rwc *readWriteCloser) Read(p []byte) (n int, err error) {
+	copy(p, rwc.BS)
+	return len(rwc.BS), nil
+}
 
-	for testNumber, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			responseMap[testNumber] = make([]udpResponse, len(tt.args.broadcasts))
+func (rwc *readWriteCloser) Write(p []byte) (n int, err error) {
+	rwc.BS = p
+	return len(p), nil
+}
 
-			for i, broadcast := range tt.args.broadcasts {
-				// we can't create a listener on a nil broadcast, default to localhost
-				if broadcast == nil {
-					broadcast = net.IPv4(127, 0, 0, 1)
-				}
-				responseMap[testNumber][i] = udpResponse{
-					bs:       make([]byte, MagicPacketSize),
-					received: make(chan int),
-				}
+func (rwc *readWriteCloser) Close() error {
+	return nil
+}
 
-				if len(tt.conns) != 0 {
-					defer tt.conns[i].Close()
-					go listenOnConn(t, tt.conns[i], &responseMap[testNumber][i])
-					time.Sleep(1 * time.Second)
-				}
-			}
-
-			if err := Wake(tt.args.mac, tt.args.broadcasts, tt.port); (err != nil) != tt.wantErr {
-				t.Errorf("Wake() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			for _, response := range responseMap[testNumber] {
-
-				// if we don't expect a packet, don't wait for one
-				select {
-				case <-response.received:
-					if !reflect.DeepEqual(response.bs, tt.args.expectedPacket) {
-						t.Errorf("Wake() got = %v, want %v", response.bs, tt.args.expectedPacket)
-					}
-				case <-time.After(25 * time.Millisecond):
-					if !tt.wantErr {
-						t.Errorf("failed to recieve UDP packet on %s", tt.conns[0].LocalAddr().String())
-					}
-				}
-			}
-
-		})
+func newReadWriteCloser() io.ReadWriteCloser {
+	return &readWriteCloser{
+		BS: []byte{},
 	}
 }
 
@@ -188,68 +97,98 @@ func Test_newMagicPacket(t *testing.T) {
 	}
 }
 
-func Test_sendWoLPacket(t *testing.T) {
-	wolSizedPacket := make([]byte, MagicPacketSize)
+func Test_wakeInternal(t *testing.T) {
 	type args struct {
-		ip net.IP
-		bs []byte
+		dst io.ReadWriteCloser
+		mac string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name     string
+		args     args
+		wantErr  bool
+		wantSent []byte
 	}{
 		{
-			name: "nil IP",
+			name: "invalid MAC",
 			args: args{
-				ip: nil,
-				bs: wolSizedPacket,
+				dst: newReadWriteCloser(),
+				mac: "invalid",
 			},
-			wantErr: true,
+			wantErr:  true,
+			wantSent: nil,
 		},
 		{
-			name: "empty IP",
+			name: "invalid MAC too long",
 			args: args{
-				ip: net.IP{},
-				bs: wolSizedPacket,
+				dst: newReadWriteCloser(),
+				mac: "01:02:03:04:05:06:07",
 			},
-			wantErr: true,
+			wantErr:  true,
+			wantSent: nil,
 		},
 		{
-			name: "valid",
+			name: "invalid MAC too short",
 			args: args{
-				ip: net.IPv4(127, 0, 0, 255),
-				bs: wolSizedPacket,
+				dst: newReadWriteCloser(),
+				mac: "01:02:03:04:05",
+			},
+			wantErr:  true,
+			wantSent: nil,
+		},
+		{
+			name: "invalid MAC wrong format",
+			args: args{
+				dst: newReadWriteCloser(),
+				mac: "01:02:03:04:gg",
+			},
+			wantErr:  true,
+			wantSent: nil,
+		},
+		{
+			name: "valid MAC",
+			args: args{
+				dst: newReadWriteCloser(),
+				mac: "01:02:03:04:05:06",
 			},
 			wantErr: false,
+			wantSent: []byte{
+				0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := sendWoLPacket(tt.args.ip, 9, tt.args.bs); (err != nil) != tt.wantErr {
-				t.Errorf("sendWoLPacket() error = %v, wantErr %v", err, tt.wantErr)
+			if err := wakeInternal(tt.args.dst, tt.args.mac); (err != nil) != tt.wantErr {
+				t.Errorf("wakeInternal() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+
+			var sent = make([]byte, MagicPacketSize)
+			_, err := tt.args.dst.Read(sent)
+			if err != nil {
+				t.Errorf("wakeInternal() error reading from dst = %v", err)
+			}
+			if !reflect.DeepEqual(sent, tt.wantSent) {
+				t.Errorf("wakeInternal() got = %v, want %v", sent, tt.wantSent)
 			}
 		})
 	}
-}
-
-func createUDPListener(address string, port int) *net.UDPConn {
-	udpaddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", address, port))
-	if err != nil {
-		log.Fatalf("failed to resolve UDP address: %v", err)
-	}
-	conn, err := net.ListenUDP("udp", udpaddr)
-	if err != nil {
-		log.Fatalf("failed to listen on UDP: %v", err)
-	}
-	return conn
-}
-
-func listenOnConn(t *testing.T, conn *net.UDPConn, response *udpResponse) {
-	_, _, err := conn.ReadFromUDP(response.bs)
-	if err != nil {
-		t.Errorf("failed to read UDP: %v", err)
-	}
-	// signal that we received a packet
-	response.received <- 1
 }
