@@ -48,11 +48,13 @@ func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
 		ticker := time.NewTicker(interval)
 		select {
 		case <-ctx.Done():
+			// TODO: this may not be the best way to stop a goroutine
 			log.Printf("Stopping worker for %s\n", woLTarget.Name)
 			return
 		case <-ticker.C:
 			err := processWoLTarget(woLTarget)
 			if err != nil {
+				// TODO: this may cause a race condition
 				log.Printf("Error processing WoL target %s: %s\n", woLTarget.Name, err)
 			}
 		}
