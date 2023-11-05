@@ -92,11 +92,11 @@ func (cfg *Config) IsValid() error {
 	return nil
 }
 
-func (host *NutServer) GetPort() int {
-	if host.Port == 0 {
+func (ns *NutServer) GetPort() int {
+	if ns.Port == 0 {
 		return DefaultNUTPort
 	}
-	return host.Port
+	return ns.Port
 }
 
 func CreateDefaultConfig() Config {
@@ -107,6 +107,7 @@ func CreateDefaultConfig() Config {
 				Mac:       "00:00:00:00:00:00",
 				Broadcast: "192.168.1.255",
 				Port:      9,
+				Interval:  "15m",
 				NutServer: NutServer{
 					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
