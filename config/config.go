@@ -82,7 +82,7 @@ func (ns *NutServer) GetPort() int {
 // 'NutServers' that are not used are not used by a 'WoLTargets' are not validated
 func (cfg *Config) IsValid() error {
 	for _, woLTarget := range cfg.WoLTargets {
-		log.Println("Validating config")
+		log.Printf("Validating config for %s\n", woLTarget.Name)
 
 		if err := woLTarget.Validate(); err != nil {
 			return err
