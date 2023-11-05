@@ -103,13 +103,13 @@ Use "upsWake [command] --help" for more information about a command.
 
 ## Roadmap
 
-- [ ] Add logic to wake hosts after evaluating rules
-- [ ] Make serve command run continuously, add interval flag
+- [x] Add logic to wake hosts after evaluating rules
+- [x] Make serve command run continuously, add interval flag
 - [ ] Add command to output all UPS json data (helps create rules)
 - [ ] Bug fixes
 - [ ] Add more tests
 - [ ] Add more documentation
-- [ ] Better config validation
+- [x] Better config validation
 - [ ] Add more examples
 - [ ] Change app name from UPSWake to something else
 - [ ] Change rego package name from authz to something else

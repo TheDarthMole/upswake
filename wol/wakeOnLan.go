@@ -3,7 +3,6 @@ package wol
 import (
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/go-playground/validator/v10"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
 	"net"
@@ -22,7 +21,7 @@ func NewWoLClient(target config.WoLTarget) *WakeOnLan {
 }
 
 func (tgt *WakeOnLan) Wake() error {
-	if err := validator.New().Struct(tgt); err != nil {
+	if err := tgt.Validate(); err != nil {
 		return err
 	}
 

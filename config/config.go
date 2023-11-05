@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"log"
+	"time"
 )
 
 const DefaultNUTPort = 3493
@@ -25,6 +26,7 @@ type WoLTarget struct {
 	Mac       string    `yaml:"mac" validate:"required,mac"`
 	Broadcast string    `yaml:"broadcast" validate:"required,ip"`
 	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
+	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
 	NutServer NutServer `yaml:"nutServer" validate:"required"`
 	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,required"`
 }
@@ -33,35 +35,68 @@ type Config struct {
 	WoLTargets []WoLTarget `yaml:"wolTargets"`
 }
 
-// IsValid Validate the config
-// ensure all 'WoLTargets' are valid and have a corresponding 'NutServers' that is valid
-// 'NutServers' that are not used are not used by a 'WoLTargets' are not validated
-func (cfg *Config) IsValid() error {
+func Duration(fl validator.FieldLevel) bool {
+	if _, err := time.ParseDuration(fl.Field().String()); err != nil {
+		return false
+	}
+	return true
+}
+
+func (wol *WoLTarget) Validate() error {
 	validate := validator.New()
-
-	for _, woLTarget := range cfg.WoLTargets {
-		log.Println("Validating config")
-
-		if err := validate.Struct(woLTarget); err != nil {
-			return fmt.Errorf("invalid woLTarget: %s", err)
-		}
-
-		if err := validate.Struct(woLTarget.NutServer); err != nil {
-			return fmt.Errorf("invalid nutServer for %s: %s", woLTarget.Name, err)
-		}
-
-		if err := validate.Struct(woLTarget.NutServer.Credentials); err != nil {
-			return fmt.Errorf("invalid nutServer credentials: %s", err)
-		}
+	err := validate.RegisterValidation("duration", Duration, true)
+	if err != nil {
+		return fmt.Errorf("could not register Duration validator: %s", err)
+	}
+	if err := validate.Struct(wol); err != nil {
+		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
 	return nil
 }
 
-func (host *NutServer) GetPort() int {
-	if host.Port == 0 {
+func (cred *Credentials) Validate() error {
+	validate := validator.New()
+	if err := validate.Struct(cred); err != nil {
+		return fmt.Errorf("invalid credentials: %s", err)
+	}
+	return nil
+}
+
+func (ns *NutServer) Validate() error {
+	validate := validator.New()
+	if err := validate.Struct(ns); err != nil {
+		return fmt.Errorf("invalid nutServer: %s", err)
+	}
+	return nil
+}
+
+func (ns *NutServer) GetPort() int {
+	if ns.Port == 0 {
 		return DefaultNUTPort
 	}
-	return host.Port
+	return ns.Port
+}
+
+// IsValid Validate the config
+// ensure all 'WoLTargets' are valid and have a corresponding 'NutServers' that is valid
+// 'NutServers' that are not used are not used by a 'WoLTargets' are not validated
+func (cfg *Config) IsValid() error {
+	for _, woLTarget := range cfg.WoLTargets {
+		log.Printf("Validating config for %s\n", woLTarget.Name)
+
+		if err := woLTarget.Validate(); err != nil {
+			return err
+		}
+
+		if err := woLTarget.NutServer.Validate(); err != nil {
+			return err
+		}
+
+		if err := woLTarget.NutServer.Credentials.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func CreateDefaultConfig() Config {
@@ -72,6 +107,7 @@ func CreateDefaultConfig() Config {
 				Mac:       "00:00:00:00:00:00",
 				Broadcast: "192.168.1.255",
 				Port:      9,
+				Interval:  "15m",
 				NutServer: NutServer{
 					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
