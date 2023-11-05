@@ -26,7 +26,7 @@ type WoLTarget struct {
 	Mac       string    `yaml:"mac" validate:"required,mac"`
 	Broadcast string    `yaml:"broadcast" validate:"required,ip"`
 	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
-	Interval  string    `yaml:"interval" validate:"durationa" default:"15m"`
+	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
 	NutServer NutServer `yaml:"nutServer" validate:"required"`
 	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,required"`
 }
@@ -44,7 +44,7 @@ func Duration(fl validator.FieldLevel) bool {
 
 func (wol *WoLTarget) Validate() error {
 	validate := validator.New()
-	err := validate.RegisterValidation("durationa", Duration, true)
+	err := validate.RegisterValidation("duration", Duration, true)
 	if err != nil {
 		return fmt.Errorf("could not register Duration validator: %s", err)
 	}
