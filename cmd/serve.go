@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/rego"
@@ -14,13 +15,14 @@ import (
 	"time"
 )
 
-var regoFiles fs.FS
+var (
+	regoFiles fs.FS
+)
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
 	initConfig()
-
 }
 
 var serveCmd = &cobra.Command{
@@ -28,17 +30,33 @@ var serveCmd = &cobra.Command{
 	Short: "Run the UPSWake server",
 	Long:  `All software has versions. This is Hugo's`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for {
-			for _, woLTarget := range cfg.WoLTargets {
-				err := processWoLTarget(&woLTarget)
-				if err != nil {
-					log.Printf("Error processing WoL target %s: %s\n", woLTarget.Name, err)
-				}
-			}
-			// TODO: Make this configurable
-			time.Sleep(15 * time.Second)
+		ctx := context.Background()
+
+		for _, woLTarget := range cfg.WoLTargets {
+			log.Printf("Starting worker for %s\n", woLTarget.Name)
+			go runWorker(ctx, &woLTarget)
 		}
+
+		select {}
 	},
+}
+
+func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
+	for {
+		interval, _ := time.ParseDuration(woLTarget.Interval)
+
+		ticker := time.NewTicker(interval)
+		select {
+		case <-ctx.Done():
+			log.Printf("Stopping worker for %s\n", woLTarget.Name)
+			return
+		case <-ticker.C:
+			err := processWoLTarget(woLTarget)
+			if err != nil {
+				log.Printf("Error processing WoL target %s: %s\n", woLTarget.Name, err)
+			}
+		}
+	}
 }
 
 func getJSON(woLTarget *config.WoLTarget) (string, error) {
