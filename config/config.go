@@ -54,6 +54,14 @@ func (wol *WoLTarget) Validate() error {
 	return nil
 }
 
+func (cred *Credentials) Validate() error {
+	validate := validator.New()
+	if err := validate.Struct(cred); err != nil {
+		return fmt.Errorf("invalid credentials: %s", err)
+	}
+	return nil
+}
+
 func (ns *NutServer) Validate() error {
 	validate := validator.New()
 	if err := validate.Struct(ns); err != nil {
@@ -62,12 +70,11 @@ func (ns *NutServer) Validate() error {
 	return nil
 }
 
-func (cred *Credentials) Validate() error {
-	validate := validator.New()
-	if err := validate.Struct(cred); err != nil {
-		return fmt.Errorf("invalid credentials: %s", err)
+func (ns *NutServer) GetPort() int {
+	if ns.Port == 0 {
+		return DefaultNUTPort
 	}
-	return nil
+	return ns.Port
 }
 
 // IsValid Validate the config
@@ -90,13 +97,6 @@ func (cfg *Config) IsValid() error {
 		}
 	}
 	return nil
-}
-
-func (ns *NutServer) GetPort() int {
-	if ns.Port == 0 {
-		return DefaultNUTPort
-	}
-	return ns.Port
 }
 
 func CreateDefaultConfig() Config {
