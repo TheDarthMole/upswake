@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/rego"
-	"github.com/TheDarthMole/UPSWake/ups"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/TheDarthMole/UPSWake/wol"
 	"github.com/spf13/cobra"
@@ -22,7 +21,7 @@ var (
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
-	initConfig()
+
 }
 
 var serveCmd = &cobra.Command{
@@ -30,6 +29,7 @@ var serveCmd = &cobra.Command{
 	Short: "Run the UPSWake server",
 	Long:  `All software has versions. This is Hugo's`,
 	Run: func(cmd *cobra.Command, args []string) {
+		initConfig()
 		ctx := context.Background()
 
 		for _, woLTarget := range cfg.WoLTargets {
@@ -61,25 +61,8 @@ func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
 	}
 }
 
-func getJSON(woLTarget *config.WoLTarget) (string, error) {
-	ns := woLTarget.NutServer
-	log.Printf("[%s] Connecting to NUT server %s as %s\n", woLTarget.Name, ns.Host, ns.Credentials.Username)
-	client, err := ups.Connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
-	if err != nil {
-		return "", fmt.Errorf("could not connect to NUT server: %s", err)
-	}
-	defer client.Disconnect()
-	log.Printf("[%s] Getting JSON from NUT server", woLTarget.Name)
-
-	inputJson, err := client.ToJson()
-	if err != nil {
-		return "", fmt.Errorf("could not get UPS list: %s", err)
-	}
-	return inputJson, nil
-}
-
 func processWoLTarget(woLTarget *config.WoLTarget) error {
-	inputJson, err := getJSON(woLTarget)
+	inputJson, err := util.GetJSON(woLTarget)
 	if err != nil {
 		return err
 	}
