@@ -24,11 +24,11 @@ jobs:
       -
         name: Downcase Repo Name
         run: |
-            echo "REPO=${github.event.repository.name,,}" >>${GITHUB_ENV}
+            echo "github.event.repository.name=${github.event.repository.name,,}" >>${GITHUB_ENV}
       -
         name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ REPO }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}:latest
