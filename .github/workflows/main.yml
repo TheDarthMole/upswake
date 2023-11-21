@@ -22,9 +22,13 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
+        name: Downcase Repo Name
+        run: |
+            echo "REPO_NAME=${github.event.repository.name,,}" >>${GITHUB_ENV}
+      -
         name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name | lower }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ REPO_NAME }}:latest
