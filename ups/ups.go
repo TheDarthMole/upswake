@@ -3,6 +3,7 @@ package ups
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/TheDarthMole/UPSWake/config"
 	nut "github.com/robbiet480/go.nut"
 	"log"
 )
@@ -26,6 +27,21 @@ func Connect(host string, port int, username, password string) (UPS, error) {
 		return UPS{}, err
 	}
 	return UPS{client}, nil
+}
+
+func GetJSON(woLTarget *config.WoLTarget) (string, error) {
+	ns := woLTarget.NutServer
+	client, err := Connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
+	if err != nil {
+		return "", fmt.Errorf("could not connect to NUT server: %s", err)
+	}
+	defer client.Disconnect()
+
+	inputJson, err := client.ToJson()
+	if err != nil {
+		return "", fmt.Errorf("could not get UPS list: %s", err)
+	}
+	return inputJson, nil
 }
 
 func (u *UPS) getValueFromUPS(upsName, variableName string) (interface{}, error) {

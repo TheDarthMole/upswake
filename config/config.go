@@ -2,8 +2,12 @@ package config
 
 import (
 	"fmt"
+	"github.com/TheDarthMole/UPSWake/rego"
+	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
 	"log"
+	"os"
+	"reflect"
 	"time"
 )
 
@@ -28,7 +32,7 @@ type WoLTarget struct {
 	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
 	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
 	NutServer NutServer `yaml:"nutServer" validate:"required"`
-	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,required"`
+	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,regofile,required"`
 }
 
 type Config struct {
@@ -36,10 +40,46 @@ type Config struct {
 }
 
 func Duration(fl validator.FieldLevel) bool {
-	if _, err := time.ParseDuration(fl.Field().String()); err != nil {
-		return false
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		if _, err := time.ParseDuration(fl.Field().String()); err != nil {
+			return false
+		}
+		return true
 	}
-	return true
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
+}
+
+func IsRegoFile(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	regoFiles := os.DirFS("rules")
+
+	switch field.Kind() {
+	case reflect.String:
+		exists := util.FileExists(regoFiles, field.String())
+		if !exists {
+			log.Printf("File %s does not exist", field.String())
+			return false
+		}
+
+		regoFile, err := util.GetFile(regoFiles, field.String())
+		if err != nil {
+			log.Printf("Could not get file: %s", err)
+			return false
+		}
+
+		err = rego.IsValidRego(string(regoFile))
+		if err != nil {
+			log.Printf("File %s is not a valid rego file: %s", field.String(), err)
+			return false
+		}
+		return true
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
 
 func (wol *WoLTarget) Validate() error {
@@ -47,6 +87,10 @@ func (wol *WoLTarget) Validate() error {
 	err := validate.RegisterValidation("duration", Duration, true)
 	if err != nil {
 		return fmt.Errorf("could not register Duration validator: %s", err)
+	}
+	err = validate.RegisterValidation("regofile", IsRegoFile, true)
+	if err != nil {
+		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
 	}
 	if err := validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)

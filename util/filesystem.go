@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 func GetFile(fileSystem fs.FS, fileName string) ([]byte, error) {
@@ -23,20 +23,23 @@ func GetFile(fileSystem fs.FS, fileName string) ([]byte, error) {
 	return fileData, nil
 }
 
-func removeLastElement(input string, separator string) string {
-	lastIndex := strings.LastIndex(input, separator)
-	if lastIndex >= 0 {
-		return input[:lastIndex]
-	}
-	return ""
-}
-
 func GetCurrentDirectory() (string, error) {
-	cwd, err := os.Executable()
+	ex, err := os.Executable()
 	if err != nil {
 		return "", fmt.Errorf("could not get current working directory: %s", err)
 	}
-	return removeLastElement(cwd, "/"), nil
+	return filepath.Dir(ex), nil
+}
+
+func FileExists(fileSystem fs.FS, file string) bool {
+	fileInfo, err := fs.Stat(fileSystem, file)
+
+	if err != nil {
+		log.Printf("could not stat file %s: %s", file, err)
+		return false
+	}
+
+	return !fileInfo.IsDir()
 }
 
 func CreateFile(file string, data []byte) error {

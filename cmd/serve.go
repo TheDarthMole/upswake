@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/rego"
+	"github.com/TheDarthMole/UPSWake/ups"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/TheDarthMole/UPSWake/wol"
 	"github.com/spf13/cobra"
@@ -62,7 +63,7 @@ func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
 }
 
 func processWoLTarget(woLTarget *config.WoLTarget) error {
-	inputJson, err := util.GetJSON(woLTarget)
+	inputJson, err := ups.GetJSON(woLTarget)
 	if err != nil {
 		return err
 	}

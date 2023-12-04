@@ -5,8 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/rego"
 )
+
+func IsValidRego(rego string) error {
+	_, err := ast.ParseModule("test", rego)
+	return err
+}
 
 func EvaluateExpression(rawJson, regoRule string) (bool, error) {
 	var input interface{}
@@ -21,17 +27,17 @@ func EvaluateExpression(rawJson, regoRule string) (bool, error) {
 		return false, fmt.Errorf("failed to decode input: %w", err)
 	}
 	// Create query that returns a single boolean value.
-	rego := rego.New(
+	regoEngine := rego.New(
 		rego.Query("data.authz.allow"),
 		rego.Module(
-			"example.rego",
+			"main.rego",
 			regoRule,
 		),
 		rego.Input(input),
 	)
 
 	// Run evaluation.
-	rs, err := rego.Eval(ctx)
+	rs, err := regoEngine.Eval(ctx)
 	if err != nil {
 		panic(err)
 	}

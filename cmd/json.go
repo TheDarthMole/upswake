@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/ups"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -28,7 +28,7 @@ and for creating rego rules for a WoL target`,
 			},
 		}
 
-		ups, err := util.GetJSON(&wolTarget)
+		ups, err := ups.GetJSON(&wolTarget)
 		if err != nil {
 			log.Fatalf("failed to get JSON: %s", err)
 			return
