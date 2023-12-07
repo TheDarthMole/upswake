@@ -1,6 +1,7 @@
 # UPSWake
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
 
 ## Overview
