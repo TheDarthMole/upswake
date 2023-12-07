@@ -1,6 +1,7 @@
 # UPSWake
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
 
 ## Overview
 
@@ -130,3 +131,6 @@ Use "upsWake [command] --help" for more information about a command.
 - [ ] Change rego package name from authz to something else
 - [ ] Add more rego examples
 - [ ] Add GitLab CI/CD to test, build and push Docker image
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)
