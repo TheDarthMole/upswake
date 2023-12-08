@@ -86,15 +86,15 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 
 func (wol *WoLTarget) Validate() error {
 	validate := validator.New()
-	err := validate.RegisterValidation("duration", Duration, true)
-	if err != nil {
+
+	if err := validate.RegisterValidation("duration", Duration, true); err != nil {
 		return fmt.Errorf("could not register Duration validator: %s", err)
 	}
-	err = validate.RegisterValidation("regofile", IsRegoFile, true)
-	if err != nil {
+
+	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
 		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
 	}
-	if err = validate.Struct(wol); err != nil {
+	if err := validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
 	return nil
