@@ -32,7 +32,7 @@ type WoLTarget struct {
 	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
 	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
 	NutServer NutServer `yaml:"nutServer" validate:"required"`
-	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,regofile,required"`
+	Rules     []string  `yaml:"rules" validate:"required,dive,regofile,required"`
 }
 
 type Config struct {
@@ -92,7 +92,7 @@ func (wol *WoLTarget) Validate() error {
 	if err != nil {
 		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
 	}
-	if err := validate.Struct(wol); err != nil {
+	if err = validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
 	return nil
