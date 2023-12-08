@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/go-playground/validator/v10"
 	"testing"
 )
 
@@ -488,6 +489,60 @@ func TestConfig_IsValid(t *testing.T) {
 			}
 			if err := cfg.IsValid(); (err != nil) != tt.wantErr {
 				t.Errorf("IsValid() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDuration(t *testing.T) {
+	type args struct {
+		Duration string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Valid",
+			args: args{
+				Duration: "15m",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid",
+			args: args{
+				Duration: "invalid!duration",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Empty",
+			args: args{
+				Duration: "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Negative",
+			args: args{
+				Duration: "-15m",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			type test struct {
+				Duration string `validate:"duration"`
+			}
+			v := validator.New()
+			if err := v.RegisterValidation("duration", Duration); err != nil {
+				t.Errorf("Duration() = %v, want error %v", err, tt.wantErr)
+			}
+			if err := v.Struct(test{tt.args.Duration}); (err != nil) != tt.wantErr {
+				t.Errorf("Duration() = %v, want error %v", err, tt.wantErr)
 			}
 		})
 	}

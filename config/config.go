@@ -46,7 +46,8 @@ func Duration(fl validator.FieldLevel) bool {
 
 	switch field.Kind() {
 	case reflect.String:
-		if _, err := time.ParseDuration(fl.Field().String()); err != nil {
+		dur, err := time.ParseDuration(fl.Field().String())
+		if err != nil || dur < 1*time.Millisecond {
 			return false
 		}
 		return true
