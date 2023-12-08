@@ -5,16 +5,18 @@ import (
 	"github.com/TheDarthMole/UPSWake/rego"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
-	"io/fs"
+	"github.com/hack-pad/hackpadfs"
 	"log"
-	"os"
 	"reflect"
 	"time"
 )
 
-const DefaultNUTPort = 3493
+const (
+	DefaultNUTPort    = 3493
+	DefaultConfigFile = "config.yaml"
+)
 
-var regoFiles fs.FS
+var regoFiles hackpadfs.FS
 
 type NutServer struct {
 	Name        string      `yaml:"name" validate:"required"`
@@ -43,7 +45,16 @@ type Config struct {
 }
 
 func init() {
-	regoFiles = os.DirFS("rules")
+	localFS, err := util.GetLocalFS()
+	if err != nil {
+		log.Fatalf("could not get local filesystem: %s", err)
+	}
+	rules, err := hackpadfs.Sub(localFS, "rules")
+	if err != nil {
+		log.Fatalf("could not get subdirectory 'rules': %s", err)
+	}
+	regoFiles = rules
+
 }
 
 func Duration(fl validator.FieldLevel) bool {

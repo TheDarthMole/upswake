@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/go-playground/validator/v10 v10.15.5
+	github.com/hack-pad/hackpadfs v0.2.1
 	github.com/open-policy-agent/opa v0.57.1
 	github.com/robbiet480/go.nut v0.0.0-20220219091450-bd8f121e1fa1
 	github.com/sabhiram/go-wol v0.0.0-20211224004021-c83b0c2f887d

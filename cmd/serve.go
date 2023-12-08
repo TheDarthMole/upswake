@@ -17,29 +17,27 @@ import (
 
 var (
 	regoFiles fs.FS
+	serveCmd  = &cobra.Command{
+		Use:   "serve",
+		Short: "Run the UPSWake server",
+		Long:  `All software has versions. This is Hugo's`,
+		Run: func(cmd *cobra.Command, args []string) {
+			initConfig()
+			ctx := context.Background()
+
+			for _, woLTarget := range cfg.WoLTargets {
+				log.Printf("Starting worker for %s\n", woLTarget.Name)
+				go runWorker(ctx, &woLTarget)
+			}
+
+			select {}
+		},
+	}
 )
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
-
-}
-
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Run the UPSWake server",
-	Long:  `All software has versions. This is Hugo's`,
-	Run: func(cmd *cobra.Command, args []string) {
-		initConfig()
-		ctx := context.Background()
-
-		for _, woLTarget := range cfg.WoLTargets {
-			log.Printf("Starting worker for %s\n", woLTarget.Name)
-			go runWorker(ctx, &woLTarget)
-		}
-
-		select {}
-	},
 }
 
 func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
