@@ -62,9 +62,5 @@ func newMagicPacket(mac string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create magic packet: %w", err)
 	}
 
-	bs, err := mp.Marshal()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal magic packet: %w", err)
-	}
-	return bs, nil
+	return mp.Marshal()
 }
