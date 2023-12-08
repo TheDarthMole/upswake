@@ -54,7 +54,7 @@ func TestGetFile(t *testing.T) {
 			fmt.Println(tt.wantErr)
 			fmt.Println((err != nil) != tt.wantErr)
 
-			if (err != nil) == tt.wantErr {
+			if (err != nil) != tt.wantErr {
 				fmt.Println("THIS WAS HIT!")
 				t.Errorf("GetFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
