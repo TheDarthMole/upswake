@@ -1,7 +1,9 @@
 package config
 
 import (
+	"embed"
 	"github.com/go-playground/validator/v10"
+	"io/fs"
 	"testing"
 )
 
@@ -25,7 +27,13 @@ var (
 		NutServer: validNutServer,
 		Rules:     []string{},
 	}
+	//go:embed "testing/*"
+	fakedRegoFiles embed.FS
 )
+
+func init() {
+	regoFiles, _ = fs.Sub(fakedRegoFiles, "testing")
+}
 
 func TestCredentials_Validate(t *testing.T) {
 	type fields struct {
@@ -235,7 +243,7 @@ func TestWoLTarget_Validate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Valid",
+			name: "Valid With No Rules",
 			fields: fields{
 				Name:      "test",
 				Mac:       "12:34:56:78:90:ab",
@@ -246,6 +254,77 @@ func TestWoLTarget_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			// TODO: Add tests for rules
+		},
+		{
+			name: "Invalid Rule Location",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.1",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{"fileDoesNotExist.rego"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Valid With Rule",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.1",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{"80percentOn.rego"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid Rego File",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.1",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{"regoWithSyntaxError.rego"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Multiple Valid Rules",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.1",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules: []string{
+					"80percentOn.rego",
+					"alwaysPasses.rego",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "One Valid One Invalid Rules",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.1",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules: []string{
+					"alwaysPasses.rego",
+					"regoWithSyntaxError.rego",
+				},
+			},
+			wantErr: true,
 		},
 		{
 			name: "Missing Name",
@@ -560,4 +639,13 @@ func TestDuration(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreateDefaultConfig(t *testing.T) {
+	t.Run("Validate Default Config", func(t *testing.T) {
+		got := CreateDefaultConfig()
+		if got.IsValid() != nil {
+			t.Errorf("CreateDefaultConfig() = %v, want valid config", got)
+		}
+	})
 }

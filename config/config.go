@@ -5,6 +5,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/rego"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
+	"io/fs"
 	"log"
 	"os"
 	"reflect"
@@ -13,7 +14,7 @@ import (
 
 const DefaultNUTPort = 3493
 
-var regoFiles = os.DirFS("rules")
+var regoFiles fs.FS
 
 type NutServer struct {
 	Name        string      `yaml:"name" validate:"required"`
@@ -39,6 +40,10 @@ type WoLTarget struct {
 
 type Config struct {
 	WoLTargets []WoLTarget `yaml:"wolTargets"`
+}
+
+func init() {
+	regoFiles = os.DirFS("rules")
 }
 
 func Duration(fl validator.FieldLevel) bool {
@@ -73,8 +78,7 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 			return false
 		}
 
-		err = rego.IsValidRego(string(regoFile))
-		if err != nil {
+		if err = rego.IsValidRego(string(regoFile)); err != nil {
 			log.Printf("File %s is not a valid rego file: %s", field.String(), err)
 			return false
 		}
@@ -94,6 +98,7 @@ func (wol *WoLTarget) Validate() error {
 	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
 		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
 	}
+
 	if err := validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
