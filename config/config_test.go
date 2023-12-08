@@ -504,9 +504,23 @@ func TestDuration(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Valid",
+			name: "Valid 15m",
 			args: args{
 				Duration: "15m",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid 1h",
+			args: args{
+				Duration: "15h",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid 1s",
+			args: args{
+				Duration: "1s",
 			},
 			wantErr: false,
 		},
