@@ -76,7 +76,7 @@ func calculateIPv4Broadcast(ipNet *net.IPNet) net.IP {
 }
 
 func IPsToStrings(input []net.IP) []string {
-	if input == nil || len(input) == 0 {
+	if len(input) == 0 {
 		return nil
 	}
 	ips := make([]string, len(input))
