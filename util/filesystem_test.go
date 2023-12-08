@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
 	"reflect"
@@ -9,15 +8,6 @@ import (
 )
 
 func TestGetFile(t *testing.T) {
-	filename1 := "test.txt"
-	filename2 := "test2.txt"
-	data1 := []byte("test")
-	data2 := []byte("test2")
-	memFS := newMemFS(t, map[string][]byte{
-		filename1: data1,
-		filename2: data2,
-	})
-
 	type args struct {
 		fileSystem hackpadfs.FS
 		fileName   string
@@ -31,10 +21,12 @@ func TestGetFile(t *testing.T) {
 		{
 			name: "Valid File",
 			args: args{
-				fileSystem: memFS,
-				fileName:   filename1,
+				fileSystem: newMemFS(t, map[string][]byte{
+					"filename1.txt": []byte("data1"),
+				}),
+				fileName: "filename1.txt",
 			},
-			want:    data1,
+			want:    []byte("data1"),
 			wantErr: false,
 		},
 		{
@@ -43,19 +35,14 @@ func TestGetFile(t *testing.T) {
 				fileSystem: newMemFS(t, map[string][]byte{}),
 				fileName:   "doesnotexist.txt",
 			},
-			want:    []byte(""),
+			want:    nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetFile(tt.args.fileSystem, tt.args.fileName)
-			fmt.Println(err != nil)
-			fmt.Println(tt.wantErr)
-			fmt.Println((err != nil) != tt.wantErr)
-
 			if (err != nil) != tt.wantErr {
-				fmt.Println("THIS WAS HIT!")
 				t.Errorf("GetFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
