@@ -15,6 +15,15 @@ var (
 		Port:        3493,
 		Credentials: validCredentials,
 	}
+	validWoLTarget = WoLTarget{
+		Name:      "test",
+		Mac:       "12:34:56:78:90:ab",
+		Broadcast: "127.0.0.255",
+		Port:      9,
+		Interval:  "15m",
+		NutServer: validNutServer,
+		Rules:     []string{},
+	}
 )
 
 func TestCredentials_Validate(t *testing.T) {
@@ -235,6 +244,137 @@ func TestWoLTarget_Validate(t *testing.T) {
 				NutServer: validNutServer,
 				Rules:     []string{},
 			},
+			// TODO: Add tests for rules
+		},
+		{
+			name: "Missing Name",
+			fields: fields{
+				Name:      "",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing MAC",
+			fields: fields{
+				Name:      "test",
+				Mac:       "",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid MAC",
+			fields: fields{
+				Name:      "test",
+				Mac:       "invalid!mac",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing Broadcast",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid Broadcast",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "invalid!broadcast",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Negative Port Number",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      -1,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Port Number Too Large",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      65536,
+				Interval:  "15m",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing Interval",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid Interval",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "invalid!interval",
+				NutServer: validNutServer,
+				Rules:     []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing NutServer",
+			fields: fields{
+				Name:      "test",
+				Mac:       "12:34:56:78:90:ab",
+				Broadcast: "127.0.0.255",
+				Port:      9,
+				Interval:  "15m",
+				NutServer: NutServer{},
+				Rules:     []string{},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -250,6 +390,104 @@ func TestWoLTarget_Validate(t *testing.T) {
 			}
 			if err := wol.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestConfig_IsValid(t *testing.T) {
+	type fields struct {
+		WoLTargets []WoLTarget
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "Valid",
+			fields: fields{
+				WoLTargets: []WoLTarget{
+					validWoLTarget,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Empty WoLTargets",
+			fields: fields{
+				WoLTargets: []WoLTarget{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid WoLTarget",
+			fields: fields{
+				WoLTargets: []WoLTarget{
+					{
+						Name:      "test",
+						Mac:       "12:34:56:78:90:ab",
+						Broadcast: "127.0.0.255",
+						Port:      9,
+						Interval:  "15m",
+						NutServer: NutServer{},
+						Rules:     []string{},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid NutServer",
+			fields: fields{
+				WoLTargets: []WoLTarget{
+					{
+						Name:      "test",
+						Mac:       "12:34:56:78:90:ab",
+						Broadcast: "127.0.0.255",
+						Port:      9,
+						Interval:  "15m",
+						NutServer: NutServer{
+							Name:        "test",
+							Host:        "invalid!hostname",
+							Port:        3493,
+							Credentials: validCredentials,
+						},
+						Rules: []string{},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid Credentials",
+			fields: fields{
+				WoLTargets: []WoLTarget{
+					{
+						Name:      "test",
+						Mac:       "12:34:56:78:90:ab",
+						Broadcast: "127.0.0.255",
+						Port:      9,
+						Interval:  "15m",
+						NutServer: NutServer{
+							Name:        "test",
+							Host:        "127.0.0.1",
+							Port:        3493,
+							Credentials: Credentials{},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				WoLTargets: tt.fields.WoLTargets,
+			}
+			if err := cfg.IsValid(); (err != nil) != tt.wantErr {
+				t.Errorf("IsValid() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

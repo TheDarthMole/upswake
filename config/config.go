@@ -13,6 +13,8 @@ import (
 
 const DefaultNUTPort = 3493
 
+var regoFiles = os.DirFS("rules")
+
 type NutServer struct {
 	Name        string      `yaml:"name" validate:"required"`
 	Host        string      `yaml:"host" validate:"required,ip|hostname"`
@@ -55,7 +57,6 @@ func Duration(fl validator.FieldLevel) bool {
 
 func IsRegoFile(fl validator.FieldLevel) bool {
 	field := fl.Field()
-	regoFiles := os.DirFS("rules")
 
 	switch field.Kind() {
 	case reflect.String:
@@ -129,14 +130,6 @@ func (cfg *Config) IsValid() error {
 		log.Printf("Validating config for %s\n", woLTarget.Name)
 
 		if err := woLTarget.Validate(); err != nil {
-			return err
-		}
-
-		if err := woLTarget.NutServer.Validate(); err != nil {
-			return err
-		}
-
-		if err := woLTarget.NutServer.Credentials.Validate(); err != nil {
 			return err
 		}
 	}
