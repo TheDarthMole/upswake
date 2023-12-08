@@ -1,7 +1,7 @@
-package authz
+package upswake
 
-default allow = false
+default wake = false
 
-allow = true {
+wake = true {
     true
 }

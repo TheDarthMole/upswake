@@ -1,10 +1,10 @@
-package authz
+package upswake
 
-default allow = false
+default wake = false
 
 A COMMENT THAT IS NOT COMMENTED OUT
 
-allow = true {
+wake = true {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value >= 80 # 80% or more charge
