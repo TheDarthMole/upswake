@@ -131,16 +131,16 @@ Use "upsWake [command] --help" for more information about a command.
 
 - [x] Add logic to wake hosts after evaluating rules
 - [x] Make serve command run continuously, add interval flag
-- [ ] Add command to output all UPS json data (helps create rules)
-- [ ] Bug fixes
-- [ ] Add more tests
+- [x] Add command to output all UPS json data (helps create rules)
+- [x] Bug fixes
+- [x] Add more tests
 - [ ] Add more documentation
 - [x] Better config validation
 - [ ] Add more examples
 - [ ] Change app name from UPSWake to something else
-- [ ] Change rego package name from authz to something else
+- [x] Change rego package name from authz to something else
 - [ ] Add more rego examples
-- [ ] Add GitLab CI/CD to test, build and push Docker image
+- [x] Add GitLab CI/CD to test, build and push Docker image
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)
