@@ -26,7 +26,7 @@ var (
 			ctx := context.Background()
 
 			for _, woLTarget := range cfg.WoLTargets {
-				log.Printf("Starting worker for %s\n", woLTarget.Name)
+				log.Printf("Starting worker for %s with interval %s\n", woLTarget.Name, woLTarget.Interval)
 				go runWorker(ctx, &woLTarget)
 			}
 
@@ -42,7 +42,12 @@ func init() {
 
 func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
 	for {
-		interval, _ := time.ParseDuration(woLTarget.Interval)
+		interval, err := time.ParseDuration(woLTarget.Interval)
+
+		if err != nil {
+			log.Printf("[%s] Could not parse interval: %s\n", woLTarget.Name, err)
+			return
+		}
 
 		ticker := time.NewTicker(interval)
 		select {
@@ -51,7 +56,7 @@ func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
 			log.Printf("[%s] Stopping worker\n", woLTarget.Name)
 			return
 		case <-ticker.C:
-			err := processWoLTarget(woLTarget)
+			err = processWoLTarget(woLTarget)
 			if err != nil {
 				// TODO: this may cause a race condition
 				log.Printf("[%s] Error processing WoL target: %s\n", woLTarget.Name, err)
