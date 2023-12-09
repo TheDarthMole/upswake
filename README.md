@@ -63,49 +63,38 @@ go build -o upswake
 
 ## Getting Started
 
-A default config is created for you when you first run `upswake serve` for the first time. 
-You will need to edit this config to suit your environment.
+Create a `config.yaml` file in the same directory as the application.
+If a config is not provided, the application will create a default config.
 
 ```yaml
-nutHosts:
-  - host: 192.168.1.133
-    port: 3493
-    name: ups1
-    credentials:
-      - username: upsmon
-        password: bigsecret
-wakeHosts:
+wolTargets:
   - name: server1
-    mac: "00:00:00:00:00:00"
+    mac: 12:23:45:67:89:ab
     broadcast: 192.168.1.255
     port: 9
-    nutHost:
-      name: ups1
-      username: upsmon
+    interval: 15s
+    nutServer:
+      host: 127.0.0.1
+      port: 3493
+      name: nut-server
+      credentials:
+        username: upsmon
+        password: bigsecret
     rules:
       - 80percentOn.rego
 ```
 
-The above config allows for a flexible configuration. You can define multiple NUT hosts and multiple wake hosts. 
-You can also define multiple rules for each wake host.
+The above config allows for a flexible configuration. 
+You can define multiple NUT hosts and multiple wake hosts. 
+Multiple rules can also be defined for each server to be woken.
+YAML anchors can be used if the same NUT server is used for multiple servers.
 
-Rules are stored in the "rules" folder and are written in the OPA Rego language. 
-The following example rule will wake the server if the UPS is on line power and the battery level is above 80%. 
-This rule is stored in the file `80percentOn.rego`.
+> Note: the rules are evaluated in a logical OR fashion. If any of the rules are met, the host will be woken.
 
-```rego
-package authz
+Rules are stored and read from the `rules` folder and are written in the OPA Rego language. 
+The example rule [80percentOn.rego](./rules/80percentOn.rego) will wake the server if the UPS named "cyberpower900" is 
+on line power and the battery level is above 80%.
 
-default allow = false
-
-allow = true {
-	input[i].Name == "cyberpower900"
-	input[i].Variables[j].Name == "battery.charge"
-	input[i].Variables[j].Value >= 80 # 80% or more charge
-	input[i].Variables[k].Name == "ups.status"
-	input[i].Variables[k].Value == "OL" # On Line (mains is present)
-}
-```
 
 ## Usage
 
