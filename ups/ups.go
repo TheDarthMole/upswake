@@ -24,7 +24,7 @@ func Connect(host string, port int, username, password string) (UPS, error) {
 	}
 	if !authenticate {
 		log.Printf("Authentication failed to host '%s' as user '%s'", host, username)
-		return UPS{}, err
+		return UPS{}, fmt.Errorf("authentication failed")
 	}
 	return UPS{client}, nil
 }
