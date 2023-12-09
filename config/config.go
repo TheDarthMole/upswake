@@ -5,13 +5,18 @@ import (
 	"github.com/TheDarthMole/UPSWake/rego"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
+	"github.com/hack-pad/hackpadfs"
 	"log"
-	"os"
 	"reflect"
 	"time"
 )
 
-const DefaultNUTPort = 3493
+const (
+	DefaultNUTPort    = 3493
+	DefaultConfigFile = "config.yaml"
+)
+
+var regoFiles hackpadfs.FS
 
 type NutServer struct {
 	Name        string      `yaml:"name" validate:"required"`
@@ -32,11 +37,24 @@ type WoLTarget struct {
 	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
 	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
 	NutServer NutServer `yaml:"nutServer" validate:"required"`
-	Rules     []string  `yaml:"rules" validate:"required,gt=0,dive,regofile,required"`
+	Rules     []string  `yaml:"rules" validate:"required,dive,regofile,required"`
 }
 
 type Config struct {
 	WoLTargets []WoLTarget `yaml:"wolTargets"`
+}
+
+func init() {
+	localFS, err := util.GetLocalFS()
+	if err != nil {
+		log.Fatalf("could not get local filesystem: %s", err)
+	}
+	rules, err := hackpadfs.Sub(localFS, "rules")
+	if err != nil {
+		log.Fatalf("could not get subdirectory 'rules': %s", err)
+	}
+	regoFiles = rules
+
 }
 
 func Duration(fl validator.FieldLevel) bool {
@@ -44,7 +62,8 @@ func Duration(fl validator.FieldLevel) bool {
 
 	switch field.Kind() {
 	case reflect.String:
-		if _, err := time.ParseDuration(fl.Field().String()); err != nil {
+		dur, err := time.ParseDuration(fl.Field().String())
+		if err != nil || dur < 1*time.Millisecond {
 			return false
 		}
 		return true
@@ -55,7 +74,6 @@ func Duration(fl validator.FieldLevel) bool {
 
 func IsRegoFile(fl validator.FieldLevel) bool {
 	field := fl.Field()
-	regoFiles := os.DirFS("rules")
 
 	switch field.Kind() {
 	case reflect.String:
@@ -71,8 +89,7 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 			return false
 		}
 
-		err = rego.IsValidRego(string(regoFile))
-		if err != nil {
+		if err = rego.IsValidRego(string(regoFile)); err != nil {
 			log.Printf("File %s is not a valid rego file: %s", field.String(), err)
 			return false
 		}
@@ -84,14 +101,15 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 
 func (wol *WoLTarget) Validate() error {
 	validate := validator.New()
-	err := validate.RegisterValidation("duration", Duration, true)
-	if err != nil {
+
+	if err := validate.RegisterValidation("duration", Duration, true); err != nil {
 		return fmt.Errorf("could not register Duration validator: %s", err)
 	}
-	err = validate.RegisterValidation("regofile", IsRegoFile, true)
-	if err != nil {
+
+	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
 		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
 	}
+
 	if err := validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
@@ -129,14 +147,6 @@ func (cfg *Config) IsValid() error {
 		log.Printf("Validating config for %s\n", woLTarget.Name)
 
 		if err := woLTarget.Validate(); err != nil {
-			return err
-		}
-
-		if err := woLTarget.NutServer.Validate(); err != nil {
-			return err
-		}
-
-		if err := woLTarget.NutServer.Credentials.Validate(); err != nil {
 			return err
 		}
 	}

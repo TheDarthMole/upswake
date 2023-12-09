@@ -1,15 +1,20 @@
 # UPSWake
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
 
 ## Overview
 
-UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of a NUT UPS server.
+UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of 
+a NUT UPS server.
 
-The OPA Rego language is used in order to allow for dynamic rules to be defined for when to wake a server. The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met, a Wake on Lan packet is sent to the defined server.
+The OPA Rego language is used in order to allow for dynamic rules to be defined for when to wake a server. 
+The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met, 
+a Wake on Lan packet is sent to the defined server.
 
-This application is designed to be run on a Raspberry Pi or other small computer that is always on and is on the same network as the servers you wish to wake.
+This application is designed to be run on a Raspberry Pi or other small computer that is always on and is on the same 
+network as the servers you wish to wake.
 
 ## Installation
 
@@ -58,45 +63,38 @@ go build -o upswake
 
 ## Getting Started
 
-A default config is created for you when you first run `upswake serve` for the first time. You will need to edit this config to suit your environment.
+Create a `config.yaml` file in the same directory as the application.
+If a config is not provided, the application will create a default config.
 
 ```yaml
-nutHosts:
-  - host: 192.168.1.133
-    port: 3493
-    name: ups1
-    credentials:
-      - username: upsmon
-        password: bigsecret
-wakeHosts:
+wolTargets:
   - name: server1
-    mac: "00:00:00:00:00:00"
+    mac: 12:23:45:67:89:ab
     broadcast: 192.168.1.255
     port: 9
-    nutHost:
-      name: ups1
-      username: upsmon
+    interval: 15s
+    nutServer:
+      host: 127.0.0.1
+      port: 3493
+      name: nut-server
+      credentials:
+        username: upsmon
+        password: bigsecret
     rules:
       - 80percentOn.rego
 ```
 
-The above config allows for a flexible configuration. You can define multiple NUT hosts and multiple wake hosts. You can also define multiple rules for each wake host.
+The above config allows for a flexible configuration. 
+You can define multiple NUT hosts and multiple wake hosts. 
+Multiple rules can also be defined for each server to be woken.
+YAML anchors can be used if the same NUT server is used for multiple servers.
 
-Rules are stored in the "rules" folder and are written in the OPA Rego language. The following example rule will wake the server if the UPS is on line power and the battery level is above 80%. This rule is stored in the file `80percentOn.rego`.
+> Note: the rules are evaluated in a logical OR fashion. If any of the rules are met, the host will be woken.
 
-```rego
-package authz
+Rules are stored and read from the `rules` folder and are written in the OPA Rego language. 
+The example rule [80percentOn.rego](./rules/80percentOn.rego) will wake the server if the UPS named "cyberpower900" is 
+on line power and the battery level is above 80%.
 
-default allow = false
-
-allow = true {
-	input[i].Name == "cyberpower900"
-	input[i].Variables[j].Name == "battery.charge"
-	input[i].Variables[j].Value >= 80 # 80% or more charge
-	input[i].Variables[k].Name == "ups.status"
-	input[i].Variables[k].Value == "OL" # On Line (mains is present)
-}
-```
 
 ## Usage
 
@@ -107,11 +105,12 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  json        Retrieve JSON from a NUT server
   serve       Run the UPSWake server
   wake        Manually wake a computer
 
 Flags:
-      --config string   config file (default is ./config.yaml)
+  --config string   config file (default is ./config.yaml)
   -h, --help            help for upsWake
 
 Use "upsWake [command] --help" for more information about a command.
@@ -121,16 +120,16 @@ Use "upsWake [command] --help" for more information about a command.
 
 - [x] Add logic to wake hosts after evaluating rules
 - [x] Make serve command run continuously, add interval flag
-- [ ] Add command to output all UPS json data (helps create rules)
-- [ ] Bug fixes
-- [ ] Add more tests
+- [x] Add command to output all UPS json data (helps create rules)
+- [x] Bug fixes
+- [x] Add more tests
 - [ ] Add more documentation
 - [x] Better config validation
 - [ ] Add more examples
 - [ ] Change app name from UPSWake to something else
-- [ ] Change rego package name from authz to something else
+- [x] Change rego package name from authz to something else
 - [ ] Add more rego examples
-- [ ] Add GitLab CI/CD to test, build and push Docker image
+- [x] Add GitLab CI/CD to test, build and push Docker image
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)

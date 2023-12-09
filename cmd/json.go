@@ -6,6 +6,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/ups"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
 )
 
 // jsonCmd represents the json command
@@ -43,7 +44,16 @@ func init() {
 	jsonCmd.Flags().StringP("password", "p", "", "MAC address of the computer to wake")
 	jsonCmd.Flags().StringP("host", "H", "", "MAC address of the computer to wake")
 	jsonCmd.Flags().StringP("port", "P", "9", "MAC address of the computer to wake")
-	jsonCmd.MarkFlagRequired("username")
-	jsonCmd.MarkFlagRequired("password")
-	jsonCmd.MarkFlagRequired("host")
+	if err := jsonCmd.MarkFlagRequired("username"); err != nil {
+		_ = jsonCmd.Usage()
+		os.Exit(1)
+	}
+	if err := jsonCmd.MarkFlagRequired("password"); err != nil {
+		_ = jsonCmd.Usage()
+		os.Exit(1)
+	}
+	if err := jsonCmd.MarkFlagRequired("host"); err != nil {
+		_ = jsonCmd.Usage()
+		os.Exit(1)
+	}
 }

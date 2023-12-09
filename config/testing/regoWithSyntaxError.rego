@@ -2,6 +2,8 @@ package upswake
 
 default wake = false
 
+A COMMENT THAT IS NOT COMMENTED OUT
+
 wake = true {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/spf13/cobra"
@@ -10,25 +11,24 @@ import (
 	"os"
 )
 
-var cfgFile string
-var cfg config.Config
+var (
+	cfgFile string
+	cfg     config.Config
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "upsWake",
-	Short: "UPSWake sends WoL packets based on a UPS's status",
-	Long:  `TODO: Add a long description here`, // TODO: Add a long description here
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
-}
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd = &cobra.Command{
+		Use:   "upsWake",
+		Short: "UPSWake sends WoL packets based on a UPS's status",
+		Long:  `TODO: Add a long description here`, // TODO: Add a long description here
+	}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatalf("Error executing root command: %s", err)
 	}
 }
 
@@ -38,7 +38,11 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml)")
+	rootCmd.PersistentFlags().StringVar(
+		&cfgFile,
+		"config",
+		"",
+		fmt.Sprintf("config file (default is ./%s)", config.DefaultConfigFile))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -55,28 +59,28 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Printf("Reading config file from %s", viper.ConfigFileUsed())
-	} else {
-		cwd, err := util.GetCurrentDirectory()
-		if err != nil {
-			log.Fatalf("Unable to get current working directory: %s", err)
-		}
+	err := viper.ReadInConfig()
+	if err != nil {
 		cfg := config.CreateDefaultConfig()
 		marshalledConfig, err := yaml.Marshal(cfg)
 		if err != nil {
 			log.Fatalf("Unable to marshal config: %s", err)
 		}
 
-		err = util.CreateFile(cwd+"/config.yaml", marshalledConfig)
+		localFS, err := util.GetLocalFS()
 		if err != nil {
+			log.Fatalf("Unable to get local filesystem: %s", err)
+		}
+
+		if err = util.CreateFile(localFS, config.DefaultConfigFile, marshalledConfig); err != nil {
 			log.Fatalf("Unable to create new config file: %s", err)
 		}
-		log.Printf("Created new config file at %s", cwd+"/config.yaml")
+
+		log.Printf("Created new config file at %s", config.DefaultConfigFile)
 		os.Exit(0)
 	}
 
-	err := viper.Unmarshal(&cfg)
+	err = viper.Unmarshal(&cfg)
 	if err != nil {
 		log.Fatalf("Unable to unmarshal config: %s", err)
 	}

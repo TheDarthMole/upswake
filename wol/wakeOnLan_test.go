@@ -1,6 +1,7 @@
 package wol
 
 import (
+	"github.com/TheDarthMole/UPSWake/config"
 	"io"
 	"reflect"
 	"testing"
@@ -8,6 +9,10 @@ import (
 
 type readWriteCloser struct {
 	BS []byte
+}
+
+type readWriteCloserError struct {
+	readWriteCloser
 }
 
 func (rwc *readWriteCloser) Read(p []byte) (n int, err error) {
@@ -24,9 +29,41 @@ func (rwc *readWriteCloser) Close() error {
 	return nil
 }
 
+func (rwc *readWriteCloserError) Write(p []byte) (n int, err error) {
+	return 15, nil
+}
+
+func newValidTestWoLTarget() config.WoLTarget {
+	return config.WoLTarget{
+		Name:      "test",
+		Mac:       "01:02:03:04:05:06",
+		Broadcast: "127.0.0.255",
+		Port:      9,
+		Interval:  "15m",
+		NutServer: config.NutServer{
+			Host: "127.0.0.1",
+			Port: 3493,
+			Name: "ups1",
+			Credentials: config.Credentials{
+				Username: "test",
+				Password: "test",
+			},
+		},
+		Rules: []string{},
+	}
+}
+
 func newReadWriteCloser() io.ReadWriteCloser {
 	return &readWriteCloser{
 		BS: []byte{},
+	}
+}
+
+func newReadWriteCloserError() io.ReadWriteCloser {
+	return &readWriteCloserError{
+		readWriteCloser{
+			BS: []byte{},
+		},
 	}
 }
 
@@ -171,6 +208,33 @@ func Test_wakeInternal(t *testing.T) {
 				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
 			},
 		},
+		{
+			name: "invalid write length",
+			args: args{
+				dst: newReadWriteCloserError(),
+				mac: "01:02:03:04:05:06",
+			},
+			wantErr: true,
+			wantSent: []byte{
+				0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -188,6 +252,62 @@ func Test_wakeInternal(t *testing.T) {
 			}
 			if !reflect.DeepEqual(sent, tt.wantSent) {
 				t.Errorf("wakeInternal() got = %v, want %v", sent, tt.wantSent)
+			}
+		})
+	}
+}
+
+func TestNewWoLClient(t *testing.T) {
+	type args struct {
+		target config.WoLTarget
+	}
+	tests := []struct {
+		name string
+		args args
+		want *WakeOnLan
+	}{
+		{
+			name: "valid target",
+			args: args{
+				newValidTestWoLTarget(),
+			},
+			want: &WakeOnLan{newValidTestWoLTarget()},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewWoLClient(tt.args.target); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewWoLClient() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestWakeOnLan_Wake(t *testing.T) {
+	type fields struct {
+		WoLTarget config.WoLTarget
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "valid",
+			fields: fields{
+				newValidTestWoLTarget(),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tgt := &WakeOnLan{
+				WoLTarget: tt.fields.WoLTarget,
+			}
+			if err := tgt.Wake(); (err != nil) != tt.wantErr {
+				t.Errorf("Wake() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
