@@ -5,14 +5,23 @@ import (
 	"net"
 )
 
+type NetworkInterface interface {
+	Addrs() ([]net.Addr, error)
+	MulticastAddrs() ([]net.Addr, error)
+}
+
 func getAllInterfaceAddresses() ([]net.Addr, error) {
-	var validAddresses []net.Addr
 	// Get a list of network interfaces
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		fmt.Println("Error getting network interfaces:", err)
 		return nil, err
 	}
+	return filterAddressesFromInterfaces(interfaces)
+}
+
+func filterAddressesFromInterfaces(interfaces []net.Interface) ([]net.Addr, error) {
+	var validAddresses []net.Addr
 	for _, iface := range interfaces {
 		addrs, err := iface.Addrs()
 		if err != nil {
@@ -77,7 +86,7 @@ func calculateIPv4Broadcast(ipNet *net.IPNet) net.IP {
 
 func IPsToStrings(input []net.IP) []string {
 	if len(input) == 0 {
-		return nil
+		return []string{}
 	}
 	ips := make([]string, len(input))
 	for i, ip := range input {
