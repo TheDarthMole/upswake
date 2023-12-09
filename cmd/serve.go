@@ -41,26 +41,24 @@ func init() {
 }
 
 func runWorker(ctx context.Context, woLTarget *config.WoLTarget) {
+	interval, err := time.ParseDuration(woLTarget.Interval)
+
+	if err != nil {
+		log.Printf("[%s] Stopping Worker. Could not parse interval: %s\n", woLTarget.Name, err)
+		return
+	}
+	ticker := time.NewTicker(interval)
+
 	for {
-		interval, err := time.ParseDuration(woLTarget.Interval)
-
-		if err != nil {
-			log.Printf("[%s] Could not parse interval: %s\n", woLTarget.Name, err)
-			return
-		}
-
-		ticker := time.NewTicker(interval)
 		select {
 		case <-ctx.Done():
-			// TODO: this may not be the best way to stop a goroutine
 			log.Printf("[%s] Stopping worker\n", woLTarget.Name)
 			return
 		case <-ticker.C:
-			err = processWoLTarget(woLTarget)
-			if err != nil {
-				// TODO: this may cause a race condition
+			if err = processWoLTarget(woLTarget); err != nil {
 				log.Printf("[%s] Error processing WoL target: %s\n", woLTarget.Name, err)
 			}
+			ticker.Reset(interval)
 		}
 	}
 }
