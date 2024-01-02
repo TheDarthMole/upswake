@@ -3,12 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/TheDarthMole/UPSWake/api"
+	"github.com/TheDarthMole/UPSWake/api/handlers"
 	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/TheDarthMole/UPSWake/rego"
 	"github.com/TheDarthMole/UPSWake/ups"
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/TheDarthMole/UPSWake/wol"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"io/fs"
 	"log"
 	"os"
@@ -25,12 +28,28 @@ var (
 			initConfig()
 			ctx := context.Background()
 
-			for _, woLTarget := range cfg.WoLTargets {
-				log.Printf("Starting worker for %s with interval %s\n", woLTarget.Name, woLTarget.Interval)
-				go runWorker(ctx, &woLTarget)
+			logger, err := zap.NewProduction()
+			if err != nil {
+				log.Fatalf("can't initialize zap logger: %v", err)
 			}
+			sugar := logger.Sugar()
 
-			select {}
+			server := api.NewServer(ctx, sugar)
+
+			rootHandler := handlers.NewRootHandler()
+			rootHandler.Register(server.Root())
+
+			serverHandler := handlers.NewServerHandler()
+			serverHandler.Register(server.API().Group("/servers"))
+
+			// TODO: Add UPS handler that uses the new api rather than go routines
+			//for _, woLTarget := range cfg.WoLTargets {
+			//	sugar.Infof("Starting worker for %s with interval %s\n", woLTarget.Name, woLTarget.Interval)
+			//	go runWorker(ctx, &woLTarget)
+			//}
+
+			server.PrintRoutes()
+			sugar.Fatal(server.Start(":8080"))
 		},
 	}
 )
