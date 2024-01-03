@@ -13,6 +13,7 @@ import (
 
 const (
 	DefaultNUTPort    = 3493
+	DefaultWoLPort    = 9
 	DefaultConfigFile = "config.yaml"
 )
 
@@ -123,6 +124,12 @@ func (nsm *NutServerMapping) Validate() error {
 	validate := validator.New()
 	if err := validate.Struct(nsm); err != nil {
 		return fmt.Errorf("invalid nutServerMapping: %s", err)
+	}
+
+	for _, target := range nsm.Targets {
+		if err := target.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
