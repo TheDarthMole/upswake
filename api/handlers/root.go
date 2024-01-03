@@ -7,6 +7,10 @@ import (
 
 type RootHandler struct{}
 
+type Response struct {
+	Message string `json:"message"`
+}
+
 func NewRootHandler() *RootHandler {
 	return &RootHandler{}
 }
@@ -16,9 +20,9 @@ func (h *RootHandler) Register(g *echo.Group) {
 }
 
 func (h *RootHandler) Root(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+	return c.JSON(http.StatusOK, Response{Message: "Hello, World!"})
 }
 
 func HandlerNotImplemented(c echo.Context) error {
-	return c.String(http.StatusNotImplemented, "Not Implemented")
+	return c.JSON(http.StatusNotImplemented, Response{Message: "Not Implemented"})
 }
