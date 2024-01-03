@@ -18,18 +18,22 @@ var jsonCmd = &cobra.Command{
 This is useful for testing the connection to a NUT server
 and for creating rego rules for a WoL target`,
 	Run: func(cmd *cobra.Command, args []string) {
-		wolTarget := config.WoLTarget{
+		port, err := cmd.Flags().GetInt("port")
+		if err != nil {
+			log.Fatalf("could not get port: %s", err)
+			return
+		}
+		nutServer := config.NutServer{
 			Name: "test",
-			NutServer: config.NutServer{
-				Host: cmd.Flag("host").Value.String(),
-				Credentials: config.Credentials{
-					Username: cmd.Flag("username").Value.String(),
-					Password: cmd.Flag("password").Value.String(),
-				},
+			Host: cmd.Flag("host").Value.String(),
+			Port: port,
+			Credentials: config.Credentials{
+				Username: cmd.Flag("username").Value.String(),
+				Password: cmd.Flag("password").Value.String(),
 			},
 		}
 
-		ups, err := ups.GetJSON(&wolTarget)
+		ups, err := ups.GetJSON(&nutServer)
 		if err != nil {
 			log.Fatalf("failed to get JSON: %s", err)
 			return
@@ -40,10 +44,10 @@ and for creating rego rules for a WoL target`,
 
 func init() {
 	rootCmd.AddCommand(jsonCmd)
-	jsonCmd.Flags().StringP("username", "u", "", "MAC address of the computer to wake")
-	jsonCmd.Flags().StringP("password", "p", "", "MAC address of the computer to wake")
-	jsonCmd.Flags().StringP("host", "H", "", "MAC address of the computer to wake")
-	jsonCmd.Flags().StringP("port", "P", "9", "MAC address of the computer to wake")
+	jsonCmd.Flags().StringP("username", "u", "", "Username for the NUT server")
+	jsonCmd.Flags().StringP("password", "p", "", "Password for the NUT server")
+	jsonCmd.Flags().StringP("host", "H", "", "Host address of the NUT server")
+	jsonCmd.Flags().IntP("port", "P", 9, "Port number of the NUT server")
 	if err := jsonCmd.MarkFlagRequired("username"); err != nil {
 		_ = jsonCmd.Usage()
 		os.Exit(1)
