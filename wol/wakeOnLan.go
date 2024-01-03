@@ -11,10 +11,10 @@ import (
 const MagicPacketSize = 102
 
 type WakeOnLan struct {
-	config.WoLTarget
+	config.TargetServer
 }
 
-func NewWoLClient(target config.WoLTarget) *WakeOnLan {
+func NewWoLClient(target config.TargetServer) *WakeOnLan {
 	return &WakeOnLan{
 		target,
 	}
@@ -24,7 +24,6 @@ func (tgt *WakeOnLan) Wake() error {
 	if err := tgt.Validate(); err != nil {
 		return err
 	}
-
 	conn, err := net.DialUDP("udp",
 		nil,
 		&net.UDPAddr{

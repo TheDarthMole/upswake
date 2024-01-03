@@ -1,6 +1,9 @@
 package handlers
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+	"net/http"
+)
 
 type RootHandler struct{}
 
@@ -13,5 +16,9 @@ func (h *RootHandler) Register(g *echo.Group) {
 }
 
 func (h *RootHandler) Root(c echo.Context) error {
-	return c.String(200, "Hello, World!")
+	return c.String(http.StatusOK, "Hello, World!")
+}
+
+func HandlerNotImplemented(c echo.Context) error {
+	return c.String(http.StatusNotImplemented, "Not Implemented")
 }

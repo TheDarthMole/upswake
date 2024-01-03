@@ -29,8 +29,7 @@ func Connect(host string, port int, username, password string) (UPS, error) {
 	return UPS{client}, nil
 }
 
-func GetJSON(woLTarget *config.WoLTarget) (string, error) {
-	ns := woLTarget.NutServer
+func GetJSON(ns *config.NutServer) (string, error) {
 	client, err := Connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
 	if err != nil {
 		return "", fmt.Errorf("could not connect to NUT server: %s", err)

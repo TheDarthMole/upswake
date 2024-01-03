@@ -16,7 +16,10 @@ const (
 	DefaultConfigFile = "config.yaml"
 )
 
-var regoFiles hackpadfs.FS
+var (
+	regoFiles hackpadfs.FS
+	validate  *validator.Validate
+)
 
 type NutServer struct {
 	Name        string      `yaml:"name" validate:"required"`
@@ -30,18 +33,26 @@ type Credentials struct {
 	Password string `yaml:"password" validate:"required"`
 }
 
-type WoLTarget struct {
-	Name      string    `yaml:"name" validate:"required"`
-	Mac       string    `yaml:"mac" validate:"required,mac"`
-	Broadcast string    `yaml:"broadcast" validate:"required,ip"`
-	Port      int       `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
-	Interval  string    `yaml:"interval" validate:"duration" default:"15m"`
-	NutServer NutServer `yaml:"nutServer" validate:"required"`
-	Rules     []string  `yaml:"rules" validate:"required,dive,regofile,required"`
+type TargetServerConfig struct {
+	Interval string   `yaml:"interval" validate:"required,duration" default:"15m"`
+	Rules    []string `yaml:"rules" validate:"omitempty,dive,regofile"`
+}
+
+type TargetServer struct {
+	Name      string             `yaml:"name" validate:"required"`
+	Mac       string             `yaml:"mac" validate:"required,mac"`
+	Broadcast string             `yaml:"broadcast" validate:"required,ip"`
+	Port      int                `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
+	Config    TargetServerConfig `yaml:"config" validate:"omitempty"`
+}
+
+type NutServerMapping struct {
+	NutServer NutServer      `yaml:"nutServer"`
+	Targets   []TargetServer `yaml:"targets"`
 }
 
 type Config struct {
-	WoLTargets []WoLTarget `yaml:"wolTargets"`
+	NutServerMappings []NutServerMapping `yaml:"wolTargets"`
 }
 
 func init() {
@@ -54,6 +65,15 @@ func init() {
 		log.Fatalf("could not get subdirectory 'rules': %s", err)
 	}
 	regoFiles = rules
+
+	validate = validator.New()
+	if err = validate.RegisterValidation("duration", Duration, true); err != nil {
+		log.Fatalf("could not register Duration validator: %s", err)
+	}
+
+	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
+		log.Fatalf("could not register IsRegoFile validator: %s", err)
+	}
 
 }
 
@@ -99,25 +119,30 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
 
-func (wol *WoLTarget) Validate() error {
+func (nsm *NutServerMapping) Validate() error {
 	validate := validator.New()
-
-	if err := validate.RegisterValidation("duration", Duration, true); err != nil {
-		return fmt.Errorf("could not register Duration validator: %s", err)
+	if err := validate.Struct(nsm); err != nil {
+		return fmt.Errorf("invalid nutServerMapping: %s", err)
 	}
+	return nil
+}
 
-	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
-		return fmt.Errorf("could not register IsRegoFile validator: %s", err)
-	}
-
+func (wol *TargetServer) Validate() error {
 	if err := validate.Struct(wol); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
+	}
+
+	return nil
+}
+
+func (cfg *TargetServerConfig) Validate() error {
+	if err := validate.Struct(cfg); err != nil {
+		return fmt.Errorf("invalid TargetServerConfig: %s", err)
 	}
 	return nil
 }
 
 func (cred *Credentials) Validate() error {
-	validate := validator.New()
 	if err := validate.Struct(cred); err != nil {
 		return fmt.Errorf("invalid credentials: %s", err)
 	}
@@ -125,7 +150,6 @@ func (cred *Credentials) Validate() error {
 }
 
 func (ns *NutServer) Validate() error {
-	validate := validator.New()
 	if err := validate.Struct(ns); err != nil {
 		return fmt.Errorf("invalid nutServer: %s", err)
 	}
@@ -140,13 +164,13 @@ func (ns *NutServer) GetPort() int {
 }
 
 // IsValid Validate the config
-// ensure all 'WoLTargets' are valid and have a corresponding 'NutServers' that is valid
-// 'NutServers' that are not used are not used by a 'WoLTargets' are not validated
+// ensure all 'NutServerMappings' are valid and have a corresponding 'NutServers' that is valid
+// 'NutServers' that are not used are not used by a 'NutServerMappings' are not validated
 func (cfg *Config) IsValid() error {
-	for _, woLTarget := range cfg.WoLTargets {
-		log.Printf("Validating config for %s\n", woLTarget.Name)
+	for _, nutServerMapping := range cfg.NutServerMappings {
+		log.Printf("Validating config for %s\n", nutServerMapping.NutServer.Name)
 
-		if err := woLTarget.Validate(); err != nil {
+		if err := nutServerMapping.Validate(); err != nil {
 			return err
 		}
 	}
@@ -155,24 +179,30 @@ func (cfg *Config) IsValid() error {
 
 func CreateDefaultConfig() Config {
 	return Config{
-		WoLTargets: []WoLTarget{
+		NutServerMappings: []NutServerMapping{
 			{
-				Name:      "server1",
-				Mac:       "00:00:00:00:00:00",
-				Broadcast: "192.168.1.255",
-				Port:      9,
-				Interval:  "15m",
 				NutServer: NutServer{
+					Name: "ups1",
 					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
-					Name: "ups1",
 					Credentials: Credentials{
 						Username: "upsmon",
 						Password: "bigsecret",
 					},
 				},
-				Rules: []string{
-					"80percentOn.rego",
+				Targets: []TargetServer{
+					{
+						Name:      "server1",
+						Mac:       "00:00:00:00:00:00",
+						Broadcast: "192.168.1.255",
+						Port:      DefaultNUTPort,
+						Config: TargetServerConfig{
+							Interval: "15m",
+							Rules: []string{
+								"80percentOn.rego",
+							},
+						},
+					},
 				},
 			},
 		},
