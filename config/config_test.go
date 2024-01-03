@@ -9,10 +9,32 @@ import (
 	"testing"
 )
 
+const (
+	testMAC   = "01:02:03:04:05:06"
+	localhost = "127.0.0.1"
+)
+
 var (
 	validCredentials = Credentials{
 		Username: "test",
 		Password: "test",
+	}
+	validNutServer = NutServer{
+		Name:        "test",
+		Host:        localhost,
+		Port:        DefaultNUTPort,
+		Credentials: validCredentials,
+	}
+	validTargetServerConfig = TargetServerConfig{
+		Interval: "15m",
+		Rules:    []string{},
+	}
+	validTargetServer = TargetServer{
+		Name:      "test",
+		Mac:       testMAC,
+		Broadcast: "127.0.0.255",
+		Port:      DefaultWoLPort,
+		Config:    validTargetServerConfig,
 	}
 	//go:embed "testing/*"
 	fakedRegoFiles embed.FS
@@ -86,7 +108,7 @@ func TestNutServer_Validate(t *testing.T) {
 			name: "Valid",
 			fields: fields{
 				Name:        "test",
-				Host:        "127.0.0.1",
+				Host:        localhost,
 				Port:        3493,
 				Credentials: validCredentials,
 			},
@@ -96,7 +118,7 @@ func TestNutServer_Validate(t *testing.T) {
 			name: "Missing Name",
 			fields: fields{
 				Name:        "",
-				Host:        "127.0.0.1",
+				Host:        localhost,
 				Port:        3493,
 				Credentials: validCredentials,
 			},
@@ -136,7 +158,7 @@ func TestNutServer_Validate(t *testing.T) {
 			name: "Negative Port Number",
 			fields: fields{
 				Name:        "test",
-				Host:        "127.0.0.1",
+				Host:        localhost,
 				Port:        -1,
 				Credentials: validCredentials,
 			},
@@ -146,7 +168,7 @@ func TestNutServer_Validate(t *testing.T) {
 			name: "Port Number Too Large",
 			fields: fields{
 				Name:        "test",
-				Host:        "127.0.0.1",
+				Host:        localhost,
 				Port:        65536,
 				Credentials: validCredentials,
 			},
@@ -156,7 +178,7 @@ func TestNutServer_Validate(t *testing.T) {
 			name: "Missing Credentials",
 			fields: fields{
 				Name:        "test",
-				Host:        "127.0.0.1",
+				Host:        localhost,
 				Port:        3493,
 				Credentials: Credentials{},
 			},
@@ -224,13 +246,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Valid With No Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: false,
 			// TODO: Add tests for rules
@@ -239,9 +258,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Rule Location",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
-				Broadcast: "127.0.0.1",
-				Port:      9,
+				Mac:       testMAC,
+				Broadcast: localhost,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "15m",
 					Rules:    []string{"fileDoesNotExist.rego"},
@@ -253,9 +272,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Valid With Rule",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
-				Broadcast: "127.0.0.1",
-				Port:      9,
+				Mac:       testMAC,
+				Broadcast: localhost,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "15m",
 					Rules:    []string{"80percentOn.rego"},
@@ -267,9 +286,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Rego File",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
-				Broadcast: "127.0.0.1",
-				Port:      9,
+				Mac:       testMAC,
+				Broadcast: localhost,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "15m",
 					Rules:    []string{"regoWithSyntaxError.rego"},
@@ -281,9 +300,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Multiple Valid Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
-				Broadcast: "127.0.0.1",
-				Port:      9,
+				Mac:       testMAC,
+				Broadcast: localhost,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "15m",
 					Rules: []string{
@@ -298,9 +317,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "One Valid One Invalid Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
-				Broadcast: "127.0.0.1",
-				Port:      9,
+				Mac:       testMAC,
+				Broadcast: localhost,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "15m",
 					Rules: []string{
@@ -315,13 +334,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Name",
 			fields: TargetServer{
 				Name:      "",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -331,11 +347,8 @@ func TestTargetServer_Validate(t *testing.T) {
 				Name:      "test",
 				Mac:       "",
 				Broadcast: "127.0.0.255",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -345,11 +358,8 @@ func TestTargetServer_Validate(t *testing.T) {
 				Name:      "test",
 				Mac:       "invalid!mac",
 				Broadcast: "127.0.0.255",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -357,13 +367,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Broadcast",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -371,13 +378,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Broadcast",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "invalid!broadcast",
-				Port:      9,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Port:      DefaultWoLPort,
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -385,13 +389,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Negative Port Number",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
 				Port:      -1,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -399,13 +400,10 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Port Number Too Large",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
 				Port:      65536,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{},
-				},
+				Config:    validTargetServerConfig,
 			},
 			wantErr: true,
 		},
@@ -413,9 +411,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Interval",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
-				Port:      9,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "",
 					Rules:    []string{},
@@ -427,9 +425,9 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Interval",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       "12:34:56:78:90:ab",
+				Mac:       testMAC,
 				Broadcast: "127.0.0.255",
-				Port:      9,
+				Port:      DefaultWoLPort,
 				Config: TargetServerConfig{
 					Interval: "invalid!interval",
 					Rules:    []string{},
@@ -448,85 +446,146 @@ func TestTargetServer_Validate(t *testing.T) {
 }
 
 // TODO: Fix these tests to fit new structure
-//func TestConfig_IsValid(t *testing.T) {
-//	type fields struct {
-//		WoLTargets []TargetServer
-//	}
-//	tests := []struct {
-//		name    string
-//		fields  fields
-//		wantErr bool
-//	}{
-//		{
-//			name: "Valid",
-//			fields: fields{
-//				WoLTargets: []TargetServer{
-//					validWoLTarget,
-//				},
-//			},
-//			wantErr: false,
-//		},
-//		{
-//			name: "Empty NutServerMappings",
-//			fields: fields{
-//				WoLTargets: []TargetServer{},
-//			},
-//			wantErr: false,
-//		},
-//		{
-//			name: "Invalid TargetServer",
-//			fields: fields{
-//				WoLTargets: []TargetServer{
-//					{
-//						Name:      "test",
-//						Mac:       "12:34:56:78:90:ab",
-//						Broadcast: "127.0.0.255",
-//						Port:      9,
-//					},
-//				},
-//			},
-//			wantErr: true,
-//		},
-//		{
-//			name: "Invalid NutServer",
-//			fields: fields{
-//				WoLTargets: []TargetServer{
-//					{
-//						Name:      "test",
-//						Mac:       "12:34:56:78:90:ab",
-//						Broadcast: "127.0.0.255",
-//						Port:      9,
-//					},
-//				},
-//			},
-//			wantErr: true,
-//		},
-//		{
-//			name: "Invalid Credentials",
-//			fields: fields{
-//				WoLTargets: []TargetServer{
-//					{
-//						Name:      "test",
-//						Mac:       "12:34:56:78:90:ab",
-//						Broadcast: "127.0.0.255",
-//						Port:      9,
-//					},
-//				},
-//			},
-//			wantErr: true,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			cfg := &Config{
-//				NutServerMappings: tt.fields.WoLTargets,
-//			}
-//			if err := cfg.IsValid(); (err != nil) != tt.wantErr {
-//				t.Errorf("IsValid() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//		})
-//	}
-//}
+func TestConfig_IsValid(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  Config
+		wantErr bool
+	}{
+		{
+			name: "Valid",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Multiple Valid",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid NutServer",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+					{
+						NutServer: NutServer{
+							Name:        "test",
+							Host:        "invalid9!host",
+							Port:        DefaultNUTPort,
+							Credentials: validCredentials,
+						},
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "One Valid one Invalid NutServer",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: NutServer{
+							Name:        "test",
+							Host:        "invalid9!host",
+							Port:        DefaultNUTPort,
+							Credentials: validCredentials,
+						},
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Invalid TargetServer",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							{
+								Name:      "test",
+								Mac:       "invalid!mac",
+								Broadcast: "127.0.0.255",
+								Port:      DefaultWoLPort,
+								Config:    validTargetServer.Config,
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "One Valid one Invalid TargetServer",
+			config: Config{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							{
+								Name:      "test",
+								Mac:       "invalid!mac",
+								Broadcast: "127.0.0.255",
+								Port:      DefaultWoLPort,
+								Config:    validTargetServer.Config,
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			if err := tt.config.IsValid(); (err != nil) != tt.wantErr {
+				t.Errorf("IsValid() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
 
 func TestDuration(t *testing.T) {
 	type args struct {
