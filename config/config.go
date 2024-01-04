@@ -53,7 +53,7 @@ type NutServerMapping struct {
 }
 
 type Config struct {
-	NutServerMappings []NutServerMapping `yaml:"wolTargets"`
+	NutServerMappings []NutServerMapping `yaml:"upswake"`
 }
 
 func init() {
@@ -189,7 +189,7 @@ func CreateDefaultConfig() Config {
 		NutServerMappings: []NutServerMapping{
 			{
 				NutServer: NutServer{
-					Name: "ups1",
+					Name: "nutserver1",
 					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
 					Credentials: Credentials{
@@ -202,7 +202,7 @@ func CreateDefaultConfig() Config {
 						Name:      "server1",
 						Mac:       "00:00:00:00:00:00",
 						Broadcast: "192.168.1.255",
-						Port:      DefaultNUTPort,
+						Port:      DefaultWoLPort,
 						Config: TargetServerConfig{
 							Interval: "15m",
 							Rules: []string{
