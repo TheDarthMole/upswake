@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -17,10 +18,18 @@ func NewRootHandler() *RootHandler {
 
 func (h *RootHandler) Register(g *echo.Group) {
 	g.GET("/", h.Root)
+	g.GET("/health", h.Health)
 }
 
 func (h *RootHandler) Root(c echo.Context) error {
 	return c.JSON(http.StatusOK, Response{Message: "Hello, World!"})
+}
+
+func (h *RootHandler) Health(c echo.Context) error {
+	if _, err := util.GetAllBroadcastAddresses(); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, Response{Message: "OK"})
 }
 
 func HandlerNotImplemented(c echo.Context) error {
