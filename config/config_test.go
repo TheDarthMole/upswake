@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	validCredentials = Credentials{
+	validCredentials = NutCredentials{
 		Username: "test",
 		Password: "test",
 	}
@@ -81,7 +81,7 @@ func TestCredentials_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cred := &Credentials{
+			cred := &NutCredentials{
 				Username: tt.fields.Username,
 				Password: tt.fields.Password,
 			}
@@ -97,7 +97,7 @@ func TestNutServer_Validate(t *testing.T) {
 		Name        string
 		Host        string
 		Port        int
-		Credentials Credentials
+		Credentials NutCredentials
 	}
 	tests := []struct {
 		name    string
@@ -175,12 +175,12 @@ func TestNutServer_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Missing Credentials",
+			name: "Missing NutCredentials",
 			fields: fields{
 				Name:        "test",
 				Host:        localhost,
 				Port:        3493,
-				Credentials: Credentials{},
+				Credentials: NutCredentials{},
 			},
 			wantErr: true,
 		},
@@ -580,8 +580,8 @@ func TestConfig_IsValid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			if err := tt.config.IsValid(); (err != nil) != tt.wantErr {
-				t.Errorf("IsValid() error = %v, wantErr %v", err, tt.wantErr)
+			if err := tt.config.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -658,7 +658,7 @@ func TestDuration(t *testing.T) {
 func TestCreateDefaultConfig(t *testing.T) {
 	t.Run("Validate Default Config", func(t *testing.T) {
 		got := CreateDefaultConfig()
-		if got.IsValid() != nil {
+		if got.Validate() != nil {
 			t.Errorf("CreateDefaultConfig() = %v, want valid config", got)
 		}
 	})

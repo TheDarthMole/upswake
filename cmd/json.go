@@ -27,7 +27,7 @@ and for creating rego rules for a WoL target`,
 			Name: "test",
 			Host: cmd.Flag("host").Value.String(),
 			Port: port,
-			Credentials: config.Credentials{
+			Credentials: config.NutCredentials{
 				Username: cmd.Flag("username").Value.String(),
 				Password: cmd.Flag("password").Value.String(),
 			},
