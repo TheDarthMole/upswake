@@ -35,13 +35,15 @@ var (
 			serverHandler := handlers.NewServerHandler()
 			serverHandler.Register(server.API().Group("/servers"))
 
+			upsWakeHandler := handlers.NewUPSWakeHandler(&cfg)
+			upsWakeHandler.Register(server.API().Group("/upswake"))
 			// TODO: Add UPS handler that uses the new api rather than go routines
 			//for _, woLTarget := range cfg.NutServerMappings {
 			//	sugar.Infof("Starting worker for %s with interval %s\n", woLTarget.Name, woLTarget.Interval)
 			//	go runWorker(ctx, &woLTarget)
 			//}
 
-			server.PrintRoutes()
+			//server.PrintRoutes()
 			sugar.Fatal(server.Start(":8080"))
 		},
 	}

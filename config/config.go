@@ -14,7 +14,8 @@ import (
 const (
 	DefaultNUTPort    = 3493
 	DefaultWoLPort    = 9
-	DefaultConfigFile = "config.yaml"
+	DefaultConfigFile = "config"
+	DefaultConfigExt  = "yaml"
 )
 
 var (
@@ -23,13 +24,13 @@ var (
 )
 
 type NutServer struct {
-	Name        string      `yaml:"name" validate:"required"`
-	Host        string      `yaml:"host" validate:"required,ip|hostname"`
-	Port        int         `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
-	Credentials Credentials `yaml:"credentials" validate:"required"`
+	Name        string         `yaml:"name" validate:"required"`
+	Host        string         `yaml:"host" validate:"required,ip|hostname"`
+	Port        int            `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
+	Credentials NutCredentials `yaml:"credentials" validate:"required"`
 }
 
-type Credentials struct {
+type NutCredentials struct {
 	Username string `yaml:"username" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 }
@@ -53,7 +54,7 @@ type NutServerMapping struct {
 }
 
 type Config struct {
-	NutServerMappings []NutServerMapping `yaml:"upswake"`
+	NutServerMappings []NutServerMapping `yaml:"sample"`
 }
 
 func init() {
@@ -149,7 +150,7 @@ func (cfg *TargetServerConfig) Validate() error {
 	return nil
 }
 
-func (cred *Credentials) Validate() error {
+func (cred *NutCredentials) Validate() error {
 	if err := validate.Struct(cred); err != nil {
 		return fmt.Errorf("invalid credentials: %s", err)
 	}
@@ -170,10 +171,14 @@ func (ns *NutServer) GetPort() int {
 	return ns.Port
 }
 
-// IsValid Validate the config
+// Validate Validation of the config
 // ensure all 'NutServerMappings' are valid and have a corresponding 'NutServers' that is valid
 // 'NutServers' that are not used are not used by a 'NutServerMappings' are not validated
-func (cfg *Config) IsValid() error {
+func (cfg *Config) Validate() error {
+	if reflect.DeepEqual(cfg, &Config{}) {
+		return fmt.Errorf("config is nil")
+	}
+
 	for _, nutServerMapping := range cfg.NutServerMappings {
 		log.Printf("Validating config for %s\n", nutServerMapping.NutServer.Name)
 
@@ -192,7 +197,7 @@ func CreateDefaultConfig() Config {
 					Name: "nutserver1",
 					Host: "192.168.1.13",
 					Port: DefaultNUTPort,
-					Credentials: Credentials{
+					Credentials: NutCredentials{
 						Username: "upsmon",
 						Password: "bigsecret",
 					},

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -12,6 +13,7 @@ type Server struct {
 	ctx   context.Context
 	echo  *echo.Echo
 	sugar *zap.SugaredLogger
+	cfg   *config.Config
 }
 
 type CustomValidator struct {
