@@ -21,5 +21,11 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 }
 
 func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
-	return c.JSON(http.StatusOK, h.cfg.NutServerMappings)
+	mappings := h.cfg.NutServerMappings
+	// Don't leak passwords
+	for i, mapping := range mappings {
+		mapping.NutServer.Credentials.Password = "********"
+		mappings[i] = mapping
+	}
+	return c.JSON(http.StatusOK, mappings)
 }
