@@ -2,8 +2,10 @@ definitions:
   handlers.BroadcastWakeRequest:
     properties:
       mac:
+        example: "00:11:22:33:44:55"
         type: string
       port:
+        example: 9
         maximum: 65535
         minimum: 1
         type: integer
@@ -18,10 +20,13 @@ definitions:
   handlers.WakeServerRequest:
     properties:
       broadcast:
+        example: 192.168.1.13
         type: string
       mac:
+        example: "00:11:22:33:44:55"
         type: string
       port:
+        example: 9
         maximum: 65535
         minimum: 1
         type: integer
@@ -48,7 +53,8 @@ paths:
       - application/json
       responses:
         "201":
-          description: Wake on LAN packets sent to all available broadcast addresses
+          description: Wake on LAN packets successfully sent to all available broadcast
+            addresses
           schema:
             $ref: '#/definitions/handlers.Response'
         "400":
