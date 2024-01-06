@@ -1,0 +1,95 @@
+definitions:
+  handlers.BroadcastWakeRequest:
+    properties:
+      mac:
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - mac
+    type: object
+  handlers.Response:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.WakeServerRequest:
+    properties:
+      broadcast:
+        type: string
+      mac:
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - broadcast
+    - mac
+    type: object
+info:
+  contact: {}
+paths:
+  /servers/broadcastwake:
+    post:
+      consumes:
+      - application/json
+      description: Wake a server using Wake on LAN
+      parameters:
+      - description: Broadcast wake request
+        in: body
+        name: broadcastWakeRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BroadcastWakeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Wake on LAN packets sent to all available broadcast addresses
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Wake a server using just a mac (broadcast is enumerated)
+      tags:
+      - servers
+  /servers/wake:
+    post:
+      consumes:
+      - application/json
+      description: Wake a server using Wake on LAN
+      parameters:
+      - description: Wake server request
+        in: body
+        name: wakeServerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.WakeServerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Wake a server using a mac and a broadcast address
+      tags:
+      - servers
+swagger: "2.0"

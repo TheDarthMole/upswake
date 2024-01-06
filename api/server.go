@@ -3,9 +3,11 @@ package api
 import (
 	"context"
 	"github.com/TheDarthMole/UPSWake/config"
+	_ "github.com/TheDarthMole/UPSWake/docs"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 )
 
@@ -32,6 +34,8 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app.Validator = &CustomValidator{validator: validator.New()}
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.Logger())
+
+	app.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	return &Server{
 		ctx:   ctx,
