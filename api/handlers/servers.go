@@ -11,14 +11,14 @@ import (
 type ServerHandler struct{}
 
 type WakeServerRequest struct {
-	Port      int    `json:"port" validate:"gte=1,lte=65535"`
-	Broadcast string `json:"broadcast" validate:"required,ip"`
-	Mac       string `json:"mac" validate:"required,mac"`
+	Port      int    `json:"port" validate:"gte=1,lte=65535" example:"9"`
+	Broadcast string `json:"broadcast" validate:"required,ip" example:"192.168.1.13"`
+	Mac       string `json:"mac" validate:"required,mac" example:"00:11:22:33:44:55"`
 }
 
 type BroadcastWakeRequest struct {
-	Port int    `json:"port" validate:"gte=1,lte=65535"`
-	Mac  string `json:"mac" validate:"required,mac"`
+	Port int    `json:"port" validate:"gte=1,lte=65535" example:"9"`
+	Mac  string `json:"mac" validate:"required,mac" example:"00:11:22:33:44:55"`
 }
 
 func NewWakeServerRequest() *WakeServerRequest {

@@ -41,7 +41,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Wake on LAN packets sent to all available broadcast addresses",
+                        "description": "Wake on LAN packets successfully sent to all available broadcast addresses",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
@@ -116,12 +116,14 @@ const docTemplate = `{
             ],
             "properties": {
                 "mac": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
                 },
                 "port": {
                     "type": "integer",
                     "maximum": 65535,
-                    "minimum": 1
+                    "minimum": 1,
+                    "example": 9
                 }
             }
         },
@@ -141,15 +143,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "broadcast": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "192.168.1.13"
                 },
                 "mac": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
                 },
                 "port": {
                     "type": "integer",
                     "maximum": 65535,
-                    "minimum": 1
+                    "minimum": 1,
+                    "example": 9
                 }
             }
         }
