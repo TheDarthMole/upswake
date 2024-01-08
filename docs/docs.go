@@ -33,6 +33,17 @@ const docTemplate = `{
         },
         "/health": {
             "get": {
+                "description": "Health check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "root"
+                ],
+                "summary": "Health check",
                 "responses": {
                     "200": {
                         "description": "OK",

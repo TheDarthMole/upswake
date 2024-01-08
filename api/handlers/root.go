@@ -41,9 +41,9 @@ func (h *RootHandler) Root(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //
-// @Success	200	{object}	Response	"OK"
-// @Failure	500	{object}	Response
-// @Router		/health [get]
+//	@Success		200	{object}	Response	"OK"
+//	@Failure		500	{object}	Response
+//	@Router			/health [get]
 func (h *RootHandler) Health(c echo.Context) error {
 	if _, err := util.GetAllBroadcastAddresses(); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})

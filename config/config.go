@@ -54,7 +54,7 @@ type NutServerMapping struct {
 }
 
 type Config struct {
-	NutServerMappings []NutServerMapping `yaml:"sample"`
+	NutServerMappings []NutServerMapping `yaml:"upswake"`
 }
 
 func init() {
