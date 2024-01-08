@@ -33,23 +33,16 @@ func (rwc *readWriteCloserError) Write(p []byte) (n int, err error) {
 	return 15, nil
 }
 
-func newValidTestWoLTarget() config.WoLTarget {
-	return config.WoLTarget{
+func newValidTestWoLTarget() config.TargetServer {
+	return config.TargetServer{
 		Name:      "test",
 		Mac:       "01:02:03:04:05:06",
 		Broadcast: "127.0.0.255",
 		Port:      9,
-		Interval:  "15m",
-		NutServer: config.NutServer{
-			Host: "127.0.0.1",
-			Port: 3493,
-			Name: "ups1",
-			Credentials: config.Credentials{
-				Username: "test",
-				Password: "test",
-			},
+		Config: config.TargetServerConfig{
+			Interval: "15m",
+			Rules:    []string{},
 		},
-		Rules: []string{},
 	}
 }
 
@@ -259,7 +252,7 @@ func Test_wakeInternal(t *testing.T) {
 
 func TestNewWoLClient(t *testing.T) {
 	type args struct {
-		target config.WoLTarget
+		target config.TargetServer
 	}
 	tests := []struct {
 		name string
@@ -286,7 +279,7 @@ func TestNewWoLClient(t *testing.T) {
 
 func TestWakeOnLan_Wake(t *testing.T) {
 	type fields struct {
-		WoLTarget config.WoLTarget
+		WoLTarget config.TargetServer
 	}
 	tests := []struct {
 		name    string
@@ -304,7 +297,7 @@ func TestWakeOnLan_Wake(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tgt := &WakeOnLan{
-				WoLTarget: tt.fields.WoLTarget,
+				TargetServer: tt.fields.WoLTarget,
 			}
 			if err := tgt.Wake(); (err != nil) != tt.wantErr {
 				t.Errorf("Wake() error = %v, wantErr %v", err, tt.wantErr)

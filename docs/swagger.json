@@ -1,0 +1,385 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Redirect to swagger docs",
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "root"
+                ],
+                "summary": "Root redirect to swagger",
+                "responses": {}
+            }
+        },
+        "/health": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/servers/broadcastwake": {
+            "post": {
+                "description": "Wake a server using Wake on LAN by using the mac and enumerating all available broadcast addresses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "servers"
+                ],
+                "summary": "Wake a server using just a mac",
+                "parameters": [
+                    {
+                        "description": "Broadcast wake request",
+                        "name": "broadcastWakeRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BroadcastWakeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Wake on LAN packets successfully sent to all available broadcast addresses",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Input validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Wake on LAN packet failed to send",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/servers/wake": {
+            "post": {
+                "description": "Wake a server using Wake on LAN using the mac and broadcast address provided",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "servers"
+                ],
+                "summary": "Wake a server using a mac and a broadcast address",
+                "parameters": [
+                    {
+                        "description": "Wake server request",
+                        "name": "wakeServerRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.WakeServerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Wake on LAN packet sent",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Input validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Wake on LAN packet failed to send",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/upswake": {
+            "get": {
+                "description": "List NUT server mappings using the config stored in the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UPSWake"
+                ],
+                "summary": "List NUT server mappings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/config.Config"
+                        }
+                    }
+                }
+            }
+        },
+        "/upswake/{mac}": {
+            "post": {
+                "description": "Run wake evaluation using the config and rules stored in the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UPSWake"
+                ],
+                "summary": "Run wake evaluation",
+                "parameters": [
+                    {
+                        "description": "MAC address",
+                        "name": "macAddress",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.macAddress"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wake on LAN sent",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "304": {
+                        "description": "No rule evaluated to true",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "MAC address not found in the config",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "config.Config": {
+            "type": "object",
+            "properties": {
+                "nutServerMappings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/config.NutServerMapping"
+                    }
+                }
+            }
+        },
+        "config.NutCredentials": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "config.NutServer": {
+            "type": "object",
+            "required": [
+                "credentials",
+                "host",
+                "name"
+            ],
+            "properties": {
+                "credentials": {
+                    "$ref": "#/definitions/config.NutCredentials"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                }
+            }
+        },
+        "config.NutServerMapping": {
+            "type": "object",
+            "properties": {
+                "nutServer": {
+                    "$ref": "#/definitions/config.NutServer"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/config.TargetServer"
+                    }
+                }
+            }
+        },
+        "config.TargetServer": {
+            "type": "object",
+            "required": [
+                "broadcast",
+                "mac",
+                "name"
+            ],
+            "properties": {
+                "broadcast": {
+                    "type": "string"
+                },
+                "config": {
+                    "$ref": "#/definitions/config.TargetServerConfig"
+                },
+                "mac": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 9,
+                    "maximum": 65535,
+                    "minimum": 1
+                }
+            }
+        },
+        "config.TargetServerConfig": {
+            "type": "object",
+            "required": [
+                "interval"
+            ],
+            "properties": {
+                "interval": {
+                    "type": "string",
+                    "default": "15m"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.BroadcastWakeRequest": {
+            "type": "object",
+            "required": [
+                "mac"
+            ],
+            "properties": {
+                "mac": {
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 9
+                }
+            }
+        },
+        "handlers.Response": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.WakeServerRequest": {
+            "type": "object",
+            "required": [
+                "broadcast",
+                "mac"
+            ],
+            "properties": {
+                "broadcast": {
+                    "type": "string",
+                    "example": "192.168.1.13"
+                },
+                "mac": {
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 9
+                }
+            }
+        },
+        "handlers.macAddress": {
+            "type": "object",
+            "properties": {
+                "mac": {
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
+                }
+            }
+        }
+    }
+}

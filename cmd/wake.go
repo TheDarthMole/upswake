@@ -42,7 +42,8 @@ var wakeCmd = &cobra.Command{
 		}
 
 		for _, broadcast := range ipBroadcasts {
-			wolClient := wol.NewWoLClient(config.WoLTarget{
+			wolClient := wol.NewWoLClient(config.TargetServer{
+				Name:      "CLI Request",
 				Mac:       mac,
 				Broadcast: broadcast.String(),
 				Port:      WoLPort,

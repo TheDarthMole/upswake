@@ -1,0 +1,259 @@
+definitions:
+  config.Config:
+    properties:
+      nutServerMappings:
+        items:
+          $ref: '#/definitions/config.NutServerMapping'
+        type: array
+    type: object
+  config.NutCredentials:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  config.NutServer:
+    properties:
+      credentials:
+        $ref: '#/definitions/config.NutCredentials'
+      host:
+        type: string
+      name:
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - credentials
+    - host
+    - name
+    type: object
+  config.NutServerMapping:
+    properties:
+      nutServer:
+        $ref: '#/definitions/config.NutServer'
+      targets:
+        items:
+          $ref: '#/definitions/config.TargetServer'
+        type: array
+    type: object
+  config.TargetServer:
+    properties:
+      broadcast:
+        type: string
+      config:
+        $ref: '#/definitions/config.TargetServerConfig'
+      mac:
+        type: string
+      name:
+        type: string
+      port:
+        default: 9
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - broadcast
+    - mac
+    - name
+    type: object
+  config.TargetServerConfig:
+    properties:
+      interval:
+        default: 15m
+        type: string
+      rules:
+        items:
+          type: string
+        type: array
+    required:
+    - interval
+    type: object
+  handlers.BroadcastWakeRequest:
+    properties:
+      mac:
+        example: "00:11:22:33:44:55"
+        type: string
+      port:
+        example: 9
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - mac
+    type: object
+  handlers.Response:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.WakeServerRequest:
+    properties:
+      broadcast:
+        example: 192.168.1.13
+        type: string
+      mac:
+        example: "00:11:22:33:44:55"
+        type: string
+      port:
+        example: 9
+        maximum: 65535
+        minimum: 1
+        type: integer
+    required:
+    - broadcast
+    - mac
+    type: object
+  handlers.macAddress:
+    properties:
+      mac:
+        example: "00:11:22:33:44:55"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /:
+    get:
+      consumes:
+      - text/plain
+      description: Redirect to swagger docs
+      produces:
+      - text/html
+      responses: {}
+      summary: Root redirect to swagger
+      tags:
+      - root
+  /health:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+  /servers/broadcastwake:
+    post:
+      consumes:
+      - application/json
+      description: Wake a server using Wake on LAN by using the mac and enumerating
+        all available broadcast addresses
+      parameters:
+      - description: Broadcast wake request
+        in: body
+        name: broadcastWakeRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BroadcastWakeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Wake on LAN packets successfully sent to all available broadcast
+            addresses
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Input validation failed
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Wake on LAN packet failed to send
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Wake a server using just a mac
+      tags:
+      - servers
+  /servers/wake:
+    post:
+      consumes:
+      - application/json
+      description: Wake a server using Wake on LAN using the mac and broadcast address
+        provided
+      parameters:
+      - description: Wake server request
+        in: body
+        name: wakeServerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.WakeServerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Wake on LAN packet sent
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Input validation failed
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Wake on LAN packet failed to send
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Wake a server using a mac and a broadcast address
+      tags:
+      - servers
+  /upswake:
+    get:
+      consumes:
+      - application/json
+      description: List NUT server mappings using the config stored in the server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.Config'
+      summary: List NUT server mappings
+      tags:
+      - UPSWake
+  /upswake/{mac}:
+    post:
+      consumes:
+      - application/json
+      description: Run wake evaluation using the config and rules stored in the server
+      parameters:
+      - description: MAC address
+        in: body
+        name: macAddress
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.macAddress'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wake on LAN sent
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "304":
+          description: No rule evaluated to true
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "404":
+          description: MAC address not found in the config
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Run wake evaluation
+      tags:
+      - UPSWake
+swagger: "2.0"
