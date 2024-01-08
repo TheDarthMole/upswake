@@ -118,11 +118,34 @@ definitions:
 info:
   contact: {}
 paths:
+  /:
+    get:
+      consumes:
+      - text/plain
+      description: Redirect to swagger docs
+      produces:
+      - text/html
+      responses: {}
+      summary: Root redirect to swagger
+      tags:
+      - root
+  /health:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
   /servers/broadcastwake:
     post:
       consumes:
       - application/json
-      description: Wake a server using Wake on LAN
+      description: Wake a server using Wake on LAN by using the mac and enumerating
+        all available broadcast addresses
       parameters:
       - description: Broadcast wake request
         in: body
@@ -139,21 +162,22 @@ paths:
           schema:
             $ref: '#/definitions/handlers.Response'
         "400":
-          description: Bad Request
+          description: Input validation failed
           schema:
             $ref: '#/definitions/handlers.Response'
         "500":
-          description: Internal Server Error
+          description: Wake on LAN packet failed to send
           schema:
             $ref: '#/definitions/handlers.Response'
-      summary: Wake a server using just a mac (broadcast is enumerated)
+      summary: Wake a server using just a mac
       tags:
       - servers
   /servers/wake:
     post:
       consumes:
       - application/json
-      description: Wake a server using Wake on LAN
+      description: Wake a server using Wake on LAN using the mac and broadcast address
+        provided
       parameters:
       - description: Wake server request
         in: body
@@ -165,15 +189,15 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Wake on LAN packet sent
           schema:
             $ref: '#/definitions/handlers.Response'
         "400":
-          description: Bad Request
+          description: Input validation failed
           schema:
             $ref: '#/definitions/handlers.Response'
         "500":
-          description: Internal Server Error
+          description: Wake on LAN packet failed to send
           schema:
             $ref: '#/definitions/handlers.Response'
       summary: Wake a server using a mac and a broadcast address
