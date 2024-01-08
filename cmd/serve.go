@@ -1,14 +1,25 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"github.com/TheDarthMole/UPSWake/api"
 	"github.com/TheDarthMole/UPSWake/api/handlers"
+	"github.com/TheDarthMole/UPSWake/config"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
+	"time"
+)
+
+const (
+	listenHost   = "localhost"
+	listenPort   = ":8080"
+	listenScheme = "http://"
+	localURL     = listenScheme + listenHost + listenPort
 )
 
 var (
@@ -20,13 +31,12 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			initConfig()
 			ctx := context.Background()
-
 			logger, err := zap.NewProduction()
 			if err != nil {
 				log.Fatalf("can't initialize zap logger: %v", err)
 			}
-			sugar := logger.Sugar()
 
+			sugar := logger.Sugar()
 			server := api.NewServer(ctx, sugar)
 
 			rootHandler := handlers.NewRootHandler()
@@ -35,16 +45,17 @@ var (
 			serverHandler := handlers.NewServerHandler()
 			serverHandler.Register(server.API().Group("/servers"))
 
-			upsWakeHandler := handlers.NewUPSWakeHandler(&cfg)
+			upsWakeHandler := handlers.NewUPSWakeHandler(&cfg, regoFiles)
 			upsWakeHandler.Register(server.API().Group("/upswake"))
-			// TODO: Add UPS handler that uses the new api rather than go routines
-			//for _, woLTarget := range cfg.NutServerMappings {
-			//	sugar.Infof("Starting worker for %s with interval %s\n", woLTarget.Name, woLTarget.Interval)
-			//	go runWorker(ctx, &woLTarget)
-			//}
+
+			for _, mapping := range cfg.NutServerMappings {
+				for _, target := range mapping.Targets {
+					go processTarget(ctx, sugar, target)
+				}
+			}
 
 			//server.PrintRoutes()
-			sugar.Fatal(server.Start(":8080"))
+			sugar.Fatal(server.Start(listenPort))
 		},
 	}
 )
@@ -54,57 +65,39 @@ func init() {
 	regoFiles = os.DirFS("rules")
 }
 
-//
-//func runWorker(ctx context.Context, nutServerMapping *config.NutServerMapping) {
-//	interval, err := time.ParseDuration(nutServerMapping.Targets)
-//
-//	if err != nil {
-//		log.Printf("[%s] Stopping Worker. Could not parse interval: %s\n", nutServerMapping.Name, err)
-//		return
-//	}
-//	ticker := time.NewTicker(interval)
-//
-//	for {
-//		select {
-//		case <-ctx.Done():
-//			log.Printf("[%s] Stopping worker\n", nutServerMapping.Name)
-//			return
-//		case <-ticker.C:
-//			if err = processWoLTarget(nutServerMapping); err != nil {
-//				log.Printf("[%s] Error processing WoL target: %s\n", nutServerMapping.Name, err)
-//			}
-//			ticker.Reset(interval)
-//		}
-//	}
-//}
-//
-//func processWoLTarget(woLTarget *config.TargetServer) error {
-//	inputJson, err := ups.GetJSON(woLTarget)
-//	if err != nil {
-//		return err
-//	}
-//	for _, ruleName := range woLTarget.Rules {
-//		log.Printf("[%s] Evaluating rule %s\n", woLTarget.Name, ruleName)
-//
-//		regoRule, err := util.GetFile(regoFiles, ruleName)
-//		if err != nil {
-//			return fmt.Errorf("could not get file: %s", err)
-//		}
-//
-//		allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
-//		if err != nil {
-//			return fmt.Errorf("could not evaluate expression: %s", err)
-//		}
-//		log.Printf("[%s] Rule %s evaluated to %t\n", woLTarget.Name, ruleName, allowed)
-//
-//		if allowed {
-//			wolClient := wol.NewWoLClient(*woLTarget)
-//
-//			if err = wolClient.Wake(); err != nil {
-//				return fmt.Errorf("could not send WoL packet: %s", err)
-//			}
-//			log.Printf("[%s] Sent WoL packet to %s (%s)\n", woLTarget.Name, woLTarget.Name, woLTarget.Mac)
-//		}
-//	}
-//	return nil
-//}
+func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.TargetServer) {
+	sugar.Infof("[%s] Starting worker", target.Name)
+	interval, err := time.ParseDuration(target.Config.Interval)
+	if err != nil {
+		sugar.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
+		return
+	}
+	ticker := time.NewTicker(interval)
+	for {
+		select {
+		case <-ctx.Done():
+			sugar.Infof("[%s] Gracefully stopping worker\n", target.Name)
+			return
+		case <-ticker.C:
+			sendWakeRequest(ctx, target)
+			ticker.Reset(interval)
+		}
+	}
+}
+
+func sendWakeRequest(ctx context.Context, target config.TargetServer) {
+	body := []byte(`{"mac":"` + target.Mac + `"}`)
+	r, err := http.NewRequestWithContext(ctx, "POST", localURL+"/api/upswake", bytes.NewBuffer(body))
+	if err != nil {
+		log.Fatalf("Error creating post request: %s", err)
+	}
+	r.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(r)
+	if err != nil {
+		log.Fatalf("Error sending post request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("Error sending post request: %s", resp.Status)
+	}
+}
