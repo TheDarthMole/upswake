@@ -135,8 +135,8 @@ func (nsm *NutServerMapping) Validate() error {
 	return nil
 }
 
-func (wol *TargetServer) Validate() error {
-	if err := validate.Struct(wol); err != nil {
+func (ts *TargetServer) Validate() error {
+	if err := validate.Struct(ts); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
 

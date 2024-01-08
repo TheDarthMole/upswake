@@ -40,7 +40,6 @@ func NewServerHandler() *ServerHandler {
 func (h *ServerHandler) Register(g *echo.Group) {
 	g.POST("/wake", h.WakeServer)
 	g.POST("/broadcastwake", h.BroadcastWakeServer)
-	g.GET("/:mac", HandlerNotImplemented)
 }
 
 // WakeServer godoc
