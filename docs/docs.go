@@ -15,9 +15,43 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/": {
+            "get": {
+                "description": "Redirect to swagger docs",
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "root"
+                ],
+                "summary": "Root redirect to swagger",
+                "responses": {}
+            }
+        },
+        "/health": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/servers/broadcastwake": {
             "post": {
-                "description": "Wake a server using Wake on LAN",
+                "description": "Wake a server using Wake on LAN by using the mac and enumerating all available broadcast addresses",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +61,7 @@ const docTemplate = `{
                 "tags": [
                     "servers"
                 ],
-                "summary": "Wake a server using just a mac (broadcast is enumerated)",
+                "summary": "Wake a server using just a mac",
                 "parameters": [
                     {
                         "description": "Broadcast wake request",
@@ -47,13 +81,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Input validation failed",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Wake on LAN packet failed to send",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
@@ -63,7 +97,7 @@ const docTemplate = `{
         },
         "/servers/wake": {
             "post": {
-                "description": "Wake a server using Wake on LAN",
+                "description": "Wake a server using Wake on LAN using the mac and broadcast address provided",
                 "consumes": [
                     "application/json"
                 ],
@@ -87,19 +121,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Wake on LAN packet sent",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Input validation failed",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Wake on LAN packet failed to send",
                         "schema": {
                             "$ref": "#/definitions/handlers.Response"
                         }
