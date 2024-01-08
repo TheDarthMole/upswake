@@ -16,10 +16,9 @@ import (
 )
 
 const (
-	listenHost   = "localhost"
-	listenPort   = ":8080"
-	listenScheme = "http://"
-	localURL     = listenScheme + listenHost + listenPort
+	listenHost        = "localhost"
+	defaultListenPort = "8080"
+	listenScheme      = "http://"
 )
 
 var (
@@ -27,9 +26,10 @@ var (
 	serveCmd  = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
-		Long:  `All software has versions. This is Hugo's`,
+		Long:  `Run the UPSWake server and API on the specified port`,
 		Run: func(cmd *cobra.Command, args []string) {
 			initConfig()
+			baseURL := listenScheme + listenHost + ":" + cmd.Flag("port").Value.String()
 			ctx := context.Background()
 			logger, err := zap.NewProduction()
 			if err != nil {
@@ -50,12 +50,12 @@ var (
 
 			for _, mapping := range cfg.NutServerMappings {
 				for _, target := range mapping.Targets {
-					go processTarget(ctx, sugar, target)
+					go processTarget(ctx, sugar, target, baseURL+"/api/upswake")
 				}
 			}
 
 			//server.PrintRoutes()
-			sugar.Fatal(server.Start(listenPort))
+			sugar.Fatal(server.Start(":" + cmd.Flag("port").Value.String()))
 		},
 	}
 )
@@ -63,9 +63,10 @@ var (
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
+	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on, default: "+defaultListenPort)
 }
 
-func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.TargetServer) {
+func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.TargetServer, endpoint string) {
 	sugar.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Config.Interval)
 	if err != nil {
@@ -76,18 +77,18 @@ func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.
 	for {
 		select {
 		case <-ctx.Done():
-			sugar.Infof("[%s] Gracefully stopping worker\n", target.Name)
+			sugar.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			sendWakeRequest(ctx, target)
+			sendWakeRequest(ctx, target, endpoint)
 			ticker.Reset(interval)
 		}
 	}
 }
 
-func sendWakeRequest(ctx context.Context, target config.TargetServer) {
-	body := []byte(`{"mac":"` + target.Mac + `"}`)
-	r, err := http.NewRequestWithContext(ctx, "POST", localURL+"/api/upswake", bytes.NewBuffer(body))
+func sendWakeRequest(ctx context.Context, target config.TargetServer, address string) {
+	body := []byte(`{"mac":"` + target.Mac + `"}`) // target.Mac is validated in the config
+	r, err := http.NewRequestWithContext(ctx, "POST", address, bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatalf("Error creating post request: %s", err)
 	}
