@@ -131,6 +131,11 @@ paths:
       - root
   /health:
     get:
+      consumes:
+      - application/json
+      description: Health check
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -140,6 +145,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.Response'
+      summary: Health check
+      tags:
+      - root
   /servers/broadcastwake:
     post:
       consumes:
