@@ -95,9 +95,200 @@
                     }
                 }
             }
+        },
+        "/upswake": {
+            "get": {
+                "description": "List NUT server mappings using the config stored in the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UPSWake"
+                ],
+                "summary": "List NUT server mappings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/config.Config"
+                        }
+                    }
+                }
+            }
+        },
+        "/upswake/{mac}": {
+            "post": {
+                "description": "Run wake evaluation using the config and rules stored in the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UPSWake"
+                ],
+                "summary": "Run wake evaluation",
+                "parameters": [
+                    {
+                        "description": "MAC address",
+                        "name": "macAddress",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.macAddress"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wake on LAN sent",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "304": {
+                        "description": "No rule evaluated to true",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "MAC address not found in the config",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "config.Config": {
+            "type": "object",
+            "properties": {
+                "nutServerMappings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/config.NutServerMapping"
+                    }
+                }
+            }
+        },
+        "config.NutCredentials": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "config.NutServer": {
+            "type": "object",
+            "required": [
+                "credentials",
+                "host",
+                "name"
+            ],
+            "properties": {
+                "credentials": {
+                    "$ref": "#/definitions/config.NutCredentials"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                }
+            }
+        },
+        "config.NutServerMapping": {
+            "type": "object",
+            "properties": {
+                "nutServer": {
+                    "$ref": "#/definitions/config.NutServer"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/config.TargetServer"
+                    }
+                }
+            }
+        },
+        "config.TargetServer": {
+            "type": "object",
+            "required": [
+                "broadcast",
+                "mac",
+                "name"
+            ],
+            "properties": {
+                "broadcast": {
+                    "type": "string"
+                },
+                "config": {
+                    "$ref": "#/definitions/config.TargetServerConfig"
+                },
+                "mac": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 9,
+                    "maximum": 65535,
+                    "minimum": 1
+                }
+            }
+        },
+        "config.TargetServerConfig": {
+            "type": "object",
+            "required": [
+                "interval"
+            ],
+            "properties": {
+                "interval": {
+                    "type": "string",
+                    "default": "15m"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "handlers.BroadcastWakeRequest": {
             "type": "object",
             "required": [
@@ -144,6 +335,15 @@
                     "maximum": 65535,
                     "minimum": 1,
                     "example": 9
+                }
+            }
+        },
+        "handlers.macAddress": {
+            "type": "object",
+            "properties": {
+                "mac": {
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
                 }
             }
         }
