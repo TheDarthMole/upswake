@@ -16,13 +16,14 @@ import (
 const (
 	DefaultNUTPort    = 3493
 	DefaultWoLPort    = 9
-	DefaultConfigFile = "config"
+	DefaultConfigName = "config"
 	DefaultConfigExt  = "yaml"
 )
 
 var (
-	regoFiles hackpadfs.FS
-	validate  *validator.Validate
+	DefaultConfigFile = fmt.Sprintf("%s.%s", DefaultConfigName, DefaultConfigExt)
+	regoFiles         hackpadfs.FS
+	validate          *validator.Validate
 )
 
 type NutServer struct {
@@ -207,7 +208,7 @@ func CheckCreateConfigFile(fs hackpadfs.FS, configFile string) error {
 			log.Fatalf("Unable to create new config file: %s", err)
 		}
 
-		log.Printf("Created new config file at %s.%s", DefaultConfigFile, DefaultConfigExt)
+		log.Printf("Created new config file at %s.%s", DefaultConfigName, DefaultConfigExt)
 		os.Exit(0)
 	}
 	return nil
