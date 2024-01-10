@@ -7,7 +7,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 	"io/fs"
 	"log"
 	"os"
@@ -20,9 +19,12 @@ var (
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
-		Use:   "upsWake",
-		Short: "UPSWake sends WoL packets based on a UPS's status",
-		Long:  `TODO: Add a long description here`, // TODO: Add a long description here
+		Use:   "upswake",
+		Short: "UPSWake sends Wake on LAN packets based on a UPS's status",
+		Long: `UPSWake sends Wake on LAN packets to target servers
+
+It uses the status of a UPS to determine which servers to wake
+using a set of Rego rules defined and the servers in the config file`,
 	}
 )
 
@@ -54,6 +56,10 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
+		if !util.FileExists(fileSystem, cfgFile) {
+			log.Fatalf("config file %s does not exist", cfgFile)
+		}
+
 	} else {
 		// Search config in home directory with name ".test" (without extension).
 		viper.AddConfigPath(".")
@@ -63,29 +69,18 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 	// If a config file is found, read it in.
 
-	if !util.FileExists(fileSystem, fmt.Sprintf("%s.%s", config.DefaultConfigFile, config.DefaultConfigExt)) {
-		defaultConfig := config.CreateDefaultConfig()
-		marshalledConfig, err := yaml.Marshal(defaultConfig)
-		if err != nil {
-			log.Fatalf("Unable to marshal config: %s", err)
-		}
-
-		localFS, err := util.GetLocalFS()
-		if err != nil {
-			log.Fatalf("Unable to get local filesystem: %s", err)
-		}
-		configFile := fmt.Sprintf("%s.%s", config.DefaultConfigFile, config.DefaultConfigExt)
-		if err = util.CreateFile(localFS, configFile, marshalledConfig); err != nil {
-			log.Fatalf("Unable to create new config file: %s", err)
-		}
-
-		log.Printf("Created new config file at %s", config.DefaultConfigFile)
-		os.Exit(0)
+	if err := config.CheckCreateConfigFile(fileSystem, "./"+config.DefaultConfigFile+"."+config.DefaultConfigExt); err != nil {
+		log.Fatal(err)
 	}
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error reading config file: %s", err)
+	if err := parseConfig(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func parseConfig() error {
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("error reading config file: %s", err)
 	}
 
 	unmarshalOptions := viper.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) {
@@ -93,10 +88,11 @@ func initConfig() {
 		decoderConfig.TagName = config.DefaultConfigExt
 	})
 
-	if err = viper.Unmarshal(&cfg, unmarshalOptions); err != nil {
-		log.Fatalf("Unable to unmarshal config: %s", err)
+	if err := viper.Unmarshal(&cfg, unmarshalOptions); err != nil {
+		return fmt.Errorf("unable to unmarshal config: %s", err)
 	}
-	if err = cfg.Validate(); err != nil {
-		log.Fatalf("Invalid config: %s", err)
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid config: %s", err)
 	}
+	return nil
 }

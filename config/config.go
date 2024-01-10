@@ -6,7 +6,9 @@ import (
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
 	"github.com/hack-pad/hackpadfs"
+	"gopkg.in/yaml.v3"
 	"log"
+	"os"
 	"reflect"
 	"time"
 )
@@ -189,6 +191,28 @@ func (cfg *Config) Validate() error {
 	return nil
 }
 
+func CheckCreateConfigFile(fs hackpadfs.FS, configFile string) error {
+	if !util.FileExists(fs, configFile) {
+		defaultConfig := CreateDefaultConfig()
+		marshalledConfig, err := yaml.Marshal(defaultConfig)
+		if err != nil {
+			log.Fatalf("Unable to marshal config: %s", err)
+		}
+
+		localFS, err := util.GetLocalFS()
+		if err != nil {
+			log.Fatalf("Unable to get local filesystem: %s", err)
+		}
+		if err = util.CreateFile(localFS, configFile, marshalledConfig); err != nil {
+			log.Fatalf("Unable to create new config file: %s", err)
+		}
+
+		log.Printf("Created new config file at %s.%s", DefaultConfigFile, DefaultConfigExt)
+		os.Exit(0)
+	}
+	return nil
+}
+
 func CreateDefaultConfig() Config {
 	return Config{
 		NutServerMappings: []NutServerMapping{
@@ -210,9 +234,7 @@ func CreateDefaultConfig() Config {
 						Port:      DefaultWoLPort,
 						Config: TargetServerConfig{
 							Interval: "15m",
-							Rules: []string{
-								"80percentOn.rego",
-							},
+							Rules:    []string{},
 						},
 					},
 				},
