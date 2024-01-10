@@ -38,7 +38,7 @@ var wakeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ipBroadcasts, err := util.StringsToIPs(broadcasts)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 
 		for _, broadcast := range ipBroadcasts {
@@ -49,8 +49,12 @@ var wakeCmd = &cobra.Command{
 				Port:      WoLPort,
 			})
 
+			err := wolClient.Validate()
+			if err != nil {
+				log.Fatalf("failed to validate %s: %s", mac, err)
+			}
 			if err = wolClient.Wake(); err != nil {
-				log.Panicf("failed to wake %s: %s", mac, err)
+				log.Fatalf("failed to wake %s: %s", mac, err)
 			}
 			log.Printf("Sent WoL packet to %s to wake %s", broadcast, mac)
 		}
