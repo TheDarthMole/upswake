@@ -67,21 +67,31 @@ Create a `config.yaml` file in the same directory as the application.
 If a config is not provided, the application will create a default config.
 
 ```yaml
-wolTargets:
-  - name: server1
-    mac: 12:23:45:67:89:ab
+upswake:
+- nutServer:
+    name: nutserver1
+    host: 192.168.13.37
+    port: 3493
+    credentials:
+      username: upsmon
+      password: bigsecret
+  targets:
+  - name: MyNAS
+    mac: "01:23:45:67:89:01"
     broadcast: 192.168.1.255
     port: 9
-    interval: 15s
-    nutServer:
-      host: 127.0.0.1
-      port: 3493
-      name: nut-server
-      credentials:
-        username: upsmon
-        password: bigsecret
-    rules:
+    config:
+      interval: 15s
+      rules:
       - 80percentOn.rego
+  - name: Gaming PC
+    mac: "10:98:76:54:32:01"
+    broadcast: 192.168.13.255
+    port: 9
+    config:
+      interval: 15m
+      rules:
+      - alwaysTrue.rego
 ```
 
 The above config allows for a flexible configuration. 
