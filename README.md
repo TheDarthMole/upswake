@@ -78,7 +78,7 @@ upswake:
   targets:
   - name: MyNAS
     mac: "01:23:45:67:89:01"
-    broadcast: 192.168.1.255
+    broadcast: 192.168.13.255
     port: 9
     config:
       interval: 15s
@@ -97,7 +97,7 @@ upswake:
 The above config allows for a flexible configuration. 
 You can define multiple NUT hosts and multiple wake hosts. 
 Multiple rules can also be defined for each server to be woken.
-YAML anchors can be used if the same NUT server is used for multiple servers.
+YAML anchors can be used if the same NUT client is used for multiple servers.
 
 > Note: the rules are evaluated in a logical OR fashion. If any of the rules are met, the host will be woken.
 
