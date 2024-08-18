@@ -9,7 +9,7 @@ import (
 	"github.com/hack-pad/hackpadfs"
 )
 
-type RegoEvaluator struct {
+type regoEvaluator struct {
 	config  *config.Config
 	rulesFS hackpadfs.FS
 	mac     string
@@ -22,8 +22,8 @@ type EvaluationResult struct {
 	Target  *config.TargetServer
 }
 
-func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *RegoEvaluator {
-	return &RegoEvaluator{
+func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *regoEvaluator {
+	return &regoEvaluator{
 		config:  config,
 		mac:     mac,
 		rulesFS: rulesFS,
@@ -31,9 +31,12 @@ func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *
 }
 
 // EvaluateExpressions evaluates the expressions in the rules files
-func (r *RegoEvaluator) EvaluateExpressions() EvaluationResult {
+func (r *regoEvaluator) EvaluateExpressions() EvaluationResult {
 	found := false
+	// For each NUT server
 	for _, mapping := range r.config.NutServerMappings {
+
+		// For each client defined for the server
 		for _, target := range mapping.Targets {
 			if target.Mac == r.mac {
 				found = true
@@ -66,7 +69,11 @@ func (r *RegoEvaluator) EvaluateExpressions() EvaluationResult {
 	}
 }
 
-func (r *RegoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
+func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
+	if target == nil || nutServer == nil {
+		return false, nil
+	}
+
 	inputJson, err := ups.GetJSON(nutServer)
 	if err != nil {
 		return false, err
