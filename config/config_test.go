@@ -3,6 +3,7 @@ package config
 import (
 	"embed"
 	"github.com/go-playground/validator/v10"
+	"reflect"
 
 	//"github.com/go-playground/validator/v10"
 	"io/fs"
@@ -35,6 +36,14 @@ var (
 		Broadcast: "127.0.0.255",
 		Port:      DefaultWoLPort,
 		Config:    validTargetServerConfig,
+	}
+	validNutServerMapping = []NutServerMapping{
+		{
+			NutServer: validNutServer,
+			Targets: []TargetServer{
+				validTargetServer,
+			},
+		},
 	}
 	//go:embed "testing/*"
 	fakedRegoFiles embed.FS
@@ -455,14 +464,7 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "Valid",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
-					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
-						},
-					},
-				},
+				NutServerMappings: validNutServerMapping,
 			},
 			wantErr: false,
 		},
@@ -662,4 +664,96 @@ func TestCreateDefaultConfig(t *testing.T) {
 			t.Errorf("CreateDefaultConfig() = %v, want valid config", got)
 		}
 	})
+}
+
+func TestConfig_FindTarget(t *testing.T) {
+	type fields struct {
+		NutServerMappings []NutServerMapping
+	}
+	validSecondTargetServer := TargetServer{
+		Name:      "test",
+		Mac:       "00:00:00:00:00:00",
+		Broadcast: "192.168.1.255",
+		Port:      9,
+		Config:    validTargetServerConfig,
+	}
+	type args struct {
+		mac string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantTS  *TargetServer
+		wantNS  *NutServer
+		wantErr bool
+	}{
+		{
+			name: "Valid",
+			fields: fields{
+				NutServerMappings: validNutServerMapping,
+			},
+			args: args{
+				mac: validTargetServer.Mac,
+			},
+			wantTS:  &validTargetServer,
+			wantNS:  &validNutServer,
+			wantErr: false,
+		},
+		{
+			name: "Valid target invalid mac",
+			fields: fields{
+				NutServerMappings: validNutServerMapping,
+			},
+			args: args{
+				mac: "invalidmac",
+			},
+			wantTS:  nil,
+			wantNS:  nil,
+			wantErr: true,
+		},
+		{
+			name: "multiple targets valid mac",
+			fields: fields{
+				NutServerMappings: []NutServerMapping{
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validTargetServer,
+						},
+					},
+					{
+						NutServer: validNutServer,
+						Targets: []TargetServer{
+							validSecondTargetServer,
+						},
+					},
+				},
+			},
+			args: args{
+				mac: "00:00:00:00:00:00",
+			},
+			wantTS:  &validSecondTargetServer,
+			wantNS:  &validNutServer,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				NutServerMappings: tt.fields.NutServerMappings,
+			}
+			got, got1, err := c.FindTarget(tt.args.mac)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindTarget() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.wantTS) {
+				t.Errorf("FindTarget() got = %v, want %v", got, tt.wantTS)
+			}
+			if !reflect.DeepEqual(got1, tt.wantNS) {
+				t.Errorf("FindTarget() got1 = %v, want %v", got1, tt.wantNS)
+			}
+		})
+	}
 }

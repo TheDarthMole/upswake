@@ -60,6 +60,17 @@ type Config struct {
 	NutServerMappings []NutServerMapping `yaml:"upswake"`
 }
 
+func (c *Config) FindTarget(mac string) (*TargetServer, *NutServer, error) {
+	for _, nutServerMapping := range c.NutServerMappings {
+		for _, target := range nutServerMapping.Targets {
+			if target.Mac == mac {
+				return &target, &nutServerMapping.NutServer, nil
+			}
+		}
+	}
+	return nil, nil, fmt.Errorf("target not found")
+}
+
 func init() {
 	localFS, err := util.GetLocalFS()
 	if err != nil {
@@ -177,12 +188,12 @@ func (ns *NutServer) GetPort() int {
 // Validate Validation of the config
 // ensure all 'NutServerMappings' are valid and have a corresponding 'NutServers' that is valid
 // 'NutServers' that are not used are not used by a 'NutServerMappings' are not validated
-func (cfg *Config) Validate() error {
-	if reflect.DeepEqual(cfg, &Config{}) {
+func (c *Config) Validate() error {
+	if reflect.DeepEqual(c, &Config{}) {
 		return fmt.Errorf("config is nil")
 	}
 
-	for _, nutServerMapping := range cfg.NutServerMappings {
+	for _, nutServerMapping := range c.NutServerMappings {
 		log.Printf("Validating config for %s\n", nutServerMapping.NutServer.Name)
 
 		if err := nutServerMapping.Validate(); err != nil {
