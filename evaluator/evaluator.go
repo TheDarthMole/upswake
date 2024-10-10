@@ -9,7 +9,7 @@ import (
 	"github.com/hack-pad/hackpadfs"
 )
 
-type RegoEvaluator struct {
+type regoEvaluator struct {
 	config  *config.Config
 	rulesFS hackpadfs.FS
 	mac     string
@@ -22,8 +22,8 @@ type EvaluationResult struct {
 	Target  *config.TargetServer
 }
 
-func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *RegoEvaluator {
-	return &RegoEvaluator{
+func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *regoEvaluator {
+	return &regoEvaluator{
 		config:  config,
 		mac:     mac,
 		rulesFS: rulesFS,
@@ -31,42 +31,35 @@ func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *
 }
 
 // EvaluateExpressions evaluates the expressions in the rules files
-func (r *RegoEvaluator) EvaluateExpressions() EvaluationResult {
-	found := false
-	for _, mapping := range r.config.NutServerMappings {
-		for _, target := range mapping.Targets {
-			if target.Mac == r.mac {
-				found = true
-				allowed, err := r.evaluateExpression(&target, &mapping.NutServer)
-				if err != nil {
-					return EvaluationResult{
-						Allowed: false,
-						Found:   true,
-						Error:   err,
-						Target:  &target,
-					}
-				}
-				if allowed {
-					return EvaluationResult{
-						Allowed: true,
-						Found:   true,
-						Error:   nil,
-						Target:  &target,
-					}
-				}
-			}
+func (r *regoEvaluator) EvaluateExpressions() EvaluationResult {
+	// For each NUT server
+
+	target, nutServer, err := r.config.FindTarget(r.mac)
+
+	if err != nil {
+		return EvaluationResult{
+			Allowed: false,
+			Found:   target != nil, // couldn't find the target in the config
+			Error:   err,
+			Target:  nil,
 		}
 	}
 
+	allowed, err := r.evaluateExpression(target, nutServer)
+
 	return EvaluationResult{
-		Allowed: false,
-		Found:   found,
-		Error:   nil,
-		Target:  nil,
+		Allowed: allowed,
+		Found:   true,
+		Error:   err,
+		Target:  target,
 	}
 }
 
-func (r *RegoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
+func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
+	if target == nil || nutServer == nil {
+		return false, nil
+	}
+
 	inputJson, err := ups.GetJSON(nutServer)
 	if err != nil {
 		return false, err

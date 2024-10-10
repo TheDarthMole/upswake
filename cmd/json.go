@@ -16,7 +16,7 @@ var jsonCmd = &cobra.Command{
 	Long: `Retrieve JSON from a NUT server and print it to stdout
 
 This is useful for testing the connection to a NUT server
-and for creating rego rules for a WoL target`,
+and for creating rego rules for waking a target`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetInt("port")
 		if err != nil {

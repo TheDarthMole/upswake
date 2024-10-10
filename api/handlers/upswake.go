@@ -67,7 +67,7 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 //	@Failure		400			{object}	Response "Bad request"
 //	@Failure		404			{object}	Response "MAC address not found in the config"
 //	@Failure		500			{object}	Response "Internal server error"
-//	@Router			/upswake/{mac} [post]
+//	@Router			/upswake	[post]
 func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {

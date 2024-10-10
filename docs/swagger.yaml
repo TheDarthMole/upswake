@@ -226,7 +226,6 @@ paths:
       summary: List NUT server mappings
       tags:
       - UPSWake
-  /upswake/{mac}:
     post:
       consumes:
       - application/json

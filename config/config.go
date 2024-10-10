@@ -6,7 +6,9 @@ import (
 	"github.com/TheDarthMole/UPSWake/util"
 	"github.com/go-playground/validator/v10"
 	"github.com/hack-pad/hackpadfs"
+	"gopkg.in/yaml.v3"
 	"log"
+	"os"
 	"reflect"
 	"time"
 )
@@ -14,13 +16,14 @@ import (
 const (
 	DefaultNUTPort    = 3493
 	DefaultWoLPort    = 9
-	DefaultConfigFile = "config"
+	DefaultConfigName = "config"
 	DefaultConfigExt  = "yaml"
 )
 
 var (
-	regoFiles hackpadfs.FS
-	validate  *validator.Validate
+	DefaultConfigFile = fmt.Sprintf("%s.%s", DefaultConfigName, DefaultConfigExt)
+	regoFiles         hackpadfs.FS
+	validate          *validator.Validate
 )
 
 type NutServer struct {
@@ -55,6 +58,17 @@ type NutServerMapping struct {
 
 type Config struct {
 	NutServerMappings []NutServerMapping `yaml:"upswake"`
+}
+
+func (c *Config) FindTarget(mac string) (*TargetServer, *NutServer, error) {
+	for _, nutServerMapping := range c.NutServerMappings {
+		for _, target := range nutServerMapping.Targets {
+			if target.Mac == mac {
+				return &target, &nutServerMapping.NutServer, nil
+			}
+		}
+	}
+	return nil, nil, fmt.Errorf("target not found")
 }
 
 func init() {
@@ -174,17 +188,39 @@ func (ns *NutServer) GetPort() int {
 // Validate Validation of the config
 // ensure all 'NutServerMappings' are valid and have a corresponding 'NutServers' that is valid
 // 'NutServers' that are not used are not used by a 'NutServerMappings' are not validated
-func (cfg *Config) Validate() error {
-	if reflect.DeepEqual(cfg, &Config{}) {
+func (c *Config) Validate() error {
+	if reflect.DeepEqual(c, &Config{}) {
 		return fmt.Errorf("config is nil")
 	}
 
-	for _, nutServerMapping := range cfg.NutServerMappings {
+	for _, nutServerMapping := range c.NutServerMappings {
 		log.Printf("Validating config for %s\n", nutServerMapping.NutServer.Name)
 
 		if err := nutServerMapping.Validate(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func CheckCreateConfigFile(fs hackpadfs.FS, configFile string) error {
+	if !util.FileExists(fs, configFile) {
+		defaultConfig := CreateDefaultConfig()
+		marshalledConfig, err := yaml.Marshal(defaultConfig)
+		if err != nil {
+			log.Fatalf("Unable to marshal config: %s", err)
+		}
+
+		localFS, err := util.GetLocalFS()
+		if err != nil {
+			log.Fatalf("Unable to get local filesystem: %s", err)
+		}
+		if err = util.CreateFile(localFS, configFile, marshalledConfig); err != nil {
+			log.Fatalf("Unable to create new config file: %s", err)
+		}
+
+		log.Printf("Created new config file at %s.%s", DefaultConfigName, DefaultConfigExt)
+		os.Exit(0)
 	}
 	return nil
 }
@@ -210,9 +246,7 @@ func CreateDefaultConfig() Config {
 						Port:      DefaultWoLPort,
 						Config: TargetServerConfig{
 							Interval: "15m",
-							Rules: []string{
-								"80percentOn.rego",
-							},
+							Rules:    []string{},
 						},
 					},
 				},

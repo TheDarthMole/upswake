@@ -173,9 +173,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/upswake/{mac}": {
+            },
             "post": {
                 "description": "Run wake evaluation using the config and rules stored in the server",
                 "consumes": [
