@@ -26,7 +26,7 @@ This application can be run in a Docker container. To build and run the containe
 git clone git@github.com:TheDarthMole/UPSWake.git
 cd UPSWake
 docker build -t thedarthmole/upswake .
-docker run --network host -v ${PWD}/config.yaml:/config.yaml:ro -v ${PWD}/rules:/rules/:ro --name upswake upswake
+docker run --network host -v ${PWD}/config.yaml:/config.yaml:ro -v ${PWD}/rules:/rules/:ro --name upswake thedarthmole/upswake
 ```
 > Note: The `--network host` flag is required to allow the container to access the host's network interface to send Wake-on-LAN packets.
 
