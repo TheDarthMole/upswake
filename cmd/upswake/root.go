@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"github.com/spf13/cobra"
@@ -19,7 +19,7 @@ using a set of Rego rules defined and the servers in the config file`,
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func main() {
 	err := rootCmd.Execute()
 	if err != nil {
 		log.Fatalf("Error executing root command: %s", err)

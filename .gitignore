@@ -5,7 +5,7 @@
 # upsWake
 config.yaml
 output.json
-upswake
+/upswake
 
 # User-specific stuff
 .idea/**/workspace.xml
