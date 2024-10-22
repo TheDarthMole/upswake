@@ -13,6 +13,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
     steps:
       - name: 🛡️ Harden Runner
@@ -53,6 +54,7 @@ jobs:
     name: Regenerate
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
     steps:
       - name: 🛡️ Harden Runner
