@@ -2,10 +2,10 @@ package evaluator
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/TheDarthMole/UPSWake/rego"
-	"github.com/TheDarthMole/UPSWake/ups"
-	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/rego"
+	"github.com/TheDarthMole/UPSWake/internal/ups"
+	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/hack-pad/hackpadfs"
 )
 

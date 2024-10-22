@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/api"
-	"github.com/TheDarthMole/UPSWake/api/handlers"
-	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/internal/api"
+	handlers2 "github.com/TheDarthMole/UPSWake/internal/api/handlers"
+	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/fsnotify/fsnotify"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
@@ -47,13 +47,13 @@ var (
 			sugar := logger.Sugar()
 			server := api.NewServer(ctx, sugar)
 
-			rootHandler := handlers.NewRootHandler()
+			rootHandler := handlers2.NewRootHandler()
 			rootHandler.Register(server.Root())
 
-			serverHandler := handlers.NewServerHandler()
+			serverHandler := handlers2.NewServerHandler()
 			serverHandler.Register(server.API().Group("/servers"))
 
-			upsWakeHandler := handlers.NewUPSWakeHandler(&cfg, regoFiles)
+			upsWakeHandler := handlers2.NewUPSWakeHandler(&cfg, regoFiles)
 			upsWakeHandler.Register(server.API().Group("/upswake"))
 
 			for _, mapping := range cfg.NutServerMappings {

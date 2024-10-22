@@ -2,7 +2,7 @@ package wol
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/config"
+	"github.com/TheDarthMole/UPSWake/internal/config"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
 	"net"

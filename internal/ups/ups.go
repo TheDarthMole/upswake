@@ -3,7 +3,7 @@ package ups
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/config"
+	"github.com/TheDarthMole/UPSWake/internal/config"
 	nut "github.com/robbiet480/go.nut"
 	"log"
 )

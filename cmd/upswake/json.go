@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/TheDarthMole/UPSWake/ups"
+	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
