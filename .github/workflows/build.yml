@@ -69,6 +69,7 @@ jobs:
         with:
           images: ${{ github.repository }}
           tags: |
+            type=edge
             type=semver,pattern=v{{major}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{version}}
