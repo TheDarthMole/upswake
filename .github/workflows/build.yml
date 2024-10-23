@@ -1,4 +1,4 @@
-name: ci
+name: Docker
 
 on:
   push:
@@ -10,14 +10,21 @@ on:
       - published
 
 env:
-  platforms: "linux/arm/v7,linux/arm64/v8,linux/amd64,linux/riscv64"
+  platforms: "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
 
 permissions:
   contents: read
 
 jobs:
-  release:
+  build:
+    name: "Build"
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: 🛡️ Harden Runner
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
