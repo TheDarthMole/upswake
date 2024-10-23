@@ -19,17 +19,17 @@ jobs:
   build:
     name: "Build"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        architecture:
-          - linux/386
-          - linux/arm/v6
-          - linux/arm/v7
-          - linux/arm64/v8
-          - linux/amd64
-          - linux/ppc64le
-          - linux/riscv64
-          - linux/s390x
+    #strategy:
+    #  matrix:
+    #    architecture:
+    #      - linux/386
+    #      - linux/arm/v6
+      #      - linux/arm/v7
+      #    - linux/arm64/v8
+      #    - linux/amd64
+      #    - linux/ppc64le
+      #    - linux/riscv64
+    #    - linux/s390x
     #concurrency:
     #  group: ${{ github.workflow }}-build-${{ github.ref }}
     #  cancel-in-progress: true
@@ -91,7 +91,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ env.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
