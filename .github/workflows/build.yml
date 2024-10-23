@@ -29,18 +29,19 @@ jobs:
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           disable-sudo: true
-          egress-policy: block
-          allowed-endpoints: >
-            api.github.com:443
-            auth.docker.io:443
-            github.com:443
-            objects.githubusercontent.com:443
-            production.cloudflare.docker.com:443
-            proxy.golang.org:443
-            raw.githubusercontent.com:443
-            registry-1.docker.io:443
-            storage.googleapis.com:443
-            sum.golang.org:443
+          egress-policy: audit
+          #allowed-endpoints: >
+            #  api.github.com:443
+            #  auth.docker.io:443
+            #  github.com:443
+            #  objects.githubusercontent.com:443
+            #  production.cloudflare.docker.com:443
+            #  proxy.golang.org:443
+            #  raw.githubusercontent.com:443
+            #  registry-1.docker.io:443
+            #  storage.googleapis.com:443
+            #  sum.golang.org:443
+            #  oauth2.sigstore.dev:443
 
       - name: 🚚 Check out the repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
