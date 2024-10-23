@@ -19,20 +19,9 @@ jobs:
   build:
     name: "Build"
     runs-on: ubuntu-latest
-    #strategy:
-      #matrix:
-      #  architecture:
-      #    - linux/arm64/v8
-    #      - linux/386
-    #      - linux/arm/v6
-      #      - linux/arm/v7
-      #    - linux/amd64
-      #    - linux/ppc64le
-      #    - linux/riscv64
-    #    - linux/s390x
-    #concurrency:
-    #  group: ${{ github.workflow }}-build-${{ github.ref }}
-    #  cancel-in-progress: true
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
     steps:
