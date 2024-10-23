@@ -1,0 +1,9 @@
+# ignore everything
+**
+
+# include what we need
+!go.mod
+!go.sum
+!cmd
+!internal
+!rules
