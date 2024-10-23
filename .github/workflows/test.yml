@@ -13,14 +13,12 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     steps:
       - name: 🛡️ Harden Runner
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           disable-sudo: true
-          policy: test
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
