@@ -19,18 +19,19 @@ jobs:
   build:
     name: "Build"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: ${{ env.platforms }}
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
       cancel-in-progress: true
     permissions:
-      id-token: write
       contents: read
     steps:
       - name: 🛡️ Harden Runner
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           disable-sudo: true
-          policy: build
           egress-policy: audit
 
       - name: 🚚 Check out the repository
@@ -82,7 +83,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
-          platforms: ${{ env.platforms }}
+          platforms: ${{ matrix.platform }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
