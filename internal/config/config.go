@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/rego"
-	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/internal/rego"
+	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/go-playground/validator/v10"
 	"github.com/hack-pad/hackpadfs"
 	"gopkg.in/yaml.v3"

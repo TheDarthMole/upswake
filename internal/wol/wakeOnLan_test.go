@@ -1,7 +1,7 @@
 package wol
 
 import (
-	"github.com/TheDarthMole/UPSWake/config"
+	"github.com/TheDarthMole/UPSWake/internal/config"
 	"io"
 	"reflect"
 	"testing"

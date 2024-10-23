@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/util"
+	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

@@ -1,7 +1,7 @@
 package evaluator
 
 import (
-	"github.com/TheDarthMole/UPSWake/config"
+	"github.com/TheDarthMole/UPSWake/internal/config"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
 	"reflect"

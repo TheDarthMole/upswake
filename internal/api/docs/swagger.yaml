@@ -1,11 +1,4 @@
 definitions:
-  config.Config:
-    properties:
-      nutServerMappings:
-        items:
-          $ref: '#/definitions/config.NutServerMapping'
-        type: array
-    type: object
   config.NutCredentials:
     properties:
       password:
@@ -73,6 +66,13 @@ definitions:
         type: array
     required:
     - interval
+    type: object
+  github_com_TheDarthMole_UPSWake_internal_config.Config:
+    properties:
+      nutServerMappings:
+        items:
+          $ref: '#/definitions/config.NutServerMapping'
+        type: array
     type: object
   handlers.BroadcastWakeRequest:
     properties:
@@ -222,7 +222,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/config.Config'
+            $ref: '#/definitions/github_com_TheDarthMole_UPSWake_internal_config.Config'
       summary: List NUT server mappings
       tags:
       - UPSWake

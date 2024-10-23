@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/config"
-	"github.com/TheDarthMole/UPSWake/evaluator"
-	"github.com/TheDarthMole/UPSWake/wol"
+	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/evaluator"
+	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
 	"net/http"
