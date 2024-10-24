@@ -12,7 +12,7 @@ type UPS struct {
 	nut.Client
 }
 
-func Connect(host string, port int, username, password string) (UPS, error) {
+func connect(host string, port int, username, password string) (UPS, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
 		return UPS{}, err
@@ -30,7 +30,7 @@ func Connect(host string, port int, username, password string) (UPS, error) {
 }
 
 func GetJSON(ns *config.NutServer) (string, error) {
-	client, err := Connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
+	client, err := connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
 	if err != nil {
 		return "", fmt.Errorf("could not connect to NUT server: %s", err)
 	}
@@ -41,20 +41,20 @@ func GetJSON(ns *config.NutServer) (string, error) {
 		}
 	}(&client)
 
-	inputJson, err := client.ToJson()
+	inputJson, err := client.toJson()
 	if err != nil {
 		return "", fmt.Errorf("could not get UPS list: %s", err)
 	}
 	return inputJson, nil
 }
 
-func (u *UPS) ToJson() (string, error) {
-	upss, err := u.GetUPSList()
+func (u *UPS) toJson() (string, error) {
+	ups, err := u.GetUPSList()
 	if err != nil {
 		return "", err
 	}
 
-	jsonData, err := json.Marshal(upss)
+	jsonData, err := json.Marshal(ups)
 	if err != nil {
 		return "", err
 	}

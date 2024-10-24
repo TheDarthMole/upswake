@@ -103,9 +103,9 @@ func Duration(fl validator.FieldLevel) bool {
 			return false
 		}
 		return true
+	default:
+		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 	}
-
-	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
 
 func IsRegoFile(fl validator.FieldLevel) bool {
@@ -130,9 +130,9 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 			return false
 		}
 		return true
+	default:
+		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 	}
-
-	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
 
 func (nsm *NutServerMapping) Validate() error {

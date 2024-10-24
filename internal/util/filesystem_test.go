@@ -43,7 +43,7 @@ type FaultyFile struct {
 	hackpadfs.File
 }
 
-func (f FaultyFile) Write(p []byte) (n int, err error) {
+func (f FaultyFile) Write(_ []byte) (n int, err error) {
 	fmt.Println("Write")
 	return 0, &hackpadfs.PathError{Op: "write", Path: "", Err: hackpadfs.ErrPermission}
 }
@@ -53,12 +53,12 @@ type FaultyWriteFS struct {
 	File FaultyFile
 }
 
-func (f FaultyWriteFS) Create(name string) (hackpadfs.File, error) {
+func (f FaultyWriteFS) Create(_ string) (hackpadfs.File, error) {
 	fmt.Println("Create")
 	return f.File, nil
 }
 
-func (f FaultyWriteFS) WriteFile(name string, data []byte, perm os.FileMode) error {
+func (f FaultyWriteFS) WriteFile(name string, _ []byte, _ os.FileMode) error {
 	fmt.Println("WriteFile")
 	return &hackpadfs.PathError{Op: "write", Path: name, Err: hackpadfs.ErrPermission}
 }
@@ -68,7 +68,7 @@ type FaultyWriteSizeFS struct {
 	File FaultyWriteSizeFile
 }
 
-func (f FaultyWriteSizeFS) Create(name string) (hackpadfs.File, error) {
+func (f FaultyWriteSizeFS) Create(_ string) (hackpadfs.File, error) {
 	fmt.Println("Create")
 	return f.File, nil
 }
@@ -77,7 +77,7 @@ type FaultyWriteSizeFile struct {
 	FaultyFile
 }
 
-func (f FaultyWriteSizeFile) Write(p []byte) (n int, err error) {
+func (f FaultyWriteSizeFile) Write(_ []byte) (n int, err error) {
 	fmt.Println("Write")
 	return -1, nil
 }
