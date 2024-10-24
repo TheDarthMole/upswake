@@ -43,31 +43,28 @@ Create a `config.yaml` file in the same directory as the application.
 If a config is not provided, the application will attempt to create a default config.
 
 ```yaml
-upswake:
-- nutServer:
-    name: nutserver1
+nut_servers:
+  - name: raspberrypi
     host: 192.168.13.37
     port: 3493
     credentials:
       username: upsmon
       password: bigsecret
-  targets:
-  - name: MyNAS
-    mac: "01:23:45:67:89:01"
-    broadcast: 192.168.13.255
-    port: 9
-    config:
-      interval: 15s
-      rules:
-      - 80percentOn.rego
-  - name: Gaming PC
-    mac: "10:98:76:54:32:01"
-    broadcast: 192.168.13.255
-    port: 9
-    config:
-      interval: 15m
-      rules:
-      - alwaysTrue.rego
+    targets:
+      - name: MyNAS
+        mac: "01:23:45:67:89:01"
+        broadcast: 192.168.13.255
+        port: 9
+        interval: 5s
+        rules:
+          - 80percentOn.rego
+      - name: Gaming PC
+        mac: "10:98:76:54:32:01"
+        broadcast: 192.168.13.255
+        port: 9
+        interval: 15m
+        rules:
+          - alwaysTrue.rego
 ```
 
 The above config allows for a flexible configuration where you can define multiple NUT hosts and multiple target hosts. 
