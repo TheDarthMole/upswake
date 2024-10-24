@@ -56,7 +56,7 @@ var (
 			upsWakeHandler := handlers2.NewUPSWakeHandler(&cfg, regoFiles)
 			upsWakeHandler.Register(server.API().Group("/upswake"))
 
-			for _, mapping := range cfg.NutServerMappings {
+			for _, mapping := range cfg.NutServers {
 				for _, target := range mapping.Targets {
 					go processTarget(ctx, sugar, target, baseURL+"/api/upswake")
 				}
@@ -82,7 +82,7 @@ func init() {
 
 func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.TargetServer, endpoint string) {
 	sugar.Infof("[%s] Starting worker", target.Name)
-	interval, err := time.ParseDuration(target.Config.Interval)
+	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
 		sugar.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
 		return

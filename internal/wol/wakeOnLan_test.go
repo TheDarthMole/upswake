@@ -39,10 +39,8 @@ func newValidTestWoLTarget() config.TargetServer {
 		Mac:       "01:02:03:04:05:06",
 		Broadcast: "127.0.0.255",
 		Port:      9,
-		Config: config.TargetServerConfig{
-			Interval: "15m",
-			Rules:    []string{},
-		},
+		Interval:  "15m",
+		Rules:     []string{},
 	}
 }
 

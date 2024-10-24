@@ -64,7 +64,7 @@ func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServe
 	if err != nil {
 		return false, err
 	}
-	for _, ruleName := range target.Config.Rules {
+	for _, ruleName := range target.Rules {
 		regoRule, err := util.GetFile(r.rulesFS, ruleName)
 		if err != nil {
 			return false, fmt.Errorf("could not get file: %s", err)

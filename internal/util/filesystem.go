@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hack-pad/hackpadfs"
 	hackpados "github.com/hack-pad/hackpadfs/os"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -25,7 +24,7 @@ func FileExists(fileSystem hackpadfs.FS, file string) bool {
 	fileInfo, err := hackpadfs.Stat(fileSystem, file)
 
 	if err != nil {
-		log.Printf("could not stat file %s: %s", file, err)
+		//log.Printf("could not stat file %s: %s", file, err)
 		return false
 	}
 
