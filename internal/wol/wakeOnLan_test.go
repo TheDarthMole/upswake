@@ -29,7 +29,7 @@ func (rwc *readWriteCloser) Close() error {
 	return nil
 }
 
-func (rwc *readWriteCloserError) Write(p []byte) (n int, err error) {
+func (rwc *readWriteCloserError) Write(_ []byte) (n int, err error) {
 	return 15, nil
 }
 
