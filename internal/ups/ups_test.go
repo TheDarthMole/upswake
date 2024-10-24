@@ -44,13 +44,13 @@ func TestConnect(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Connect(tt.args.host, tt.args.port, tt.args.username, tt.args.password)
+			got, err := connect(tt.args.host, tt.args.port, tt.args.username, tt.args.password)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Connect() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("connect() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Connect() got = %v, want %v", got, tt.want)
+				t.Errorf("connect() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
