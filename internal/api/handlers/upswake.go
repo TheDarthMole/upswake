@@ -45,13 +45,13 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 //	@Success		200	{object}	config.Config
 //	@Router			/upswake [get]
 func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
-	mappings := h.cfg.NutServerMappings
+	nutServers := h.cfg.NutServers
 	// Don't leak passwords
-	for i, mapping := range mappings {
-		mapping.NutServer.Credentials.Password = "********"
-		mappings[i] = mapping
+	for i, nutServer := range nutServers {
+		nutServer.Credentials.Password = "********"
+		nutServers[i] = nutServer
 	}
-	return c.JSON(http.StatusOK, mappings)
+	return c.JSON(http.StatusOK, nutServers)
 }
 
 // RunWakeEvaluation godoc

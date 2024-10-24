@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	testMAC   = "01:02:03:04:05:06"
+	validMAC  = "01:02:03:04:05:06"
 	localhost = "127.0.0.1"
 )
 
@@ -20,34 +20,31 @@ var (
 		Username: "test",
 		Password: "test",
 	}
-	validNutServer = NutServer{
-		Name:        "test",
-		Host:        localhost,
-		Port:        DefaultNUTPort,
-		Credentials: validCredentials,
-	}
-	validTargetServerConfig = TargetServerConfig{
-		Interval: "15m",
-		Rules:    []string{},
-	}
+	validNutServer    = ValidNutServerChooseTargets([]TargetServer{validTargetServer})
 	validTargetServer = TargetServer{
 		Name:      "test",
-		Mac:       testMAC,
+		Mac:       validMAC,
 		Broadcast: "127.0.0.255",
 		Port:      DefaultWoLPort,
-		Config:    validTargetServerConfig,
+		Interval:  "15m",
+		Rules:     []string{},
 	}
-	validNutServerMapping = []NutServerMapping{
-		{
-			NutServer: validNutServer,
-			Targets: []TargetServer{
-				validTargetServer,
-			},
-		},
+	validNutServers = []NutServer{
+		validNutServer,
 	}
 	//go:embed "testing/*"
 	fakedRegoFiles embed.FS
 )
+
+func ValidNutServerChooseTargets(targets []TargetServer) NutServer {
+	return NutServer{
+		Name:        "test",
+		Host:        localhost,
+		Port:        DefaultNUTPort,
+		Credentials: validCredentials,
+		Targets:     targets,
+	}
+}
 
 func init() {
 	regoFiles, _ = fs.Sub(fakedRegoFiles, "testing")
@@ -255,10 +252,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Valid With No Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: false,
 			// TODO: Add tests for rules
@@ -267,13 +265,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Rule Location",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: localhost,
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{"fileDoesNotExist.rego"},
-				},
+				Interval:  "15m",
+				Rules:     []string{"fileDoesNotExist.rego"},
 			},
 			wantErr: true,
 		},
@@ -281,13 +277,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Valid With Rule",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: localhost,
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{"80percentOn.rego"},
-				},
+				Interval:  "15m",
+				Rules:     []string{"80percentOn.rego"},
 			},
 			wantErr: false,
 		},
@@ -295,13 +289,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Rego File",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: localhost,
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules:    []string{"regoWithSyntaxError.rego"},
-				},
+				Interval:  "15m",
+				Rules:     []string{"regoWithSyntaxError.rego"},
 			},
 			wantErr: true,
 		},
@@ -309,15 +301,13 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Multiple Valid Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: localhost,
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules: []string{
-						"80percentOn.rego",
-						"alwaysPasses.rego",
-					},
+				Interval:  "15m",
+				Rules: []string{
+					"80percentOn.rego",
+					"alwaysPasses.rego",
 				},
 			},
 			wantErr: false,
@@ -326,15 +316,13 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "One Valid One Invalid Rules",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: localhost,
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "15m",
-					Rules: []string{
-						"alwaysPasses.rego",
-						"regoWithSyntaxError.rego",
-					},
+				Interval:  "15m",
+				Rules: []string{
+					"alwaysPasses.rego",
+					"regoWithSyntaxError.rego",
 				},
 			},
 			wantErr: true,
@@ -343,10 +331,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Name",
 			fields: TargetServer{
 				Name:      "",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -357,7 +346,8 @@ func TestTargetServer_Validate(t *testing.T) {
 				Mac:       "",
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -368,7 +358,8 @@ func TestTargetServer_Validate(t *testing.T) {
 				Mac:       "invalid!mac",
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -376,10 +367,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Broadcast",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -387,10 +379,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Broadcast",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "invalid!broadcast",
 				Port:      DefaultWoLPort,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -398,10 +391,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Negative Port Number",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      -1,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -409,10 +403,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Port Number Too Large",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      65536,
-				Config:    validTargetServerConfig,
+				Interval:  "15m",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -420,13 +415,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Missing Interval",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "",
-					Rules:    []string{},
-				},
+				Interval:  "",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -434,13 +427,11 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "Invalid Interval",
 			fields: TargetServer{
 				Name:      "test",
-				Mac:       testMAC,
+				Mac:       validMAC,
 				Broadcast: "127.0.0.255",
 				Port:      DefaultWoLPort,
-				Config: TargetServerConfig{
-					Interval: "invalid!interval",
-					Rules:    []string{},
-				},
+				Interval:  "invalid!interval",
+				Rules:     []string{},
 			},
 			wantErr: true,
 		},
@@ -464,26 +455,16 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "Valid",
 			config: Config{
-				NutServerMappings: validNutServerMapping,
+				NutServers: validNutServers,
 			},
 			wantErr: false,
 		},
 		{
 			name: "Multiple Valid",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
-					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
-						},
-					},
-					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
-						},
-					},
+				NutServers: []NutServer{
+					validNutServer,
+					validNutServer,
 				},
 			},
 			wantErr: false,
@@ -491,20 +472,13 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "Invalid NutServer",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
+				NutServers: []NutServer{
+					validNutServer,
 					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
-						},
-					},
-					{
-						NutServer: NutServer{
-							Name:        "test",
-							Host:        "invalid9!host",
-							Port:        DefaultNUTPort,
-							Credentials: validCredentials,
-						},
+						Name:        "test",
+						Host:        "invalid9!host",
+						Port:        DefaultNUTPort,
+						Credentials: validCredentials,
 						Targets: []TargetServer{
 							validTargetServer,
 						},
@@ -516,14 +490,12 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "One Valid one Invalid NutServer",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
+				NutServers: []NutServer{
 					{
-						NutServer: NutServer{
-							Name:        "test",
-							Host:        "invalid9!host",
-							Port:        DefaultNUTPort,
-							Credentials: validCredentials,
-						},
+						Name:        "test",
+						Host:        "invalid9!host",
+						Port:        DefaultNUTPort,
+						Credentials: validCredentials,
 						Targets: []TargetServer{
 							validTargetServer,
 						},
@@ -535,16 +507,20 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "Invalid TargetServer",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
+				NutServers: []NutServer{
 					{
-						NutServer: validNutServer,
+						Name:        "test",
+						Host:        localhost,
+						Port:        DefaultNUTPort,
+						Credentials: validCredentials,
 						Targets: []TargetServer{
 							{
 								Name:      "test",
 								Mac:       "invalid!mac",
 								Broadcast: "127.0.0.255",
 								Port:      DefaultWoLPort,
-								Config:    validTargetServer.Config,
+								Interval:  "15m",
+								Rules:     []string{},
 							},
 						},
 					},
@@ -555,25 +531,18 @@ func TestConfig_IsValid(t *testing.T) {
 		{
 			name: "One Valid one Invalid TargetServer",
 			config: Config{
-				NutServerMappings: []NutServerMapping{
-					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
+				NutServers: []NutServer{
+					ValidNutServerChooseTargets([]TargetServer{validTargetServer}),
+					ValidNutServerChooseTargets([]TargetServer{
+						{
+							Name:      "test",
+							Mac:       "invalid!mac",
+							Broadcast: "127.0.0.255",
+							Port:      DefaultWoLPort,
+							Interval:  "15m",
+							Rules:     []string{},
 						},
-					},
-					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							{
-								Name:      "test",
-								Mac:       "invalid!mac",
-								Broadcast: "127.0.0.255",
-								Port:      DefaultWoLPort,
-								Config:    validTargetServer.Config,
-							},
-						},
-					},
+					}),
 				},
 			},
 			wantErr: true,
@@ -668,14 +637,15 @@ func TestCreateDefaultConfig(t *testing.T) {
 
 func TestConfig_FindTarget(t *testing.T) {
 	type fields struct {
-		NutServerMappings []NutServerMapping
+		NutServers []NutServer
 	}
 	validSecondTargetServer := TargetServer{
 		Name:      "test",
 		Mac:       "00:00:00:00:00:00",
 		Broadcast: "192.168.1.255",
 		Port:      9,
-		Config:    validTargetServerConfig,
+		Interval:  "15m",
+		Rules:     []string{},
 	}
 	type args struct {
 		mac string
@@ -691,7 +661,7 @@ func TestConfig_FindTarget(t *testing.T) {
 		{
 			name: "Valid",
 			fields: fields{
-				NutServerMappings: validNutServerMapping,
+				NutServers: validNutServers,
 			},
 			args: args{
 				mac: validTargetServer.Mac,
@@ -703,7 +673,7 @@ func TestConfig_FindTarget(t *testing.T) {
 		{
 			name: "Valid target invalid mac",
 			fields: fields{
-				NutServerMappings: validNutServerMapping,
+				NutServers: validNutServers,
 			},
 			args: args{
 				mac: "invalidmac",
@@ -715,44 +685,52 @@ func TestConfig_FindTarget(t *testing.T) {
 		{
 			name: "multiple targets valid mac",
 			fields: fields{
-				NutServerMappings: []NutServerMapping{
+				NutServers: []NutServer{
 					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validTargetServer,
-						},
+						Name:        "test1",
+						Host:        localhost,
+						Port:        DefaultNUTPort,
+						Credentials: validCredentials,
+						Targets:     []TargetServer{validTargetServer},
 					},
 					{
-						NutServer: validNutServer,
-						Targets: []TargetServer{
-							validSecondTargetServer,
-						},
+						Name:        "test2",
+						Host:        localhost,
+						Port:        DefaultNUTPort,
+						Credentials: validCredentials,
+						Targets:     []TargetServer{validSecondTargetServer},
 					},
 				},
 			},
 			args: args{
-				mac: "00:00:00:00:00:00",
+				mac: validSecondTargetServer.Mac,
 			},
-			wantTS:  &validSecondTargetServer,
-			wantNS:  &validNutServer,
+			wantTS: &validSecondTargetServer,
+			wantNS: &NutServer{
+				Name:        "test2",
+				Host:        localhost,
+				Port:        DefaultNUTPort,
+				Credentials: validCredentials,
+				Targets:     []TargetServer{validSecondTargetServer},
+			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Config{
-				NutServerMappings: tt.fields.NutServerMappings,
+				NutServers: tt.fields.NutServers,
 			}
-			got, got1, err := c.FindTarget(tt.args.mac)
+			gotTargetServer, gotNutServer, err := c.FindTarget(tt.args.mac)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindTarget() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.wantTS) {
-				t.Errorf("FindTarget() got = %v, want %v", got, tt.wantTS)
+			if !reflect.DeepEqual(gotTargetServer, tt.wantTS) {
+				t.Errorf("FindTarget() gotTargetServer = %v, want %v", gotTargetServer, tt.wantTS)
 			}
-			if !reflect.DeepEqual(got1, tt.wantNS) {
-				t.Errorf("FindTarget() got1 = %v, want %v", got1, tt.wantNS)
+			if !reflect.DeepEqual(gotNutServer, tt.wantNS) {
+				t.Errorf("FindTarget() gotNutServer = %v, want %v", gotNutServer, tt.wantNS)
 			}
 		})
 	}

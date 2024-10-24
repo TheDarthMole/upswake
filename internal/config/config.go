@@ -31,6 +31,7 @@ type NutServer struct {
 	Host        string         `yaml:"host" validate:"required,ip|hostname"`
 	Port        int            `yaml:"port" validate:"omitempty,gte=1,lte=65535"`
 	Credentials NutCredentials `yaml:"credentials" validate:"required"`
+	Targets     []TargetServer `yaml:"targets" validate:"omitempty"`
 }
 
 type NutCredentials struct {
@@ -38,33 +39,24 @@ type NutCredentials struct {
 	Password string `yaml:"password" validate:"required"`
 }
 
-type TargetServerConfig struct {
-	Interval string   `yaml:"interval" validate:"required,duration" default:"15m"`
-	Rules    []string `yaml:"rules" validate:"omitempty,dive,regofile"`
-}
-
 type TargetServer struct {
-	Name      string             `yaml:"name" validate:"required"`
-	Mac       string             `yaml:"mac" validate:"required,mac"`
-	Broadcast string             `yaml:"broadcast" validate:"required,ip"`
-	Port      int                `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
-	Config    TargetServerConfig `yaml:"config" validate:"omitempty"`
-}
-
-type NutServerMapping struct {
-	NutServer NutServer      `yaml:"nutServer"`
-	Targets   []TargetServer `yaml:"targets"`
+	Name      string   `yaml:"name" validate:"required"`
+	Mac       string   `yaml:"mac" validate:"required,mac"`
+	Broadcast string   `yaml:"broadcast" validate:"required,ip"`
+	Port      int      `yaml:"port" validate:"omitempty,gte=1,lte=65535" default:"9"`
+	Interval  string   `yaml:"interval" validate:"required,duration" default:"15m"`
+	Rules     []string `yaml:"rules" validate:"omitempty,dive,regofile"`
 }
 
 type Config struct {
-	NutServerMappings []NutServerMapping `yaml:"upswake"`
+	NutServers []NutServer `yaml:"nut_servers"`
 }
 
 func (c *Config) FindTarget(mac string) (*TargetServer, *NutServer, error) {
-	for _, nutServerMapping := range c.NutServerMappings {
-		for _, target := range nutServerMapping.Targets {
+	for _, nutServer := range c.NutServers {
+		for _, target := range nutServer.Targets {
 			if target.Mac == mac {
-				return &target, &nutServerMapping.NutServer, nil
+				return &target, &nutServer, nil
 			}
 		}
 	}
@@ -87,7 +79,7 @@ func init() {
 		log.Fatalf("could not register Duration validator: %s", err)
 	}
 
-	if err := validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
+	if err = validate.RegisterValidation("regofile", IsRegoFile, true); err != nil {
 		log.Fatalf("could not register IsRegoFile validator: %s", err)
 	}
 
@@ -135,32 +127,11 @@ func IsRegoFile(fl validator.FieldLevel) bool {
 	}
 }
 
-func (nsm *NutServerMapping) Validate() error {
-	validate := validator.New()
-	if err := validate.Struct(nsm); err != nil {
-		return fmt.Errorf("invalid nutServerMapping: %s", err)
-	}
-
-	for _, target := range nsm.Targets {
-		if err := target.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (ts *TargetServer) Validate() error {
 	if err := validate.Struct(ts); err != nil {
 		return fmt.Errorf("invalid woLTarget: %s", err)
 	}
 
-	return nil
-}
-
-func (cfg *TargetServerConfig) Validate() error {
-	if err := validate.Struct(cfg); err != nil {
-		return fmt.Errorf("invalid TargetServerConfig: %s", err)
-	}
 	return nil
 }
 
@@ -186,18 +157,24 @@ func (ns *NutServer) GetPort() int {
 }
 
 // Validate Validation of the config
-// ensure all 'NutServerMappings' are valid and have a corresponding 'NutServers' that is valid
-// 'NutServers' that are not used are not used by a 'NutServerMappings' are not validated
+// ensure all 'NutServers' are valid and have a corresponding 'NutServers' that is valid
+// 'NutServers' that are not used are not used by a 'NutServers' are not validated
 func (c *Config) Validate() error {
 	if reflect.DeepEqual(c, &Config{}) {
 		return fmt.Errorf("config is nil")
 	}
 
-	for _, nutServerMapping := range c.NutServerMappings {
-		log.Printf("Validating config for %s\n", nutServerMapping.NutServer.Name)
+	for _, nutServer := range c.NutServers {
+		log.Printf("Validating config for %s\n", nutServer.Name)
 
-		if err := nutServerMapping.Validate(); err != nil {
+		if err := nutServer.Validate(); err != nil {
 			return err
+		}
+
+		for _, target := range nutServer.Targets {
+			if err := target.Validate(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -227,16 +204,14 @@ func CheckCreateConfigFile(fs hackpadfs.FS, configFile string) error {
 
 func CreateDefaultConfig() Config {
 	return Config{
-		NutServerMappings: []NutServerMapping{
+		NutServers: []NutServer{
 			{
-				NutServer: NutServer{
-					Name: "nutserver1",
-					Host: "192.168.1.13",
-					Port: DefaultNUTPort,
-					Credentials: NutCredentials{
-						Username: "upsmon",
-						Password: "bigsecret",
-					},
+				Name: "nutserver1",
+				Host: "192.168.1.13",
+				Port: DefaultNUTPort,
+				Credentials: NutCredentials{
+					Username: "upsmon",
+					Password: "bigsecret",
 				},
 				Targets: []TargetServer{
 					{
@@ -244,10 +219,8 @@ func CreateDefaultConfig() Config {
 						Mac:       "00:00:00:00:00:00",
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Config: TargetServerConfig{
-							Interval: "15m",
-							Rules:    []string{},
-						},
+						Interval:  "15m",
+						Rules:     []string{},
 					},
 				},
 			},
