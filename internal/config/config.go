@@ -135,13 +135,6 @@ func (ts *TargetServer) Validate() error {
 	return nil
 }
 
-//func (cfg *TargetServerConfig) Validate() error {
-//	if err := validate.Struct(cfg); err != nil {
-//		return fmt.Errorf("invalid TargetServerConfig: %s", err)
-//	}
-//	return nil
-//}
-
 func (cred *NutCredentials) Validate() error {
 	if err := validate.Struct(cred); err != nil {
 		return fmt.Errorf("invalid credentials: %s", err)
