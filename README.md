@@ -29,7 +29,7 @@ A dynamic Wake on Lan application that wakes servers based on the status of a NU
 
 
 ```bash
-cosign verify thedarthmole/upswake:latest \    
+cosign verify thedarthmole/upswake:latest \
     --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
