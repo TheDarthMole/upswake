@@ -3,7 +3,7 @@ module github.com/TheDarthMole/UPSWake
 go 1.23.2
 
 require (
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/google/uuid v1.6.0
 	github.com/hack-pad/hackpadfs v0.2.4
