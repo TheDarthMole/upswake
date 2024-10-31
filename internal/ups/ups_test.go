@@ -1,8 +1,14 @@
 package ups
 
 import (
+	"github.com/google/uuid"
 	"reflect"
 	"testing"
+)
+
+var (
+	randomUsername = uuid.New().String()
+	randomPassword = uuid.New().String()
 )
 
 func TestConnect(t *testing.T) {
@@ -23,8 +29,8 @@ func TestConnect(t *testing.T) {
 			args: args{
 				host:     "127.0.0.1",
 				port:     3493,
-				username: "admin",
-				password: "secret",
+				username: randomUsername,
+				password: randomPassword,
 			},
 			want:    UPS{},
 			wantErr: true,
@@ -34,8 +40,8 @@ func TestConnect(t *testing.T) {
 			args: args{
 				host:     "755.755.755.755",
 				port:     3493,
-				username: "admin",
-				password: "secret",
+				username: randomUsername,
+				password: randomPassword,
 			},
 			want:    UPS{},
 			wantErr: true,
