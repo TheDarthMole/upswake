@@ -2,8 +2,14 @@ package ups
 
 import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/google/uuid"
 	"reflect"
 	"testing"
+)
+
+var (
+	randomUsername = uuid.New().String()
+	randomPassword = uuid.New().String()
 )
 
 func TestConnect(t *testing.T) {
@@ -24,8 +30,8 @@ func TestConnect(t *testing.T) {
 			args: args{
 				host:     "127.0.0.1",
 				port:     entity.DefaultNUTServerPort,
-				username: "admin",
-				password: "secret",
+				username: randomUsername,
+				password: randomPassword,
 			},
 			want:    UPS{},
 			wantErr: true,
@@ -35,8 +41,8 @@ func TestConnect(t *testing.T) {
 			args: args{
 				host:     "755.755.755.755",
 				port:     entity.DefaultNUTServerPort,
-				username: "admin",
-				password: "secret",
+				username: randomUsername,
+				password: randomPassword,
 			},
 			want:    UPS{},
 			wantErr: true,

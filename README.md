@@ -23,6 +23,22 @@ A dynamic Wake on Lan application that wakes servers based on the status of a NU
 - ⚙️ CLI tool to manually wake a server
 - 📡 Connect to multiple NUT servers and wake multiple servers
 
+### 🛡️ Attention to Security
+
+<details><summary><em>Click to expand:</em> ✍️ You can verify the Docker images were built from this repository using the cosign tool.</summary>
+
+
+```bash
+cosign verify thedarthmole/upswake:latest \
+    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+> [!NOTE]
+> This only proves that the Docker image is from this repository, assuming that no one hacks into GitHub or the repository. It does not prove that the code itself is secure.
+
+</details>
+
 ## 🔍 Overview
 
 UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of 
