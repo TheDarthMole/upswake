@@ -11,15 +11,14 @@ import (
 )
 
 const (
-	DefaultConfigName = "config"
-	DefaultConfigType = "yaml"
-	DefaultConfigPath = "."
+	DefaultConfigFile = "config.yaml"
 )
 
 var (
 	fileSystem          = afero.NewOsFs()
 	config              = entity.Config{}
-	ErrorConfigNotFound = errors.New(fmt.Sprintf("the config at %s/%s.%s was not found", DefaultConfigPath, DefaultConfigName, DefaultConfigType))
+	configFilePath      string
+	ErrorConfigNotFound = errors.New(fmt.Sprintf("the config at '%s' was not found", DefaultConfigFile))
 	DefaultConfig       = Config{
 		NutServers: []NutServer{
 			{
@@ -46,23 +45,27 @@ var (
 )
 
 func init() {
-	viper.SetConfigName(DefaultConfigName)
-	viper.SetConfigType(DefaultConfigType)
-	viper.AddConfigPath(DefaultConfigPath)
 	viper.SetEnvPrefix("UPSWAKE")
+	viper.AutomaticEnv() // read in environment variables that match
+	configFilePath = DefaultConfigFile
+	if viper.GetString("CONFIG_FILE") != "" {
+		log.Printf("Loading config file from environment")
+		configFilePath = viper.GetString("CONFIG_FILE")
+	}
 	viper.OnConfigChange(func(in fsnotify.Event) {
-		if _, err := load(fileSystem); err != nil {
+		if _, err := load(fileSystem, configFilePath); err != nil {
 			log.Fatal(err)
 		}
 	})
 }
 
 func Load() (*entity.Config, error) {
-	return load(fileSystem)
+	return load(fileSystem, configFilePath)
 }
 
-func load(fs afero.Fs) (*entity.Config, error) {
+func load(fs afero.Fs, configFile string) (*entity.Config, error) {
 	viper.SetFs(fs)
+	viper.SetConfigFile(configFile)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -73,14 +76,16 @@ func load(fs afero.Fs) (*entity.Config, error) {
 		return &entity.Config{}, err
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
 	loadConfig := Config{}
 	if err := viper.Unmarshal(&loadConfig); err != nil {
 		return &entity.Config{}, err
 	}
+	entityConfig := *fromFileConfig(&loadConfig)
 
-	config = *fromFileConfig(&loadConfig)
+	if err := entityConfig.Validate(); err != nil {
+		return &entity.Config{}, err
+	}
+	config = entityConfig
 	return &config, nil
 }
 

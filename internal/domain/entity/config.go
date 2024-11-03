@@ -43,10 +43,8 @@ func duration(fl validator.FieldLevel) bool {
 	switch field.Kind() {
 	case reflect.String:
 		dur, err := time.ParseDuration(fl.Field().String())
-		if err != nil || dur < 1*time.Millisecond {
-			return false
-		}
-		return true
+		// true if there is no error and the time is greater than 1ms, else false
+		return err == nil && dur >= 1*time.Millisecond
 	default:
 		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 	}
@@ -54,6 +52,15 @@ func duration(fl validator.FieldLevel) bool {
 
 type Config struct {
 	NutServers []NutServer
+}
+
+func (c *Config) Validate() error {
+	for _, target := range c.NutServers {
+		if err := target.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type NutServer struct {
@@ -65,7 +72,7 @@ type NutServer struct {
 	Targets  []TargetServer
 }
 
-func (ns *NutServer) validate() error {
+func (ns *NutServer) Validate() error {
 	if ns.Name == "" {
 		return ErrorNameRequired
 	}
@@ -85,7 +92,7 @@ func (ns *NutServer) validate() error {
 		return ErrorPasswordRequired
 	}
 	for _, target := range ns.Targets {
-		if err := target.validate(); err != nil {
+		if err := target.Validate(); err != nil {
 			return err
 		}
 	}
@@ -101,7 +108,7 @@ type TargetServer struct {
 	Rules     []string
 }
 
-func (ts *TargetServer) validate() error {
+func (ts *TargetServer) Validate() error {
 	if ts.Name == "" {
 		return ErrorNameRequired
 	}
@@ -139,7 +146,7 @@ func NewTargetServer(name, mac, broadcast, interval string, port int, rules []st
 		Interval:  interval,
 		Rules:     rules,
 	}
-	err := ts.validate()
+	err := ts.Validate()
 	if err != nil {
 		return nil, err
 	}
