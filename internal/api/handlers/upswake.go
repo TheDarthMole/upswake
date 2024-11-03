@@ -73,15 +73,14 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	if err := c.Bind(mac); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
-	result := eval.EvaluateExpressions()
-	if result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, Response{Message: result.Error.Error()})
+	result, err := eval.EvaluateExpressions()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if !result.Found {
-		return c.JSON(http.StatusNotFound, Response{Message: "MAC address not found in the config"})
+		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
 	if !result.Allowed {
