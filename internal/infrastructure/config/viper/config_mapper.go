@@ -1,4 +1,4 @@
-package file
+package viper
 
 import "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 
@@ -36,6 +36,7 @@ func fromFileTargetServer(targetServer *TargetServer) *entity.TargetServer {
 		MAC:       targetServer.MAC,
 		Broadcast: targetServer.Broadcast,
 		Port:      targetServer.Port,
+		Interval:  targetServer.Interval,
 		Rules:     targetServer.Rules,
 	}
 }

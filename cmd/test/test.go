@@ -1,7 +1,7 @@
 package main
 
 import (
-	config "github.com/TheDarthMole/UPSWake/internal/infrastructure/config/file"
+	config "github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"log"
 )
 

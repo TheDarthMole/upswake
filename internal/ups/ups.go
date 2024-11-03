@@ -3,7 +3,8 @@ package ups
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+
 	nut "github.com/robbiet480/go.nut"
 	"log"
 )
@@ -29,8 +30,8 @@ func connect(host string, port int, username, password string) (UPS, error) {
 	return UPS{client}, nil
 }
 
-func GetJSON(ns *config.NutServer) (string, error) {
-	client, err := connect(ns.Host, ns.GetPort(), ns.Credentials.Username, ns.Credentials.Password)
+func GetJSON(ns *entity.NutServer) (string, error) {
+	client, err := connect(ns.Host, ns.Port, ns.Username, ns.Password)
 	if err != nil {
 		return "", fmt.Errorf("could not connect to NUT server: %s", err)
 	}

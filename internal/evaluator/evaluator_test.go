@@ -1,21 +1,23 @@
 package evaluator
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
+
 	"reflect"
 	"testing"
 )
 
 var (
-	defaultConfig = config.CreateDefaultConfig()
-	tempFS, _     = mem.NewFS()
+	defaultConfig, _ = viper.CreateDefaultConfig()
+	tempFS, _        = mem.NewFS()
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
 	type args struct {
-		config  *config.Config
+		config  *entity.Config
 		mac     string
 		rulesFS hackpadfs.FS
 	}
@@ -28,12 +30,12 @@ func TestNewRegoEvaluator(t *testing.T) {
 		{
 			name: "valid config",
 			args: args{
-				config:  &defaultConfig,
+				config:  defaultConfig,
 				mac:     "00:00:00:00:00:00",
 				rulesFS: tempFS,
 			},
 			want: &regoEvaluator{
-				config:  &defaultConfig,
+				config:  defaultConfig,
 				rulesFS: tempFS,
 				mac:     "00:00:00:00:00:00",
 			},
@@ -51,7 +53,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 
 func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 	type fields struct {
-		config  *config.Config
+		config  *entity.Config
 		rulesFS hackpadfs.FS
 		mac     string
 	}
@@ -76,13 +78,13 @@ func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	type fields struct {
-		config  *config.Config
+		config  *entity.Config
 		rulesFS hackpadfs.FS
 		mac     string
 	}
 	type args struct {
-		target    *config.TargetServer
-		nutServer *config.NutServer
+		target    *entity.TargetServer
+		nutServer *entity.NutServer
 	}
 	tests := []struct {
 		name    string
@@ -94,7 +96,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		{
 			name: "nothing to evaluate",
 			fields: fields{
-				config:  &defaultConfig,
+				config:  defaultConfig,
 				rulesFS: tempFS,
 				mac:     "00:00:00:00:00:00",
 			},

@@ -2,7 +2,7 @@ package wol
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
 	"net"
@@ -11,19 +11,16 @@ import (
 const MagicPacketSize = 102
 
 type WakeOnLan struct {
-	config.TargetServer
+	*entity.TargetServer
 }
 
-func NewWoLClient(target config.TargetServer) *WakeOnLan {
+func NewWoLClient(target *entity.TargetServer) *WakeOnLan {
 	return &WakeOnLan{
 		target,
 	}
 }
 
 func (tgt *WakeOnLan) Wake() error {
-	if err := tgt.Validate(); err != nil {
-		return err
-	}
 	conn, err := net.DialUDP("udp",
 		nil,
 		&net.UDPAddr{
@@ -34,7 +31,7 @@ func (tgt *WakeOnLan) Wake() error {
 		return err
 	}
 	defer conn.Close()
-	return wakeInternal(conn, tgt.Mac)
+	return wakeInternal(conn, tgt.MAC)
 }
 
 func wakeInternal(dst io.ReadWriteCloser, mac string) error {

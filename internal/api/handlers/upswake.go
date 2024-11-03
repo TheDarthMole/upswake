@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/hack-pad/hackpadfs"
@@ -10,7 +10,7 @@ import (
 )
 
 type UPSWakeHandler struct {
-	cfg     *config.Config
+	cfg     *entity.Config
 	rulesFS hackpadfs.FS
 }
 
@@ -23,7 +23,7 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *config.Config, rulesFS hackpadfs.FS) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, rulesFS hackpadfs.FS) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,
@@ -48,7 +48,7 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 	nutServers := h.cfg.NutServers
 	// Don't leak passwords
 	for i, nutServer := range nutServers {
-		nutServer.Credentials.Password = "********"
+		nutServer.Password = "********"
 		nutServers[i] = nutServer
 	}
 	return c.JSON(http.StatusOK, nutServers)
@@ -91,12 +91,19 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 		})
 	}
 
-	wolClient := wol.NewWoLClient(config.TargetServer{
-		Name:      "API Request",
-		Mac:       result.Target.Mac,
-		Broadcast: result.Target.Broadcast,
-		Port:      result.Target.Port,
-	})
+	ts, err := entity.NewTargetServer(
+		"API Request",
+		result.Target.MAC,
+		result.Target.Broadcast,
+		"15m",
+		result.Target.Port,
+		[]string{},
+	)
+	if err != nil {
+		return err
+	}
+
+	wolClient := wol.NewWoLClient(ts)
 
 	if err := wolClient.Wake(); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})

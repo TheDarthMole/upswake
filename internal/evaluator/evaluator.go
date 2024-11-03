@@ -2,7 +2,7 @@ package evaluator
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/TheDarthMole/UPSWake/internal/util"
@@ -33,26 +33,49 @@ func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *
 // EvaluateExpressions evaluates the expressions in the rules files
 func (r *regoEvaluator) EvaluateExpressions() EvaluationResult {
 	// For each NUT server
+	var evaluationResults []EvaluationResult
 
-	target, nutServer, err := r.config.FindTarget(r.mac)
-
-	if err != nil {
-		return EvaluationResult{
-			Allowed: false,
-			Found:   target != nil, // couldn't find the target in the config
-			Error:   err,
-			Target:  nil,
+	for _, nutServer := range r.config.NutServers {
+		// For each target
+		for _, target := range nutServer.Targets {
+			if target.MAC == r.mac {
+				allowed, err := r.evaluateExpression(&target, &nutServer)
+				evaluationResults = append(evaluationResults, EvaluationResult{
+					Allowed: allowed,
+					Found:   true,
+					Error:   err,
+					Target:  &target,
+				})
+			}
 		}
 	}
 
-	allowed, err := r.evaluateExpression(target, nutServer)
-
 	return EvaluationResult{
-		Allowed: allowed,
-		Found:   true,
-		Error:   err,
-		Target:  target,
+		Allowed: false,
+		Found:   false,
+		Error:   nil,
+		Target:  nil,
 	}
+
+	//target, nutServer, err := r.config.FindTarget(r.mac)
+	//
+	//if err != nil {
+	//	return EvaluationResult{
+	//		Allowed: false,
+	//		Found:   target != nil, // couldn't find the target in the config
+	//		Error:   err,
+	//		Target:  nil,
+	//	}
+	//}
+	//
+	//allowed, err := r.evaluateExpression(target, nutServer)
+	//
+	//return EvaluationResult{
+	//	Allowed: allowed,
+	//	Found:   true,
+	//	Error:   err,
+	//	Target:  target,
+	//}
 }
 
 func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {

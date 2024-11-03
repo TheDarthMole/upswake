@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 )
 
@@ -64,12 +66,18 @@ func (h *ServerHandler) WakeServer(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	wolClient := wol.NewWoLClient(config.TargetServer{
-		Name:      "API Request",
-		Mac:       wsRequest.Mac,
-		Broadcast: wsRequest.Broadcast,
-		Port:      wsRequest.Port,
-	})
+	ts, err := entity.NewTargetServer(
+		"API Request",
+		wsRequest.Mac,
+		wsRequest.Broadcast,
+		"15m",
+		wsRequest.Port,
+		[]string{},
+	)
+	if err != nil {
+		log.Fatalf("failed to create target server %s", err)
+	}
+	wolClient := wol.NewWoLClient(ts)
 
 	if err := wolClient.Wake(); err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
@@ -104,12 +112,19 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 	}
 
 	for _, broadcast := range broadcasts {
-		wolClient := wol.NewWoLClient(config.TargetServer{
-			Name:      "API Request",
-			Mac:       wsRequest.Mac,
-			Broadcast: broadcast.String(),
-			Port:      wsRequest.Port,
-		})
+		ts, err := entity.NewTargetServer(
+			"API Request",
+			wsRequest.Mac,
+			broadcast.String(),
+			"15m",
+			wsRequest.Port,
+			[]string{},
+		)
+
+		if err != nil {
+			log.Printf("failed to create new target server %s", err)
+		}
+		wolClient := wol.NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
 			return err
