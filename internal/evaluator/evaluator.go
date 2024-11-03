@@ -31,51 +31,31 @@ func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *
 }
 
 // EvaluateExpressions evaluates the expressions in the rules files
-func (r *regoEvaluator) EvaluateExpressions() EvaluationResult {
+func (r *regoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	// For each NUT server
-	var evaluationResults []EvaluationResult
+	evaluationResult := EvaluationResult{
+		Allowed: false,
+		Found:   false,
+		Target:  nil,
+	}
 
 	for _, nutServer := range r.config.NutServers {
 		// For each target
 		for _, target := range nutServer.Targets {
 			if target.MAC == r.mac {
 				allowed, err := r.evaluateExpression(&target, &nutServer)
-				evaluationResults = append(evaluationResults, EvaluationResult{
-					Allowed: allowed,
-					Found:   true,
-					Error:   err,
-					Target:  &target,
-				})
+				if err != nil {
+					return EvaluationResult{}, err
+				}
+
+				evaluationResult.Found = true
+				evaluationResult.Allowed = evaluationResult.Allowed || allowed
+				evaluationResult.Target = &target
 			}
 		}
 	}
 
-	return EvaluationResult{
-		Allowed: false,
-		Found:   false,
-		Error:   nil,
-		Target:  nil,
-	}
-
-	//target, nutServer, err := r.config.FindTarget(r.mac)
-	//
-	//if err != nil {
-	//	return EvaluationResult{
-	//		Allowed: false,
-	//		Found:   target != nil, // couldn't find the target in the config
-	//		Error:   err,
-	//		Target:  nil,
-	//	}
-	//}
-	//
-	//allowed, err := r.evaluateExpression(target, nutServer)
-	//
-	//return EvaluationResult{
-	//	Allowed: allowed,
-	//	Found:   true,
-	//	Error:   err,
-	//	Target:  target,
-	//}
+	return evaluationResult, nil
 }
 
 func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
