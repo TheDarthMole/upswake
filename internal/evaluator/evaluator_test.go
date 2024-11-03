@@ -69,7 +69,7 @@ func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 				rulesFS: tt.fields.rulesFS,
 				mac:     tt.fields.mac,
 			}
-			if got := r.EvaluateExpressions(); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := r.EvaluateExpressions(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("EvaluateExpressions() = %v, want %v", got, tt.want)
 			}
 		})
@@ -120,6 +120,39 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("evaluateExpression() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_regoEvaluator_EvaluateExpressions(t *testing.T) {
+	type fields struct {
+		config  *entity.Config
+		rulesFS hackpadfs.FS
+		mac     string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    EvaluationResult
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &regoEvaluator{
+				config:  tt.fields.config,
+				rulesFS: tt.fields.rulesFS,
+				mac:     tt.fields.mac,
+			}
+			got, err := r.EvaluateExpressions()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EvaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("EvaluateExpressions() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
