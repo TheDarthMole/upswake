@@ -8,7 +8,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hack-pad/hackpadfs v0.2.4
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/open-policy-agent/opa v0.69.0
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20211224004021-c83b0c2f887d
@@ -18,7 +17,6 @@ require (
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.4
 	go.uber.org/zap v1.27.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -54,6 +52,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/prometheus/client_golang v1.20.4 // indirect
@@ -96,5 +95,6 @@ require (
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
