@@ -13,8 +13,6 @@ var (
 	broadcasts []string
 )
 
-const WoLPort = 9
-
 func init() {
 	bc, err := util.GetAllBroadcastAddresses()
 	if err != nil {
@@ -47,7 +45,7 @@ var wakeCmd = &cobra.Command{
 				mac,
 				broadcast.String(),
 				"1s",
-				WoLPort,
+				entity.DefaultWoLPort,
 				[]string{},
 			)
 			if err != nil {

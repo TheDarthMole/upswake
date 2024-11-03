@@ -2,6 +2,7 @@ package config
 
 import (
 	"embed"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/go-playground/validator/v10"
 	"reflect"
 
@@ -115,7 +116,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "test",
 				Host:        localhost,
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: validCredentials,
 			},
 			wantErr: false,
@@ -125,7 +126,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "",
 				Host:        localhost,
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: validCredentials,
 			},
 			wantErr: true,
@@ -135,7 +136,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "test",
 				Host:        "",
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: validCredentials,
 			},
 			wantErr: true,
@@ -145,7 +146,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "test",
 				Host:        "invalid!host",
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: validCredentials,
 			},
 			wantErr: true,
@@ -155,7 +156,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "test",
 				Host:        "127.0.0.256",
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: validCredentials,
 			},
 			wantErr: true,
@@ -185,7 +186,7 @@ func TestNutServer_Validate(t *testing.T) {
 			fields: fields{
 				Name:        "test",
 				Host:        localhost,
-				Port:        3493,
+				Port:        entity.DefaultNUTServerPort,
 				Credentials: NutCredentials{},
 			},
 			wantErr: true,
@@ -643,7 +644,7 @@ func TestConfig_FindTarget(t *testing.T) {
 		Name:      "test",
 		Mac:       "00:00:00:00:00:00",
 		Broadcast: "192.168.1.255",
-		Port:      9,
+		Port:      entity.DefaultWoLPort,
 		Interval:  "15m",
 		Rules:     []string{},
 	}

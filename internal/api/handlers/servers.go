@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
@@ -25,13 +24,13 @@ type BroadcastWakeRequest struct {
 
 func NewWakeServerRequest() *WakeServerRequest {
 	return &WakeServerRequest{
-		Port: config.DefaultWoLPort,
+		Port: entity.DefaultWoLPort,
 	}
 }
 
 func NewBroadcastWakeRequest() *BroadcastWakeRequest {
 	return &BroadcastWakeRequest{
-		Port: config.DefaultWoLPort,
+		Port: entity.DefaultWoLPort,
 	}
 }
 

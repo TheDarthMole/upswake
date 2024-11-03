@@ -14,8 +14,6 @@ const (
 	DefaultConfigName = "config"
 	DefaultConfigType = "yaml"
 	DefaultConfigPath = "."
-	DefaultNUTPort    = 3493
-	DefaultWoLPort    = 9
 )
 
 var (
@@ -27,7 +25,7 @@ var (
 			{
 				Name:     "NUT Server 1",
 				Host:     "192.168.1.13",
-				Port:     DefaultNUTPort,
+				Port:     entity.DefaultNUTServerPort,
 				Username: "",
 				Password: "",
 				Targets: []TargetServer{
@@ -35,7 +33,7 @@ var (
 						Name:      "NAS 1",
 						MAC:       "00:00:00:00:00:00",
 						Broadcast: "192.168.1.255",
-						Port:      DefaultWoLPort,
+						Port:      entity.DefaultWoLPort,
 						Interval:  "15m",
 						Rules: []string{
 							"80percentOn.rego",

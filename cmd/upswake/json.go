@@ -45,7 +45,7 @@ func init() {
 	jsonCmd.Flags().StringP("username", "u", "", "Username for the NUT server")
 	jsonCmd.Flags().StringP("password", "p", "", "Password for the NUT server")
 	jsonCmd.Flags().StringP("host", "H", "", "Host address of the NUT server")
-	jsonCmd.Flags().IntP("port", "P", 9, "Port number of the NUT server")
+	jsonCmd.Flags().IntP("port", "P", entity.DefaultWoLPort, "Port number of the NUT server")
 	if err := jsonCmd.MarkFlagRequired("username"); err != nil {
 		_ = jsonCmd.Usage()
 		os.Exit(1)

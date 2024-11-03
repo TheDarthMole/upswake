@@ -25,6 +25,11 @@ var (
 	validate               *validator.Validate
 )
 
+const (
+	DefaultWoLPort       = 9
+	DefaultNUTServerPort = 3493
+)
+
 func init() {
 	validate = validator.New()
 	if err := validate.RegisterValidation("duration", duration, true); err != nil {
