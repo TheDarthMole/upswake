@@ -2,15 +2,15 @@ package evaluator
 
 import (
 	"fmt"
-	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/hack-pad/hackpadfs"
 )
 
-type regoEvaluator struct {
-	config  *config.Config
+type RegoEvaluator struct {
+	config  *entity.Config
 	rulesFS hackpadfs.FS
 	mac     string
 }
@@ -18,12 +18,11 @@ type regoEvaluator struct {
 type EvaluationResult struct {
 	Allowed bool
 	Found   bool
-	Error   error
-	Target  *config.TargetServer
+	Target  *entity.TargetServer
 }
 
-func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *regoEvaluator {
-	return &regoEvaluator{
+func NewRegoEvaluator(config *entity.Config, mac string, rulesFS hackpadfs.FS) *RegoEvaluator {
+	return &RegoEvaluator{
 		config:  config,
 		mac:     mac,
 		rulesFS: rulesFS,
@@ -31,7 +30,7 @@ func NewRegoEvaluator(config *config.Config, mac string, rulesFS hackpadfs.FS) *
 }
 
 // EvaluateExpressions evaluates the expressions in the rules files
-func (r *regoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
+func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	// For each NUT server
 	evaluationResult := EvaluationResult{
 		Allowed: false,
@@ -40,10 +39,19 @@ func (r *regoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	}
 
 	for _, nutServer := range r.config.NutServers {
+		inputJson, err := ups.GetJSON(&nutServer)
+		if err != nil {
+			return EvaluationResult{
+				Allowed: false,
+				Found:   false,
+				Target:  nil,
+			}, err
+		}
+
 		// For each target
 		for _, target := range nutServer.Targets {
 			if target.MAC == r.mac {
-				allowed, err := r.evaluateExpression(&target, &nutServer)
+				allowed, err := r.evaluateExpression(&target, &nutServer, inputJson)
 				if err != nil {
 					return EvaluationResult{}, err
 				}
@@ -58,15 +66,11 @@ func (r *regoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	return evaluationResult, nil
 }
 
-func (r *regoEvaluator) evaluateExpression(target *config.TargetServer, nutServer *config.NutServer) (bool, error) {
+func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, nutServer *entity.NutServer, inputJson string) (bool, error) {
 	if target == nil || nutServer == nil {
 		return false, nil
 	}
 
-	inputJson, err := ups.GetJSON(nutServer)
-	if err != nil {
-		return false, err
-	}
 	for _, ruleName := range target.Rules {
 		regoRule, err := util.GetFile(r.rulesFS, ruleName)
 		if err != nil {
