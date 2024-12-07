@@ -29,8 +29,12 @@ func NewRegoEvaluator(config *entity.Config, mac string, rulesFS hackpadfs.FS) *
 	}
 }
 
-// EvaluateExpressions evaluates the expressions in the rules files
 func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
+	return r.evaluateExpressions(ups.GetJSON)
+}
+
+// EvaluateExpressions evaluates the expressions in the rules files
+func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutServer) (string, error)) (EvaluationResult, error) {
 	// For each NUT server
 	evaluationResult := EvaluationResult{
 		Allowed: false,
@@ -39,7 +43,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	}
 
 	for _, nutServer := range r.config.NutServers {
-		inputJson, err := ups.GetJSON(&nutServer)
+		inputJson, err := getUPSJSON(&nutServer)
 		if err != nil {
 			return EvaluationResult{
 				Allowed: false,
@@ -53,7 +57,11 @@ func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 			if target.MAC == r.mac {
 				allowed, err := r.evaluateExpression(&target, &nutServer, inputJson)
 				if err != nil {
-					return EvaluationResult{}, err
+					return EvaluationResult{
+						Allowed: false,
+						Found:   true,
+						Target:  &target,
+					}, err
 				}
 
 				evaluationResult.Found = true

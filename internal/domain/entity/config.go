@@ -156,3 +156,9 @@ func NewTargetServer(name, mac, broadcast, interval string, port int, rules []st
 type ConfigLoader interface {
 	Load() (*Config, error)
 }
+
+type NutServerInterface interface {
+	Validate() error
+	GetJSON() (string, error)
+	NutServer
+}
