@@ -55,7 +55,7 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 		// For each target
 		for _, target := range nutServer.Targets {
 			if target.MAC == r.mac {
-				allowed, err := r.evaluateExpression(&target, &nutServer, inputJson)
+				allowed, err := r.evaluateExpression(&target, inputJson)
 				if err != nil {
 					return EvaluationResult{
 						Allowed: false,
@@ -74,8 +74,8 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 	return evaluationResult, nil
 }
 
-func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, nutServer *entity.NutServer, inputJson string) (bool, error) {
-	if target == nil || nutServer == nil {
+func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJson string) (bool, error) {
+	if target == nil {
 		return false, nil
 	}
 

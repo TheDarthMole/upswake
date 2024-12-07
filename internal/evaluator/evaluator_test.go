@@ -5,7 +5,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
-
 	"reflect"
 	"testing"
 )
@@ -23,6 +22,22 @@ var (
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
+	alwaysTrueRegoFS, err := mem.NewFS()
+	if err != nil {
+		t.Fatal("Failed to setup memfs")
+	}
+	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t) != nil {
+		t.Fatal(err)
+	}
+
+	alwaysFalseRegoFS, err := mem.NewFS()
+	if err != nil {
+		t.Fatal("Failed to setup memfs")
+	}
+	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysFalseRego, t) != nil {
+		t.Fatal(err)
+	}
+
 	type args struct {
 		config  *entity.Config
 		mac     string
@@ -35,16 +50,29 @@ func TestNewRegoEvaluator(t *testing.T) {
 		want *RegoEvaluator
 	}{
 		{
-			name: "valid config",
+			name: "valid config 1",
 			args: args{
 				config:  defaultConfig,
 				mac:     "00:00:00:00:00:00",
-				rulesFS: tempFS,
+				rulesFS: alwaysTrueRegoFS,
 			},
 			want: &RegoEvaluator{
 				config:  defaultConfig,
-				rulesFS: tempFS,
+				rulesFS: alwaysTrueRegoFS,
 				mac:     "00:00:00:00:00:00",
+			},
+		},
+		{
+			name: "valid config 2",
+			args: args{
+				config:  defaultConfig,
+				mac:     "00:00:00:00:00:55",
+				rulesFS: alwaysFalseRegoFS,
+			},
+			want: &RegoEvaluator{
+				config:  defaultConfig,
+				rulesFS: alwaysFalseRegoFS,
+				mac:     "00:00:00:00:00:55",
 			},
 		},
 		//	TODO: Add more test cases
@@ -84,6 +112,22 @@ func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
+	alwaysTrueRegoFS, err := mem.NewFS()
+	if err != nil {
+		t.Fatal("Failed to setup memfs")
+	}
+	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t) != nil {
+		t.Fatal(err)
+	}
+
+	alwaysFalseRegoFS, err := mem.NewFS()
+	if err != nil {
+		t.Fatal("Failed to setup memfs")
+	}
+	if writeMemFile(alwaysFalseRegoFS, "test.rego", alwaysFalseRego, t) != nil {
+		t.Fatal(err)
+	}
+
 	type fields struct {
 		config  *entity.Config
 		rulesFS hackpadfs.FS
@@ -92,6 +136,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	type args struct {
 		target    *entity.TargetServer
 		nutServer *entity.NutServer
+		inputJSON string
 	}
 	tests := []struct {
 		name    string
@@ -109,9 +154,81 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			},
 			args: args{
 				target:    nil,
-				nutServer: nil,
+				inputJSON: "",
 			},
+			want:    false,
+			wantErr: false,
 		},
+		{
+			name: "evaluate with always true rule",
+			fields: fields{
+				config:  defaultConfig,
+				rulesFS: alwaysTrueRegoFS,
+				mac:     "00:00:00:00:00:00",
+			},
+			args: args{
+				target: &entity.TargetServer{
+					Name:      "server1",
+					MAC:       "00:11:22:33:44:55",
+					Broadcast: "127.0.0.1",
+					Port:      entity.DefaultWoLPort,
+					Interval:  "15m",
+					Rules: []string{
+						"test.rego",
+					},
+				},
+				inputJSON: "", // We don't care about the input JSON, as the rule will always return true for this fs
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "evaluate with always false rule",
+			fields: fields{
+				config:  defaultConfig,
+				rulesFS: alwaysFalseRegoFS,
+				mac:     "00:00:00:00:00:00",
+			},
+			args: args{
+				target: &entity.TargetServer{
+					Name:      "server1",
+					MAC:       "00:11:22:33:44:55",
+					Broadcast: "127.0.0.1",
+					Port:      entity.DefaultWoLPort,
+					Interval:  "15m",
+					Rules: []string{
+						"test.rego",
+					},
+				},
+				inputJSON: "", // We don't care about the input JSON, as the rule will always return true for this fs
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "file not found",
+			fields: fields{
+				config:  defaultConfig,
+				rulesFS: alwaysTrueRegoFS,
+				mac:     "00:00:00:00:00:00",
+			},
+			args: args{
+				target: &entity.TargetServer{
+					Name:      "server1",
+					MAC:       "00:11:22:33:44:55",
+					Broadcast: "127.0.0.1",
+					Port:      entity.DefaultWoLPort,
+					Interval:  "15m",
+					Rules: []string{
+						"doesnotexist.rego",
+					},
+				},
+				inputJSON: "", // We don't care about the input JSON, as the rule will always return true for this fs
+			},
+			want:    false,
+			wantErr: true,
+		},
+		// TODO: Add more rules that tests inputJSON
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,7 +237,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				rulesFS: tt.fields.rulesFS,
 				mac:     tt.fields.mac,
 			}
-			got, err := r.evaluateExpression(tt.args.target, tt.args.nutServer, validNUTOutput)
+			got, err := r.evaluateExpression(tt.args.target, validNUTOutput)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("evaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
