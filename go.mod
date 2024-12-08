@@ -39,7 +39,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
