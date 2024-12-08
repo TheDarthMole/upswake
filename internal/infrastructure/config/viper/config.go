@@ -1,7 +1,6 @@
 package viper
 
 import (
-	"errors"
 	"fmt"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/fsnotify/fsnotify"
@@ -18,7 +17,7 @@ var (
 	fileSystem          = afero.NewOsFs()
 	config              = entity.Config{}
 	configFilePath      string
-	ErrorConfigNotFound = errors.New(fmt.Sprintf("the config at '%s' was not found", DefaultConfigFile))
+	ErrorConfigNotFound = fmt.Errorf("the config at '%s' was not found", DefaultConfigFile)
 	DefaultConfig       = Config{
 		NutServers: []NutServer{
 			{

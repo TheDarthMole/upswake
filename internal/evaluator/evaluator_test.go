@@ -139,8 +139,8 @@ wake = true {
 		rulesFS hackpadfs.FS
 	}
 	type args struct {
-		target    *entity.TargetServer
-		nutServer *entity.NutServer
+		target *entity.TargetServer
+		//nutServer *entity.NutServer
 		inputJSON string
 	}
 	tests := []struct {
