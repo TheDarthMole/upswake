@@ -78,6 +78,36 @@ func TestEvaluateExpression(t *testing.T) {
 			want:    false,
 			wantErr: true,
 		},
+		{
+			name: "UPS server data positive",
+			args: args{
+				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
+				regoRule: `package upswake
+default wake = false
+wake = true {
+	input[i].Name == "cyberpower900"
+	input[i].Variables[j].Name == "battery.charge"
+	input[i].Variables[j].Value == 100
+}`,
+			},
+			wantErr: false,
+			want:    true,
+		},
+		{
+			name: "UPS server data negative",
+			args: args{
+				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":50,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
+				regoRule: `package upswake
+default wake = false
+wake = true {
+	input[i].Name == "cyberpower900"
+	input[i].Variables[j].Name == "battery.charge"
+	input[i].Variables[j].Value == 100
+}`,
+			},
+			wantErr: false,
+			want:    false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

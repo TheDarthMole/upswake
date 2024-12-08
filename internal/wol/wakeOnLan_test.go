@@ -1,7 +1,7 @@
 package wol
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"io"
 	"reflect"
 	"testing"
@@ -33,10 +33,10 @@ func (rwc *readWriteCloserError) Write(_ []byte) (n int, err error) {
 	return 15, nil
 }
 
-func newValidTestWoLTarget() config.TargetServer {
-	return config.TargetServer{
+func newValidTestWoLTarget() *entity.TargetServer {
+	return &entity.TargetServer{
 		Name:      "test",
-		Mac:       "01:02:03:04:05:06",
+		MAC:       "01:02:03:04:05:06",
 		Broadcast: "127.0.0.255",
 		Port:      9,
 		Interval:  "15m",
@@ -250,7 +250,7 @@ func Test_wakeInternal(t *testing.T) {
 
 func TestNewWoLClient(t *testing.T) {
 	type args struct {
-		target config.TargetServer
+		target *entity.TargetServer
 	}
 	tests := []struct {
 		name string
@@ -277,7 +277,7 @@ func TestNewWoLClient(t *testing.T) {
 
 func TestWakeOnLan_Wake(t *testing.T) {
 	type fields struct {
-		WoLTarget config.TargetServer
+		WoLTarget *entity.TargetServer
 	}
 	tests := []struct {
 		name    string

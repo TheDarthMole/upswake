@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
@@ -12,8 +12,6 @@ var (
 	mac        string
 	broadcasts []string
 )
-
-const WoLPort = 9
 
 func init() {
 	bc, err := util.GetAllBroadcastAddresses()
@@ -42,17 +40,19 @@ var wakeCmd = &cobra.Command{
 		}
 
 		for _, broadcast := range ipBroadcasts {
-			wolClient := wol.NewWoLClient(config.TargetServer{
-				Name:      "CLI Request",
-				Mac:       mac,
-				Broadcast: broadcast.String(),
-				Port:      WoLPort,
-			})
-
-			err := wolClient.Validate()
+			ts, err := entity.NewTargetServer(
+				"CLI Request",
+				mac,
+				broadcast.String(),
+				"1s",
+				entity.DefaultWoLPort,
+				[]string{},
+			)
 			if err != nil {
-				log.Fatalf("failed to validate %s: %s", mac, err)
+				log.Fatalf("failed to create new target server %s", err)
 			}
+			wolClient := wol.NewWoLClient(ts)
+
 			if err = wolClient.Wake(); err != nil {
 				log.Fatalf("failed to wake %s: %s", mac, err)
 			}

@@ -1,6 +1,7 @@
 package ups
 
 import (
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/google/uuid"
 	"reflect"
 	"testing"
@@ -28,7 +29,7 @@ func TestConnect(t *testing.T) {
 			name: "Invalid Server",
 			args: args{
 				host:     "127.0.0.1",
-				port:     3493,
+				port:     entity.DefaultNUTServerPort,
 				username: randomUsername,
 				password: randomPassword,
 			},
@@ -39,7 +40,7 @@ func TestConnect(t *testing.T) {
 			name: "Invalid IP",
 			args: args{
 				host:     "755.755.755.755",
-				port:     3493,
+				port:     entity.DefaultNUTServerPort,
 				username: randomUsername,
 				password: randomPassword,
 			},

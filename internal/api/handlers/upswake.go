@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/config"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/hack-pad/hackpadfs"
@@ -10,7 +10,7 @@ import (
 )
 
 type UPSWakeHandler struct {
-	cfg     *config.Config
+	cfg     *entity.Config
 	rulesFS hackpadfs.FS
 }
 
@@ -23,7 +23,7 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *config.Config, rulesFS hackpadfs.FS) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, rulesFS hackpadfs.FS) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,
@@ -48,7 +48,7 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 	nutServers := h.cfg.NutServers
 	// Don't leak passwords
 	for i, nutServer := range nutServers {
-		nutServer.Credentials.Password = "********"
+		nutServer.Password = "********"
 		nutServers[i] = nutServer
 	}
 	return c.JSON(http.StatusOK, nutServers)
@@ -71,37 +71,50 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
+		c.Logger().Errorf("failed to bind mac address %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
-
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
-	result := eval.EvaluateExpressions()
-	if result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, Response{Message: result.Error.Error()})
+	result, err := eval.EvaluateExpressions()
+	if err != nil {
+		c.Logger().Errorf("failed to evaluate expressions %s", err)
+		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if !result.Found {
-		return c.JSON(http.StatusNotFound, Response{Message: "MAC address not found in the config"})
+		c.Logger().Infof("mac address not found in the config %s", mac.Mac)
+		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
 	if !result.Allowed {
+		c.Logger().Debugf("no rule evaluated to true %s", mac.Mac)
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
 		})
 	}
 
-	wolClient := wol.NewWoLClient(config.TargetServer{
-		Name:      "API Request",
-		Mac:       result.Target.Mac,
-		Broadcast: result.Target.Broadcast,
-		Port:      result.Target.Port,
-	})
+	ts, err := entity.NewTargetServer(
+		"API Request",
+		result.Target.MAC,
+		result.Target.Broadcast,
+		"15m",
+		result.Target.Port,
+		[]string{},
+	)
+	if err != nil {
+		c.Logger().Errorf("failed to create target server %s", err)
+		return err
+	}
 
-	if err := wolClient.Wake(); err != nil {
+	wolClient := wol.NewWoLClient(ts)
+
+	if err = wolClient.Wake(); err != nil {
+		c.Logger().Errorf("failed to send wake on lan %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
+	c.Logger().Debugf("wake on lan sent to %s", mac.Mac)
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on Lan sent",
 		Woken:   true,

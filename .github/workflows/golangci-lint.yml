@@ -23,8 +23,9 @@ jobs:
           allowed-endpoints: >
             github.com:443
             objects.githubusercontent.com:443
-            proxy.golang.org:443
             raw.githubusercontent.com:443
+            api.github.com:443
+            proxy.golang.org:443
             storage.googleapis.com:443
 
       - name: 🚚 Check out the repository

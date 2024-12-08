@@ -1,0 +1,6 @@
+nut_servers:
+  - name: nut_server_1
+    host: 192.168.1.133
+    port: 3493
+    username: upsmon
+    password: password
