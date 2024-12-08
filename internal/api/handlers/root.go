@@ -46,7 +46,10 @@ func (h *RootHandler) Root(c echo.Context) error {
 //	@Router			/health [get]
 func (h *RootHandler) Health(c echo.Context) error {
 	if _, err := util.GetAllBroadcastAddresses(); err != nil {
+		c.Logger().Errorf("Error getting broadcast addresses: %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
+
+	c.Logger().Debugf("Health check OK")
 	return c.JSON(http.StatusOK, Response{Message: "OK"})
 }

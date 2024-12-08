@@ -71,19 +71,23 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
+		c.Logger().Errorf("failed to bind mac address %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
+		c.Logger().Errorf("failed to evaluate expressions %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if !result.Found {
+		c.Logger().Infof("mac address not found in the config %s", mac.Mac)
 		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
 	if !result.Allowed {
+		c.Logger().Debugf("no rule evaluated to true %s", mac.Mac)
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
@@ -99,15 +103,18 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 		[]string{},
 	)
 	if err != nil {
+		c.Logger().Errorf("failed to create target server %s", err)
 		return err
 	}
 
 	wolClient := wol.NewWoLClient(ts)
 
-	if err := wolClient.Wake(); err != nil {
+	if err = wolClient.Wake(); err != nil {
+		c.Logger().Errorf("failed to send wake on lan %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
+	c.Logger().Debugf("wake on lan sent to %s", mac.Mac)
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on Lan sent",
 		Woken:   true,

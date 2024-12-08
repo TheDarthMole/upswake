@@ -58,10 +58,12 @@ func (h *ServerHandler) Register(g *echo.Group) {
 func (h *ServerHandler) WakeServer(c echo.Context) error {
 	wsRequest := NewWakeServerRequest()
 	if err := c.Bind(wsRequest); err != nil {
+		c.Logger().Errorf("failed to bind wake server request %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	if err := c.Validate(wsRequest); err != nil {
+		c.Logger().Errorf("failed to validate wake server request %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -74,13 +76,17 @@ func (h *ServerHandler) WakeServer(c echo.Context) error {
 		[]string{},
 	)
 	if err != nil {
-		log.Fatalf("failed to create target server %s", err)
+		c.Logger().Fatalf("failed to create target server %s", err)
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	wolClient := wol.NewWoLClient(ts)
 
-	if err := wolClient.Wake(); err != nil {
+	if err = wolClient.Wake(); err != nil {
+		c.Logger().Fatalf("failed to send wake on lan %s", err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
+
+	c.Logger().Debugf("wake on lan packet sent to %s", wsRequest.Mac)
 	return c.JSON(http.StatusCreated, Response{Message: "Wake on LAN packet sent"})
 }
 
