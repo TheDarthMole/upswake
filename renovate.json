@@ -4,5 +4,6 @@
     "config:recommended",
     "group:allNonMajor",
     ":semanticCommitTypeAll(build)"
-  ]
+  ],
+  "postUpdateOptions": ["gomodTidy"]
 }
