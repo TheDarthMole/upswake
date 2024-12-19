@@ -4,9 +4,6 @@ WORKDIR "/build/"
 
 # To improve layer caching
 COPY go.mod go.sum ./
-COPY rules/ /opt/upswake/rules
-COPY LICENSE /opt/upswake/LICENSE
-
 RUN go mod download
 
 COPY . ./
