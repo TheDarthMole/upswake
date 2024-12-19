@@ -25,24 +25,19 @@ const (
 var (
 	cfgFile   string
 	regoFiles fs.FS
+	sugar     *zap.SugaredLogger
 	serveCmd  = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logger, err := zap.NewProduction()
-			if err != nil {
-				log.Fatalf("can't initialize zap logger: %v", err)
-			}
-
 			cfg, err := viper.Load()
 			if err != nil {
-				logger.Fatal("Error loading config", zap.Error(err))
+				sugar.Fatal("Error loading config", err)
 			}
 			baseURL := listenScheme + listenHost + ":" + cmd.Flag("port").Value.String()
 			ctx := context.Background()
 
-			sugar := logger.Sugar()
 			server := api.NewServer(ctx, sugar)
 
 			rootHandler := handlers.NewRootHandler()
@@ -56,7 +51,7 @@ var (
 
 			for _, mapping := range cfg.NutServers {
 				for _, target := range mapping.Targets {
-					go processTarget(ctx, sugar, target, baseURL+"/api/upswake")
+					go processTarget(ctx, target, baseURL+"/api/upswake")
 				}
 			}
 
@@ -75,9 +70,14 @@ func init() {
 		"config",
 		"./config.yaml",
 		"config file (default is ./config.yaml)")
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialize zap logger: %v", err)
+	}
+	sugar = logger.Sugar()
 }
 
-func processTarget(ctx context.Context, sugar *zap.SugaredLogger, target config.TargetServer, endpoint string) {
+func processTarget(ctx context.Context, target config.TargetServer, endpoint string) {
 	sugar.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
@@ -101,15 +101,15 @@ func sendWakeRequest(ctx context.Context, target config.TargetServer, address st
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
-		log.Fatalf("Error creating post request: %s", err)
+		sugar.Errorf("Error creating post request: %s", err)
 	}
 	r.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(r)
 	if err != nil {
-		log.Fatalf("Error sending post request: %s", err)
+		sugar.Errorf("Error sending post request: %s", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Error sending post request: %s", resp.Status)
+		sugar.Errorf("Error sending post request: %s", resp.Status)
 	}
 }
