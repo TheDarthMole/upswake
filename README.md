@@ -63,9 +63,8 @@ nut_servers:
   - name: raspberrypi
     host: 192.168.13.37
     port: 3493
-    credentials:
-      username: upsmon
-      password: bigsecret
+    username: upsmon
+    password: bigsecret
     targets:
       - name: MyNAS
         mac: "01:23:45:67:89:01"
