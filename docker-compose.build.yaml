@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  upswake:
+    # Build the image from the Dockerfile in the current directory
+    build:
+        context: .
+        dockerfile: Dockerfile
+    container_name: upswake
+    # Required to allow the container to access the host's network interface to send Wake-on-LAN packets
+    network_mode: host
+    # Restart the container automatically after reboot
+    restart: always
+    # Run the application as a non-root user (optional but recommended)
+    # Change the user and group IDs based on your needs
+    user: "1000:1000"
+    # Make the container filesystem read-only (optional but recommended)
+    read_only: true
+    # Drop all Linux capabilities (optional but recommended)
+    cap_drop: [ all ]
+    # Another protection to restrict superuser privileges (optional but recommended)
+    security_opt: [no-new-privileges:true]
+    command: ["serve"]
+    # Mount the configuration file and the rules folder as read-only volumes
+    volumes:
+      - "./config.yaml:/config.yaml:ro" # upswake will create a config if one doesn't exist, you may want to remove the ':ro' in that case
+      - "./rules/:/rules/:ro"

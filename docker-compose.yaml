@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  upswake:
+    # Choose the appropriate tag based on your need:
+    # - "latest" for the latest stable version (which could become 2.x.y in the future and break things)
+    # - "edge" for the latest development version running on the default branch
+    # - "1" for the latest stable version whose major version is 1
+    # - "1.x" for the latest stable version whose major.minor version is 1.x
+    # - "1.x.y" to pin the specific version 1.x.y
+    image: thedarthmole/upswake:latest
+    container_name: upswake
+    # Required to allow the container to access the host's network interface to send Wake-on-LAN packets
+    network_mode: host
+    # Restart the container automatically after reboot
+    restart: always
+    # Run the application as a non-root user (optional but recommended)
+    # Change the user and group IDs based on your needs
+    user: "1000:1000"
+    # Make the container filesystem read-only (optional but recommended)
+    read_only: true
+    # Drop all Linux capabilities (optional but recommended)
+    cap_drop: [ all ]
+    # Another protection to restrict superuser privileges (optional but recommended)
+    security_opt: [no-new-privileges:true]
+    command: ["serve"]
+    # Mount the configuration file and the rules folder as read-only volumes
+    volumes:
+      - "./config.yaml:/config.yaml:ro" # upswake will create a config if one doesn't exist, you may want to remove the ':ro' in that case
+      - "./rules/:/rules/:ro"
