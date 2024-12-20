@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
@@ -20,7 +18,7 @@ and for creating rego rules for waking a target`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, err := cmd.Flags().GetInt("port")
 		if err != nil {
-			log.Fatalf("could not get port: %s", err)
+			sugar.Fatalf("could not get port: %s", err)
 			return
 		}
 		nutServer := entity.NutServer{
@@ -33,10 +31,10 @@ and for creating rego rules for waking a target`,
 
 		ups, err := ups.GetJSON(&nutServer)
 		if err != nil {
-			log.Fatalf("failed to get JSON: %s", err)
+			sugar.Fatalf("failed to get JSON: %s", err)
 			return
 		}
-		fmt.Println(ups)
+		sugar.Info(ups)
 	},
 }
 

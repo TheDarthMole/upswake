@@ -5,7 +5,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var (
@@ -16,14 +15,15 @@ var (
 func init() {
 	bc, err := util.GetAllBroadcastAddresses()
 	if err != nil {
-		panic(err)
+		sugar.Panic(err)
+		return
 	}
 	stringBroadcasts := util.IPsToStrings(bc)
 	wakeCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packets to, e.g. 192.168.1.255,172.16.0.255")
 	wakeCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
 	err = wakeCmd.MarkFlagRequired("mac")
 	if err != nil {
-		log.Panicf("not sure what happened here: %s", err)
+		sugar.Panicf("not sure what happened here: %s", err)
 		return
 	}
 	rootCmd.AddCommand(wakeCmd)
@@ -36,7 +36,7 @@ var wakeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ipBroadcasts, err := util.StringsToIPs(broadcasts)
 		if err != nil {
-			log.Fatal(err)
+			sugar.Fatal(err)
 		}
 
 		for _, broadcast := range ipBroadcasts {
@@ -49,14 +49,14 @@ var wakeCmd = &cobra.Command{
 				[]string{},
 			)
 			if err != nil {
-				log.Fatalf("failed to create new target server %s", err)
+				sugar.Fatalf("failed to create new target server %s", err)
 			}
 			wolClient := wol.NewWoLClient(ts)
 
 			if err = wolClient.Wake(); err != nil {
-				log.Fatalf("failed to wake %s: %s", mac, err)
+				sugar.Fatalf("failed to wake %s: %s", mac, err)
 			}
-			log.Printf("Sent WoL packet to %s to wake %s", broadcast, mac)
+			sugar.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
 		}
 
 	},

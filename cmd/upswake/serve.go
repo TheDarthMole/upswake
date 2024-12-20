@@ -8,9 +8,7 @@ import (
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -25,7 +23,6 @@ const (
 var (
 	cfgFile   string
 	regoFiles fs.FS
-	sugar     *zap.SugaredLogger
 	serveCmd  = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
@@ -70,11 +67,6 @@ func init() {
 		"config",
 		"./config.yaml",
 		"config file (default is ./config.yaml)")
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
-	}
-	sugar = logger.Sugar()
 }
 
 func processTarget(ctx context.Context, target config.TargetServer, endpoint string) {

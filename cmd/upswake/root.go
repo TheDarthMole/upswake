@@ -2,10 +2,12 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"log"
 )
 
 var (
+	sugar *zap.SugaredLogger
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "upswake",
@@ -20,7 +22,12 @@ using a set of Rego rules defined and the servers in the config file`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func main() {
-	err := rootCmd.Execute()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialize zap logger: %v", err)
+	}
+	sugar = logger.Sugar()
+	err = rootCmd.Execute()
 	if err != nil {
 		log.Fatalf("Error executing root command: %s", err)
 	}
