@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} golang:1.23.5-alpine3.20@sha256:def59a601e724ddac5139d447e8e9f7d0aeec25db287a9ee1615134bcda266e2 AS build
+FROM --platform=${BUILDPLATFORM} golang:1.24.2-alpine3.20@sha256:00f149d5963f415a8a91943531b9092fde06b596b276281039604292d8b2b9c8 AS build
 
 WORKDIR "/build/"
 
