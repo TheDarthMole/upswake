@@ -54,7 +54,7 @@ func (h *ServerHandler) Register(g *echo.Group) {
 //	@Success		201					{object}	Response			"Wake on LAN packet sent"
 //	@Failure		400					{object}	Response			"Input validation failed"
 //	@Failure		500					{object}	Response			"Wake on LAN packet failed to send"
-//	@Router			/servers/wake [post]
+//	@Router			/api/servers/wake [post]
 func (h *ServerHandler) WakeServer(c echo.Context) error {
 	wsRequest := NewWakeServerRequest()
 	if err := c.Bind(wsRequest); err != nil {
@@ -101,7 +101,7 @@ func (h *ServerHandler) WakeServer(c echo.Context) error {
 //	@Success		201						{object}	Response				"Wake on LAN packets successfully sent to all available broadcast addresses"
 //	@Failure		400						{object}	Response				"Input validation failed"
 //	@Failure		500						{object}	Response				"Wake on LAN packet failed to send"
-//	@Router			/servers/broadcastwake [post]
+//	@Router			/api/servers/broadcastwake [post]
 func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 	wsRequest := NewBroadcastWakeRequest()
 	if err := c.Bind(wsRequest); err != nil {

@@ -1,0 +1,49 @@
+name: Go
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🛡️ Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          disable-sudo: true
+          egress-policy: audit
+          allowed-endpoints: >
+            github.com:443
+
+      - name: 🚚 Check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: 🏗️ Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version-file: "go.mod"
+      - name: 🏗 Install Swag cli
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: 🧹 Run Swag fmt
+        run: swag fmt --dir "./internal/api/handlers"
+
+      - name: 🧹 Run Swag init
+        run: swag init --parseDependency --parseInternal --parseDepth 1 -d "./internal/api/handlers" -g "./root.go" -o "./internal/api/docs"
+
+      - name: 👀 Check for uncommitted changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Swagger documentation is out of date. Please run 'swag init' and commit the results."
+            git diff
+            exit 1
+          fi
