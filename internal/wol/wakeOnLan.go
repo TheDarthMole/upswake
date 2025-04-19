@@ -5,6 +5,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/sabhiram/go-wol/wol"
 	"io"
+	"log"
 	"net"
 )
 
@@ -30,7 +31,12 @@ func (tgt *WakeOnLan) Wake() error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func(conn *net.UDPConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("failed to close UDP connection: %s", err)
+		}
+	}(conn)
 	return wakeInternal(conn, tgt.MAC)
 }
 

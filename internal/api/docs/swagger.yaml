@@ -1,78 +1,83 @@
 definitions:
-  config.NutCredentials:
+  config.Config:
     properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  config.NutServer:
-    properties:
-      credentials:
-        $ref: '#/definitions/config.NutCredentials'
-      host:
-        type: string
-      name:
-        type: string
-      port:
-        maximum: 65535
-        minimum: 1
-        type: integer
-    required:
-    - credentials
-    - host
-    - name
-    type: object
-  config.NutServerMapping:
-    properties:
-      nutServer:
-        $ref: '#/definitions/config.NutServer'
-      targets:
+      bundle:
+        description: 'Deprecated: Use `bundles` instead'
         items:
-          $ref: '#/definitions/config.TargetServer'
+          type: integer
         type: array
-    type: object
-  config.TargetServer:
-    properties:
-      broadcast:
-        type: string
-      config:
-        $ref: '#/definitions/config.TargetServerConfig'
-      mac:
-        type: string
-      name:
-        type: string
-      port:
-        default: 9
-        maximum: 65535
-        minimum: 1
-        type: integer
-    required:
-    - broadcast
-    - mac
-    - name
-    type: object
-  config.TargetServerConfig:
-    properties:
-      interval:
-        default: 15m
-        type: string
-      rules:
+      bundles:
         items:
+          type: integer
+        type: array
+      caching:
+        items:
+          type: integer
+        type: array
+      decision_logs:
+        items:
+          type: integer
+        type: array
+      default_authorization_decision:
+        type: string
+      default_decision:
+        type: string
+      discovery:
+        items:
+          type: integer
+        type: array
+      distributed_tracing:
+        items:
+          type: integer
+        type: array
+      keys:
+        items:
+          type: integer
+        type: array
+      labels:
+        additionalProperties:
           type: string
-        type: array
-    required:
-    - interval
-    type: object
-  github_com_TheDarthMole_UPSWake_internal_config.Config:
-    properties:
-      nutServerMappings:
+        type: object
+      nd_builtin_cache:
+        type: boolean
+      persistence_directory:
+        type: string
+      plugins:
+        additionalProperties:
+          items:
+            type: integer
+          type: array
+        type: object
+      server:
+        properties:
+          decoding:
+            items:
+              type: integer
+            type: array
+          encoding:
+            items:
+              type: integer
+            type: array
+          metrics:
+            items:
+              type: integer
+            type: array
+        type: object
+      services:
         items:
-          $ref: '#/definitions/config.NutServerMapping'
+          type: integer
         type: array
+      status:
+        items:
+          type: integer
+        type: array
+      storage:
+        properties:
+          disk:
+            items:
+              type: integer
+            type: array
+        type: object
     type: object
   handlers.BroadcastWakeRequest:
     properties:
@@ -129,26 +134,7 @@ paths:
       summary: Root redirect to swagger
       tags:
       - root
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: Health check
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handlers.Response'
-      summary: Health check
-      tags:
-      - root
-  /servers/broadcastwake:
+  /api/servers/broadcastwake:
     post:
       consumes:
       - application/json
@@ -180,7 +166,7 @@ paths:
       summary: Wake a server using just a mac
       tags:
       - servers
-  /servers/wake:
+  /api/servers/wake:
     post:
       consumes:
       - application/json
@@ -211,7 +197,7 @@ paths:
       summary: Wake a server using a mac and a broadcast address
       tags:
       - servers
-  /upswake:
+  /api/upswake:
     get:
       consumes:
       - application/json
@@ -222,7 +208,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_TheDarthMole_UPSWake_internal_config.Config'
+            $ref: '#/definitions/config.Config'
       summary: List NUT server mappings
       tags:
       - UPSWake
@@ -263,4 +249,23 @@ paths:
       summary: Run wake evaluation
       tags:
       - UPSWake
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Health check
+      tags:
+      - root
 swagger: "2.0"

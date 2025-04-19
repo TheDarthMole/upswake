@@ -43,7 +43,7 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	config.Config
-//	@Router			/upswake [get]
+//	@Router			/api/upswake [get]
 func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 	nutServers := h.cfg.NutServers
 	// Don't leak passwords
@@ -61,13 +61,13 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 //	@Tags			UPSWake
 //	@Accept			json
 //	@Produce		json
-//	@Param			macAddress	body		macAddress	true	"MAC address"
-//	@Success		200			{object}	Response "Wake on LAN sent"
-//	@Success		304			{object}	Response "No rule evaluated to true"
-//	@Failure		400			{object}	Response "Bad request"
-//	@Failure		404			{object}	Response "MAC address not found in the config"
-//	@Failure		500			{object}	Response "Internal server error"
-//	@Router			/upswake	[post]
+//	@Param			macAddress		body		macAddress	true	"MAC address"
+//	@Success		200				{object}	Response	"Wake on LAN sent"
+//	@Success		304				{object}	Response	"No rule evaluated to true"
+//	@Failure		400				{object}	Response	"Bad request"
+//	@Failure		404				{object}	Response	"MAC address not found in the config"
+//	@Failure		500				{object}	Response	"Internal server error"
+//	@Router			/api/upswake	[post]
 func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
