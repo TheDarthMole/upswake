@@ -37,7 +37,7 @@ var (
 
 			server := api.NewServer(ctx, sugar)
 
-			rootHandler := handlers.NewRootHandler()
+			rootHandler := handlers.NewRootHandler(cfg, regoFiles)
 			rootHandler.Register(server.Root())
 
 			serverHandler := handlers.NewServerHandler()
