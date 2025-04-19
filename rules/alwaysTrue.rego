@@ -1,3 +1,3 @@
 package upswake
 
-default wake = true
+default wake := true

@@ -4,18 +4,18 @@ import "testing"
 
 const (
 	validRegoRule = `package upswake
-default wake = false
-wake = true {
+default wake := false
+wake if {
     true
 }`
 	invalidRegoRule = `package upswake
-default wake = false
-wake = true {
+default wake := false
+wake if {
 	RETURN TRUE
 }`
 	invalidPackageNameRule = `package wrongname
-default wake = false
-wake = true {
+default wake := false
+wake if {
     true
 }`
 	validJson   = `{"foo": "bar"}`
@@ -83,8 +83,8 @@ func TestEvaluateExpression(t *testing.T) {
 			args: args{
 				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 				regoRule: `package upswake
-default wake = false
-wake = true {
+default wake := false
+wake if {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value == 100
@@ -98,8 +98,8 @@ wake = true {
 			args: args{
 				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":50,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 				regoRule: `package upswake
-default wake = false
-wake = true {
+default wake := false
+wake if {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value == 100

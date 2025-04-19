@@ -1,8 +1,8 @@
 package upswake
 
-default wake = false
+default wake := false
 
-wake = true {
+wake if {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value >= 80 # 80% or more charge
