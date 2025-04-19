@@ -17,8 +17,8 @@ const (
 var (
 	defaultConfig, _ = viper.CreateDefaultConfig()
 	tempFS, _        = mem.NewFS()
-	alwaysTrueRego   = []byte("package upswake\n\ndefault wake = true")
-	alwaysFalseRego  = []byte("package upswake\n\ndefault wake = false")
+	alwaysTrueRego   = []byte("package upswake\n\ndefault wake := true")
+	alwaysFalseRego  = []byte("package upswake\n\ndefault wake := false")
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
@@ -125,8 +125,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	}
 
 	check100Percent := `package upswake
-default wake = false
-wake = true {
+default wake := false
+wake if {
 	input[i].Name == "cyberpower900"
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value == 100
