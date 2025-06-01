@@ -123,6 +123,8 @@ func TestRootHandler_Health(t *testing.T) {
 				statusCode: http.StatusOK,
 			},
 		},
+		//	TODO: Add tests that check for valid NUT server responses, where the config isn't empty
+		// 		    and test when the GetAllBroadcastAddresses fails
 	}
 	e := echo.New()
 	for _, tt := range tests {
@@ -136,6 +138,72 @@ func TestRootHandler_Health(t *testing.T) {
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 			}
+		})
+	}
+}
+
+func TestRootHandler_Register(t *testing.T) {
+	e := echo.New()
+	rulesFS := newMemFS(t, map[string][]byte{})
+	h := NewRootHandler(cfg, rulesFS)
+
+	g := e.Group("")
+	h.Register(g)
+
+	expectedRoutes := []string{"/", "/health"}
+	for _, route := range e.Routes() {
+		for i, expected := range expectedRoutes {
+			if expected == route.Path {
+				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
+				break
+			}
+		}
+	}
+
+	assert.Equal(t, 2, len(e.Routes()), "Expected 2 routes to be registered")
+	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
+}
+
+func TestNewRootHandler(t *testing.T) {
+	type args struct {
+		cfg     *entity.Config
+		rulesFS hackpadfs.FS
+	}
+	memFS1 := newMemFS(t, map[string][]byte{})
+	memFS2 := newMemFS(t, map[string][]byte{
+		"test": []byte("test"),
+	})
+	tests := []struct {
+		name string
+		args args
+		want *RootHandler
+	}{
+		{
+			name: "test-1",
+			args: args{
+				cfg:     cfg,
+				rulesFS: memFS1,
+			},
+			want: &RootHandler{
+				cfg:     cfg,
+				rulesFS: memFS1,
+			},
+		},
+		{
+			name: "test-2",
+			args: args{
+				cfg:     cfg,
+				rulesFS: memFS2,
+			},
+			want: &RootHandler{
+				cfg:     cfg,
+				rulesFS: memFS2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, NewRootHandler(tt.args.cfg, tt.args.rulesFS), "NewRootHandler(%v, %v)", tt.args.cfg, tt.args.rulesFS)
 		})
 	}
 }
