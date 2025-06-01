@@ -19,7 +19,7 @@ type macAddress struct {
 }
 
 type upsWakeResponse struct {
-	Message string `json:"message" example:"Wake on LAN sent"`
+	Message string `json:"body" example:"Wake on LAN sent"`
 	Woken   bool   `json:"woken" example:"true"`
 }
 

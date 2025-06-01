@@ -1,0 +1,141 @@
+package handlers
+
+import (
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/hack-pad/hackpadfs"
+	"github.com/hack-pad/hackpadfs/mem"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+var (
+	cfg = &entity.Config{
+		NutServers: []entity.NutServer{
+			{
+				Name:     "testNUTServer",
+				Host:     "test",
+				Port:     1234,
+				Username: "test-user",
+				Password: "test-password",
+				Targets: []entity.TargetServer{
+					{
+						Name:      "testTarget",
+						MAC:       "00:00:00:00:00:00",
+						Broadcast: "192.168.1.255",
+						Port:      9,
+						Interval:  "15s",
+						Rules:     nil,
+					},
+				},
+			},
+		},
+	}
+)
+
+func newMemFS(t *testing.T, data map[string][]byte) hackpadfs.FS {
+	t.Helper()
+	memfs, err := mem.NewFS()
+	if err != nil {
+		t.Fatalf("could not create memfs: %s", err)
+	}
+
+	for x := range data {
+		err = hackpadfs.WriteFullFile(memfs, x, data[x], 0644)
+		if err != nil {
+			t.Fatalf("could not write file to memfs: %s", err)
+		}
+	}
+	return memfs
+}
+
+func TestRootHandlerRoot(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	rulesFS := newMemFS(t, map[string][]byte{})
+	h := NewRootHandler(cfg, rulesFS)
+
+	if assert.NoError(t, h.Root(c)) {
+		assert.Equal(t, http.StatusMovedPermanently, rec.Code)
+		assert.Equal(t, "/swagger/index.html", rec.Header().Get(echo.HeaderLocation))
+	}
+}
+
+func TestRootHandler_Health(t *testing.T) {
+	type fields struct {
+		cfg     *entity.Config
+		rulesFS hackpadfs.FS
+	}
+	type wantedResponse struct {
+		body       string
+		statusCode int
+	}
+	tests := []struct {
+		name           string
+		fields         fields
+		wantedResponse wantedResponse
+	}{
+		{
+			name: "test-invalid-config",
+			fields: fields{
+				cfg: &entity.Config{NutServers: []entity.NutServer{
+					{},
+				}},
+				rulesFS: newMemFS(t, map[string][]byte{}),
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message": "name is required"}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "cannot-connect-to-server",
+			fields: fields{
+				cfg: &entity.Config{NutServers: []entity.NutServer{
+					{
+						Name:     "testNUTServer",
+						Host:     "this-host-does-not-exist",
+						Port:     1234,
+						Username: "test-user",
+						Password: "test-password",
+					},
+				}},
+				rulesFS: newMemFS(t, map[string][]byte{}),
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message": "could not connect to NUT server: lookup this-host-does-not-exist: no such host"}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "empty-config-success",
+			fields: fields{
+				cfg:     &entity.Config{},
+				rulesFS: newMemFS(t, map[string][]byte{}),
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message": "OK"}`,
+				statusCode: http.StatusOK,
+			},
+		},
+	}
+	e := echo.New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/health", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS)
+
+			if assert.NoError(t, h.Health(c)) {
+				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
+				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
+			}
+		})
+	}
+}
