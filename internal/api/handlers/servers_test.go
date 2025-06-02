@@ -4,7 +4,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -46,8 +45,7 @@ func TestNewBroadcastWakeRequest(t *testing.T) {
 
 func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 	type fields struct {
-		body   io.Reader
-		method string
+		body string
 	}
 	type wantedResponse struct {
 		body       string
@@ -61,8 +59,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		{
 			name: "valid_request",
 			fields: fields{
-				method: http.MethodPost,
-				body:   strings.NewReader(`{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`),
+				body: `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN packets sent to all available broadcast addresses"}`,
@@ -72,8 +69,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		{
 			name: "missing_mac",
 			fields: fields{
-				method: http.MethodPost,
-				body:   strings.NewReader(`{"broadcast": "127.0.0.255"}`),
+				body: `{"broadcast": "127.0.0.255"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'required' tag"}`,
@@ -83,8 +79,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		{
 			name: "invalid_mac",
 			fields: fields{
-				method: http.MethodPost,
-				body:   strings.NewReader(`{"mac": "invalid_mac", "broadcast": "127.0.0.255"}`),
+				body: `{"mac": "invalid_mac", "broadcast": "127.0.0.255"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'mac' tag"}`,
@@ -94,8 +89,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		{
 			name: "missing_broadcast",
 			fields: fields{
-				method: http.MethodPost,
-				body:   strings.NewReader(`{"mac": "00:11:22:33:44:55"}`),
+				body: `{"mac": "00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN packets sent to all available broadcast addresses"}`,
@@ -105,8 +99,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		{
 			name: "empty_request",
 			fields: fields{
-				method: http.MethodPost,
-				body:   strings.NewReader(`{}`),
+				body: `{}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'required' tag"}`,
@@ -118,7 +111,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 	e.Validator = api.NewCustomValidator()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.fields.method, "/broadcastwake", tt.fields.body)
+			req := httptest.NewRequest(http.MethodPost, "/broadcastwake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 			rec := httptest.NewRecorder()
