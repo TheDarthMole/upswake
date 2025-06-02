@@ -99,7 +99,7 @@ func TestRootHandler_Health(t *testing.T) {
 				cfg: &entity.Config{NutServers: []entity.NutServer{
 					{
 						Name:     "testNUTServer",
-						Host:     "this-host-does-not-exist",
+						Host:     "127.0.0.1",
 						Port:     1234,
 						Username: "test-user",
 						Password: "test-password",
@@ -108,7 +108,7 @@ func TestRootHandler_Health(t *testing.T) {
 				rulesFS: newMemFS(t, map[string][]byte{}),
 			},
 			wantedResponse: wantedResponse{
-				body:       `{"message": "could not connect to NUT server: lookup this-host-does-not-exist: no such host"}`,
+				body:       `{"message": "could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"}`,
 				statusCode: http.StatusInternalServerError,
 			},
 		},
