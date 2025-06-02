@@ -118,7 +118,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 	e.Validator = api.NewCustomValidator()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.fields.method, "/broadcastwake?mac=00:11:22:33:44:55", tt.fields.body)
+			req := httptest.NewRequest(tt.fields.method, "/broadcastwake", tt.fields.body)
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 			rec := httptest.NewRecorder()
