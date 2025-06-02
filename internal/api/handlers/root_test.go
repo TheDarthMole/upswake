@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
@@ -16,7 +17,7 @@ var (
 		NutServers: []entity.NutServer{
 			{
 				Name:     "testNUTServer",
-				Host:     "test",
+				Host:     "127.0.0.1",
 				Port:     1234,
 				Username: "test-user",
 				Password: "test-password",
@@ -53,6 +54,7 @@ func newMemFS(t *testing.T, data map[string][]byte) hackpadfs.FS {
 
 func TestRootHandlerRoot(t *testing.T) {
 	e := echo.New()
+	e.Validator = api.NewCustomValidator()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -127,6 +129,7 @@ func TestRootHandler_Health(t *testing.T) {
 		// 		    and test when the GetAllBroadcastAddresses fails
 	}
 	e := echo.New()
+	e.Validator = api.NewCustomValidator()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -144,13 +147,15 @@ func TestRootHandler_Health(t *testing.T) {
 
 func TestRootHandler_Register(t *testing.T) {
 	e := echo.New()
+	e.Validator = api.NewCustomValidator()
 	rulesFS := newMemFS(t, map[string][]byte{})
 	h := NewRootHandler(cfg, rulesFS)
 
 	g := e.Group("")
 	h.Register(g)
 
-	expectedRoutes := []string{"/", "/health"}
+	expectedRoutes := []string{"/", "/health", "/swagger/*"}
+	lenExpectedRoutes := len(expectedRoutes)
 	for _, route := range e.Routes() {
 		for i, expected := range expectedRoutes {
 			if expected == route.Path {
@@ -160,7 +165,7 @@ func TestRootHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 2, len(e.Routes()), "Expected 2 routes to be registered")
+	assert.Equal(t, lenExpectedRoutes, len(e.Routes()), "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 
