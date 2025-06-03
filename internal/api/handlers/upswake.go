@@ -72,7 +72,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
 		c.Logger().Errorf("failed to bind mac address %s", err)
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, Response{Message: ErrorBindingRequest.Error()})
 	}
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
 	result, err := eval.EvaluateExpressions()
@@ -82,7 +82,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	}
 
 	if !result.Found {
-		c.Logger().Infof("mac address not found in the config %s", mac.Mac)
+		c.Logger().Errorf("mac address not found in the config %s", mac.Mac)
 		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
