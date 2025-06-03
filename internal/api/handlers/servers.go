@@ -11,7 +11,6 @@ import (
 var (
 	GetAllBroadcastAddresses = util.GetAllBroadcastAddresses
 	NewTargetServer          = entity.NewTargetServer
-	NewWoLClient             = wol.NewWoLClient
 )
 
 type ServerHandler struct{}
@@ -149,7 +148,7 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 			c.Logger().Infof("failed to create new target server %s", err)
 			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 		}
-		wolClient := NewWoLClient(ts)
+		wolClient := wol.NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
 			c.Logger().Errorf("failed to send wake on lan %s", err)

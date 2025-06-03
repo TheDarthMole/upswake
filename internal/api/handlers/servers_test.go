@@ -5,7 +5,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
-	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -21,14 +20,6 @@ var (
 		return []net.IP{net.ParseIP("127.0.0.1")}, nil
 	}
 )
-
-type mockWakeOnLan struct {
-	*entity.TargetServer
-}
-
-func (m *mockWakeOnLan) Wake() error {
-	return errors.New("mock wake error")
-}
 
 func TestServerHandler_Register(t *testing.T) {
 	e := echo.New()
@@ -69,7 +60,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		body                   string
 		mockBroadcastAddresses func() ([]net.IP, error)
 		mockNewTargetServer    func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
-		mockNewWoLClient       func(target *entity.TargetServer) *wol.WakeOnLan
 	}
 	type wantedResponse struct {
 		body       string
@@ -86,7 +76,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN packets sent to all available broadcast addresses"}`,
@@ -99,7 +88,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   `{"broadcast": "127.0.0.255"}`,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'required' tag"}`,
@@ -112,7 +100,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   `{"mac": "invalid_mac", "broadcast": "127.0.0.255"}`,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'mac' tag"}`,
@@ -125,7 +112,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   validMac,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN packets sent to all available broadcast addresses"}`,
@@ -138,7 +124,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   `{}`,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Mac' Error:Field validation for 'Mac' failed on the 'required' tag"}`,
@@ -153,7 +138,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 					return []net.IP{}, nil
 				},
 				mockNewTargetServer: entity.NewTargetServer,
-				mockNewWoLClient:    wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"No broadcast addresses available"}`,
@@ -166,7 +150,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				body:                   `{"mac": "00:11:22:33:44:55", "port": 70000}`,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
 				mockNewTargetServer:    entity.NewTargetServer,
-				mockNewWoLClient:       wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Key: 'BroadcastWakeRequest.Port' Error:Field validation for 'Port' failed on the 'lte' tag"}`,
@@ -181,7 +164,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 					return []net.IP{}, errors.New("mock_get_all_broadcast_addresses_error")
 				},
 				mockNewTargetServer: entity.NewTargetServer,
-				mockNewWoLClient:    wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"mock_get_all_broadcast_addresses_error"}`,
@@ -196,7 +178,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 					return []net.IP{nil}, nil // This will not be used, but we need to return something
 				},
 				mockNewTargetServer: entity.NewTargetServer,
-				mockNewWoLClient:    wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Invalid broadcast address encountered"}`,
@@ -211,24 +192,12 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				mockNewTargetServer: func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error) {
 					return nil, errors.New("mock_new_target_server_error")
 				},
-				mockNewWoLClient: wol.NewWoLClient,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"mock_new_target_server_error"}`,
 				statusCode: http.StatusInternalServerError,
 			},
 		},
-		//{ // TODO: Uncomment this test when the mockWakeOnLan is implemented correctly
-		//	name: "mock_new_wol_client_error",
-		//	fields: fields{
-		//		body:                   validMac,
-		//		mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
-		//		mockNewTargetServer:    entity.NewTargetServer,
-		//		mockNewWoLClient: func(target *entity.TargetServer) *WakeOnLanClient {
-		//			return &mockWakeOnLan{}
-		//		},
-		//	},
-		//},
 	}
 	e := echo.New()
 	e.Validator = api.NewCustomValidator()
@@ -237,13 +206,13 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/broadcastwake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
-			h := NewServerHandler()
-
 			// Mock the functions to return the desired values
 			GetAllBroadcastAddresses = tt.fields.mockBroadcastAddresses
 			NewTargetServer = tt.fields.mockNewTargetServer
+
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			h := NewServerHandler()
 
 			if assert.NoError(t, h.BroadcastWakeServer(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
