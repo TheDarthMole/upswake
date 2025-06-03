@@ -124,7 +124,7 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	if broadcasts == nil || len(broadcasts) == 0 {
+	if len(broadcasts) == 0 {
 		c.Logger().Errorf("no broadcast addresses available, got %v", broadcasts)
 		return c.JSON(http.StatusInternalServerError, Response{Message: "No broadcast addresses available"})
 	}
