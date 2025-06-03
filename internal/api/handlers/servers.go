@@ -8,6 +8,12 @@ import (
 	"net/http"
 )
 
+var (
+	GetAllBroadcastAddresses = util.GetAllBroadcastAddresses
+	NewTargetServer          = entity.NewTargetServer
+	NewWoLClient             = wol.NewWoLClient
+)
+
 type ServerHandler struct{}
 
 type WakeServerRequest struct {
@@ -109,17 +115,28 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 	}
 
 	if err := c.Validate(wsRequest); err != nil {
-		c.Logger().Errorf("failed to validate wake server request %s", err)
+		c.Logger().Errorf("failed to validate wake server request: %s", err)
 		return c.JSON(http.StatusBadRequest, Response{Message: err.Error()})
 	}
-	broadcasts, err := util.GetAllBroadcastAddresses()
+	broadcasts, err := GetAllBroadcastAddresses()
 	if err != nil {
-		c.Logger().Error("failed to get broadcast addresses")
+		c.Logger().Errorf("failed to get broadcast addresses, %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
+	if broadcasts == nil || len(broadcasts) == 0 {
+		c.Logger().Errorf("no broadcast addresses available, got %v", broadcasts)
+		return c.JSON(http.StatusInternalServerError, Response{Message: "No broadcast addresses available"})
+	}
+
 	for _, broadcast := range broadcasts {
-		ts, err := entity.NewTargetServer(
+		if broadcast == nil {
+			c.Logger().Errorf("invalid broadcast address, got %v", broadcast)
+			return c.JSON(http.StatusInternalServerError, Response{Message: "Invalid broadcast address encountered"})
+		}
+
+		c.Logger().Debugf("sending wake on lan to %s:%d", broadcast.String(), wsRequest.Port)
+		ts, err := NewTargetServer(
 			"API Request",
 			wsRequest.Mac,
 			broadcast.String(),
@@ -129,9 +146,10 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 		)
 
 		if err != nil {
-			c.Logger().Errorf("failed to create new target server %s", err)
+			c.Logger().Infof("failed to create new target server %s", err)
+			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 		}
-		wolClient := wol.NewWoLClient(ts)
+		wolClient := NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
 			c.Logger().Errorf("failed to send wake on lan %s", err)
