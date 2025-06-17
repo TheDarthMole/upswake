@@ -6,6 +6,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
 )
 
@@ -28,6 +29,7 @@ func NewRootHandler(cfg *entity.Config, rulesFS hackpadfs.FS) *RootHandler {
 func (h *RootHandler) Register(g *echo.Group) {
 	g.GET("/", h.Root)
 	g.GET("/health", h.Health)
+	g.GET("/swagger/*", echoSwagger.WrapHandler)
 }
 
 // Root godoc
