@@ -6,7 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 )
 
@@ -20,20 +19,22 @@ type CustomValidator struct {
 	validator *validator.Validate
 }
 
+func NewCustomValidator() *CustomValidator {
+	return &CustomValidator{validator: validator.New()}
+}
+
 func (cv *CustomValidator) Validate(i interface{}) error {
 	if err := cv.validator.Struct(i); err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		return err
 	}
 	return nil
 }
 
 func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app := echo.New()
-	app.Validator = &CustomValidator{validator: validator.New()}
+	app.Validator = NewCustomValidator()
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.Logger())
-
-	app.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	return &Server{
 		ctx:   ctx,
