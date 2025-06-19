@@ -102,7 +102,6 @@ on line power and the battery level is above 80%.
 ### 🐋 Deployment with Docker Compose
 
 ```yaml
-version: "3.8"
 services:
   upswake:
     # Choose the appropriate tag based on your need:

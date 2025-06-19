@@ -106,6 +106,8 @@ jobs:
         id: build
         with:
           target: "minimal"
+          context: .
+          file: ./Containerfile
           push: ${{ github.event_name != 'pull_request' }}
 #          cache-from: type=gha
 #          cache-to: type=gha,mode=max
@@ -128,4 +130,4 @@ jobs:
       - name: ✍️ Sign the GitHub Container Registry images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${{ steps.build.outputs.digest }}"
