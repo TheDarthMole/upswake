@@ -34,6 +34,12 @@ cosign verify thedarthmole/upswake:latest \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
+```bash
+cosign verify ghcr.io/thedarthmole/upswake:latest \
+    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
 > [!NOTE]
 > This only proves that the Docker image is from this repository, assuming that no one hacks into GitHub or the repository. It does not prove that the code itself is secure.
 
@@ -105,6 +111,7 @@ services:
     # - "1.x" for the latest stable version whose major.minor version is 1.x
     # - "1.x.y" to pin the specific version 1.x.y
     image: thedarthmole/upswake:latest
+    # image: ghcr.io/thedarthmole/upswake:latest # Use this if you prefer the GitHub Container Registry
     container_name: upswake
     # Required to allow the container to access the host's network interface to send Wake-on-LAN packets
     network_mode: host
