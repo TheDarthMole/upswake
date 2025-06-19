@@ -130,4 +130,4 @@ jobs:
       - name: ✍️ Sign the GitHub Container Registry images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${{ steps.build.outputs.digest }}"
