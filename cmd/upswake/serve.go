@@ -96,12 +96,15 @@ func sendWakeRequest(ctx context.Context, target config.TargetServer, address st
 		sugar.Errorf("Error creating post request: %s", err)
 	}
 	r.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Duration(30) * time.Second}
 	resp, err := client.Do(r)
 	if err != nil {
 		sugar.Errorf("Error sending post request: %s", err)
+		return
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		sugar.Errorf("Error sending post request: %s", resp.Status)
+		return
 	}
 }
