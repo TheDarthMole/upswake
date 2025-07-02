@@ -64,7 +64,7 @@ jobs:
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: 🔑 Login to GitHub Container Registry
@@ -87,7 +87,7 @@ jobs:
         id: meta
         with:
           images: |
-            ${{ github.repository }}
+            ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}
             ghcr.io/${{ github.repository }}
           tags: |
             type=edge
@@ -125,7 +125,7 @@ jobs:
       - name: ✍️ Sign the Docker Hub images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}@${{ steps.build.outputs.digest }}"
 
       - name: ✍️ Sign the GitHub Container Registry images
         if: ${{ github.event_name == 'release' }}
