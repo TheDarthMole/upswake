@@ -173,7 +173,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid_boradcast_address",
+			name: "invalid_broadcast_address",
 			fields: fields{
 				body: validMac,
 				mockBroadcastAddresses: func() ([]net.IP, error) {
