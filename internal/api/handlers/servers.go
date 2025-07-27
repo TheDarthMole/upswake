@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
@@ -165,7 +166,7 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 			c.Logger().Errorf("failed to send wake on lan %s", err)
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 		}
-		c.Logger().Infof("sent wake on lan to %s:%d with mac %s", util.SanitizeString(broadcast.String()), wsRequest.Port, util.SanitizeString(wsRequest.Mac))
+		c.Logger().Infof("sent wake on lan to %s:%s with mac %s", util.SanitizeString(broadcast.String()), strconv.Itoa(wsRequest.Port), util.SanitizeString(wsRequest.Mac))
 	}
 	return c.JSON(http.StatusCreated, Response{Message: BroadcastWoLSentMessage})
 }
