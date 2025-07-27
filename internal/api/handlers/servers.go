@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 var (

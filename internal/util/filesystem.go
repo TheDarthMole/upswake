@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
-	"github.com/hack-pad/hackpadfs"
-	hackpados "github.com/hack-pad/hackpadfs/os"
 	"os"
 	"path/filepath"
+
+	"github.com/hack-pad/hackpadfs"
+	hackpados "github.com/hack-pad/hackpadfs/os"
 )
 
 func GetFile(fileSystem hackpadfs.FS, fileName string) ([]byte, error) {

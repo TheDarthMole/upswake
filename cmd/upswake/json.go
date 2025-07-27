@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // jsonCmd represents the json command

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
