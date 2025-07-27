@@ -2,11 +2,12 @@ package viper
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
-	"log"
 )
 
 const (

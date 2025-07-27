@@ -3,10 +3,11 @@ package entity
 import (
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"log"
 	"reflect"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 var (

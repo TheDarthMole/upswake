@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 type UPSWakeHandler struct {

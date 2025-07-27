@@ -16,16 +16,18 @@ jobs:
       contents: read
     steps:
       - name: 🛡️ Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           disable-sudo: true
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
             github.com:443
+            go.dev:443
             golang.org:443
             objects.githubusercontent.com:443
             proxy.golang.org:443
+            release-assets.githubusercontent.com:443
             storage.googleapis.com:443
             sum.golang.org:443
 
@@ -58,7 +60,7 @@ jobs:
       contents: read
     steps:
       - name: 🛡️ Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           disable-sudo: true
           policy: test.regenerate
@@ -66,9 +68,11 @@ jobs:
           allowed-endpoints: >
             api.github.com:443
             github.com:443
+            go.dev:443
             golang.org:443
             objects.githubusercontent.com:443
             proxy.golang.org:443
+            release-assets.githubusercontent.com:443
             storage.googleapis.com:443
             sum.golang.org:443
 

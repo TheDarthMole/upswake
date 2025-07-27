@@ -2,11 +2,12 @@ package wol
 
 import (
 	"fmt"
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/sabhiram/go-wol/wol"
 	"io"
 	"log"
 	"net"
+
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/sabhiram/go-wol/wol"
 )
 
 const MagicPacketSize = 102

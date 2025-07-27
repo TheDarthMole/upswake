@@ -3,16 +3,17 @@ package main
 import (
 	"bytes"
 	"context"
-	"github.com/TheDarthMole/UPSWake/internal/api"
-	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
-	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
-	"github.com/spf13/cobra"
 	"io"
 	"io/fs"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/TheDarthMole/UPSWake/internal/api"
+	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
+	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/spf13/cobra"
 )
 
 const (

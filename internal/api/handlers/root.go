@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"net/http"
 )
 
 type RootHandler struct {

@@ -28,7 +28,7 @@ jobs:
       packages: write # This is required for pushing Docker images to ghcr.io
     steps:
       - name: 🛡️ Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           disable-sudo: true
           egress-policy: block
@@ -46,6 +46,7 @@ jobs:
             raw.githubusercontent.com:443
             registry-1.docker.io:443
             rekor.sigstore.dev:443
+            release-assets.githubusercontent.com:443
             storage.googleapis.com:443
             sum.golang.org:443
             tuf-repo-cdn.sigstore.dev:443
@@ -120,7 +121,7 @@ jobs:
           provenance: "mode=max"
 
       - name: ✍️ Install Cosign
-        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
 
       - name: ✍️ Sign the Docker Hub images
         if: ${{ github.event_name == 'release' }}
