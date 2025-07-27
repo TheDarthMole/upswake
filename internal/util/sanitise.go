@@ -11,7 +11,7 @@ func SanitizeString(input string) string {
 		}
 	}
 	sanitized = strings.TrimSpace(sanitized)
-	sanitized = strings.Replace(sanitized, "\n", "", -1)
-	sanitized = strings.Replace(sanitized, "\r", "", -1)
+	sanitized = strings.ReplaceAll(sanitized, "\n", "")
+	sanitized = strings.ReplaceAll(sanitized, "\r", "")
 	return sanitized
 }

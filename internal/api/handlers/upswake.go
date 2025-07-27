@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/util"
 	"net/http"
+
+	"github.com/TheDarthMole/UPSWake/internal/util"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
