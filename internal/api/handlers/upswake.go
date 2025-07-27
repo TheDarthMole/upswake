@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/TheDarthMole/UPSWake/internal/util"
 	"net/http"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -83,12 +84,12 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	}
 
 	if !result.Found {
-		c.Logger().Errorf("mac address not found in the config %s", mac.Mac)
+		c.Logger().Errorf("mac address not found in the config %s", util.SanitizeString(mac.Mac))
 		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
 	if !result.Allowed {
-		c.Logger().Debugf("no rule evaluated to true %s", mac.Mac)
+		c.Logger().Debugf("no rule evaluated to true %s", util.SanitizeString(mac.Mac))
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
@@ -115,7 +116,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	c.Logger().Debugf("wake on lan sent to %s", mac.Mac)
+	c.Logger().Debugf("wake on lan sent to %s", util.SanitizeString(mac.Mac))
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on Lan sent",
 		Woken:   true,
