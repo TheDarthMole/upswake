@@ -6,7 +6,7 @@ services:
     # - "1" for the latest stable version whose major version is 1
     # - "1.x" for the latest stable version whose major.minor version is 1.x
     # - "1.x.y" to pin the specific version 1.x.y
-    image: thedarthmole/upswake:latest
+    image: thedarthmole/upswake:${CONTAINER_TAG:-latest}
     container_name: upswake
     # Required to allow the container to access the host's network interface to send Wake-on-LAN packets
     network_mode: host
