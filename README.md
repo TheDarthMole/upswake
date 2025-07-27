@@ -161,7 +161,7 @@ docker run \
 You need the [Go tool](https://golang.org/doc/install) to run upswake from its source.
 
 ```bash
-go install github.com/TheDarthMole/UPSWake@latest
+go install github.com/TheDarthMole/UPSWake/cmd/upswake@latest
 ```
 
 </details>
@@ -182,7 +182,7 @@ go build -o upswake ./cmd/upswake
 
 ```yaml
 Usage:
-  upsWake [command]
+  upswake [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -192,11 +192,30 @@ Available Commands:
   wake        Manually wake a computer
 
 Flags:
-  --config string   config file (default is ./config.yaml)
-  -h, --help            help for upsWake
+  -h, --help   help for upswake
 
-Use "upsWake [command] --help" for more information about a command.
+Use "upswake [command] --help" for more information about a command.
 ```
+## Development
+
+This project uses [Golang](https://go.dev/), [Just](https://github.com/casey/just) and your choice of [Docker](https://www.docker.com/) or [Podman](https://podman.io/) for development.
+To install other dependencies, build or run the application, you can use the `just` tool to run the commands defined in 
+the [justfile](justfile).
+
+```
+just -l
+Available recipes:
+    build           # Build upswake
+    build-container # Build the thedarthmole/upswake:local container
+    help            # Display this help message
+    install-deps    # Install development dependencies
+    lint            # Runs all linters
+    run *args       # Run upswake with arguments
+    run-container   # Builds and runs the upswake container
+    swagger         # Generate Swagger documentation
+    test            # Run all Go tests
+```
+
 
 ## Roadmap
 
