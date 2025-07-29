@@ -3,10 +3,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -35,9 +38,18 @@ var (
 				sugar.Fatal("Error loading config", err)
 			}
 
-			baseURL := listenScheme + cmd.Flag("host").Value.String() + ":" + cmd.Flag("port").Value.String()
-			if cmd.Flag("host").Value.String() == defaultListenHost {
-				baseURL = listenScheme + "127.0.0.1:" + cmd.Flag("port").Value.String()
+			listenHost := net.ParseIP(cmd.Flag("host").Value.String())
+			if listenHost == nil {
+				sugar.Fatalf("Invalid listen host IP address: %s", cmd.Flag("host").Value.String())
+			}
+			listenPort, err := strconv.Atoi(cmd.Flag("port").Value.String())
+			if err != nil || listenPort <= 0 || listenPort > 65535 {
+				sugar.Fatalf("Invalid listen port %s", cmd.Flag("port").Value.String())
+			}
+
+			baseURL := fmt.Sprintf("%s%s:%d", listenScheme, listenHost.String(), listenPort)
+			if listenHost.IsUnspecified() {
+				baseURL = fmt.Sprintf("%s127.0.0.1:%d", listenScheme, listenPort)
 			}
 
 			ctx := context.Background()
@@ -59,7 +71,7 @@ var (
 				}
 			}
 
-			sugar.Fatal(server.Start(cmd.Flag("host").Value.String() + ":" + cmd.Flag("port").Value.String()))
+			sugar.Fatal(server.Start(fmt.Sprintf("%s:%d", listenHost.String(), listenPort)))
 		},
 	}
 )
@@ -68,7 +80,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
-	serveCmd.Flags().StringP("host", "H", defaultListenHost, "IP to listen on, default")
+	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
 	serveCmd.PersistentFlags().StringVar(
 		&cfgFile,
 		"config",
