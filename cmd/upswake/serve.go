@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	listenHost        = "localhost"
+	defaultListenHost = "0.0.0.0"
 	defaultListenPort = "8080"
 	listenScheme      = "http://"
 )
@@ -34,7 +34,12 @@ var (
 			if err != nil {
 				sugar.Fatal("Error loading config", err)
 			}
-			baseURL := listenScheme + listenHost + ":" + cmd.Flag("port").Value.String()
+
+			baseURL := listenScheme + cmd.Flag("host").Value.String() + ":" + cmd.Flag("port").Value.String()
+			if cmd.Flag("host").Value.String() == defaultListenHost {
+				baseURL = listenScheme + "127.0.0.1:" + cmd.Flag("port").Value.String()
+			}
+
 			ctx := context.Background()
 
 			server := api.NewServer(ctx, sugar)
@@ -54,8 +59,7 @@ var (
 				}
 			}
 
-			//server.PrintRoutes()
-			sugar.Fatal(server.Start(":" + cmd.Flag("port").Value.String()))
+			sugar.Fatal(server.Start(cmd.Flag("host").Value.String() + ":" + cmd.Flag("port").Value.String()))
 		},
 	}
 )
@@ -63,12 +67,13 @@ var (
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	regoFiles = os.DirFS("rules")
-	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on, default: "+defaultListenPort)
+	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
+	serveCmd.Flags().StringP("host", "H", defaultListenHost, "IP to listen on, default")
 	serveCmd.PersistentFlags().StringVar(
 		&cfgFile,
 		"config",
 		"./config.yaml",
-		"config file (default is ./config.yaml)")
+		"location of config file")
 }
 
 func processTarget(ctx context.Context, target config.TargetServer, endpoint string) {

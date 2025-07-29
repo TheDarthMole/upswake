@@ -19,7 +19,7 @@ func init() {
 		return
 	}
 	stringBroadcasts := util.IPsToStrings(bc)
-	wakeCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packets to, e.g. 192.168.1.255,172.16.0.255")
+	wakeCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packets to")
 	wakeCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
 	err = wakeCmd.MarkFlagRequired("mac")
 	if err != nil {
