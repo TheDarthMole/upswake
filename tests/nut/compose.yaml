@@ -1,0 +1,9 @@
+services:
+  nut-server:
+    image: thedarthmole/nut-server:local
+    restart: always
+    user: "100:101"
+    cap_drop: [ all ]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - ${PORT_UPSD_1:-3493}:3493

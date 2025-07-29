@@ -1,0 +1,22 @@
+FROM alpine:3.22
+ARG NUT_VERSION=2.8.2-r2
+ENV GROUP=nut \
+    USER=nut
+HEALTHCHECK CMD upsc $NAME@localhost:3493 2>&1|grep -q stale && \
+    killall -TERM upsmon || true
+
+RUN apk add --no-cache dash && \
+    apk add --update --no-cache nut=$NUT_VERSION \
+      busybox linux-pam \
+      libcrypto3 libssl3 \
+      libusb musl net-snmp-libs util-linux && \
+    mkdir -p -m 2750 /var/run/nut && \
+    chown -R $USER:$GROUP /var/run/nut && \
+    echo 0 > /var/run/nut/upsd.pid && chown $USER:$GROUP /var/run/nut/upsd.pid && \
+    echo 0 > /var/run/upsmon.pid
+
+COPY --chown=$USER:$GROUP --chmod=640 files/* /etc/nut/
+
+EXPOSE 3493
+COPY entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]

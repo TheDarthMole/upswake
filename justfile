@@ -53,3 +53,15 @@ build-container:
 # Builds and runs the upswake container
 run-container: build-container
     CONTAINER_TAG=local {{container-tool}} compose up --force-recreate
+
+build-nut-server:
+    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+    {{container-tool}}  build -t thedarthmole/nut-server:local -f ./tests/nut/Containerfile ./tests/nut/
+
+run-nut-server: build-nut-server
+    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+    {{container-tool}} compose -f tests/nut/compose.yaml up --force-recreate --remove-orphans #--detach
+
+stop-nut-server:
+    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+    {{container-tool}} compose -f tests/nut/compose.yaml down
