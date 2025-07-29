@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -35,7 +36,7 @@ and for creating rego rules for waking a target`,
 			sugar.Fatalf("failed to get JSON: %s", err)
 			return
 		}
-		sugar.Info(ups)
+		fmt.Println(ups)
 	},
 }
 

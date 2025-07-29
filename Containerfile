@@ -14,7 +14,7 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
-    go build -tags "timetzdata" -trimpath -ldflags="-w -s -X main.Version=${GIT_DESCRIBE} -buildid=" \
+    go build -tags "timetzdata" -trimpath -ldflags="-w -s -X main.Version=${GIT_DESCRIBE}" \
     -o /opt/upswake/UPSWake ./cmd/upswake
 
 FROM scratch AS minimal

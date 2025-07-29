@@ -73,23 +73,23 @@ func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
-		c.Logger().Errorf("failed to bind mac address %s", err)
+		c.Logger().Errorf("failed to bind mac address: %s", err)
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorBindingRequest.Error()})
 	}
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
-		c.Logger().Errorf("failed to evaluate expressions %s", err)
+		c.Logger().Errorf("failed to evaluate expressions: %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if !result.Found {
-		c.Logger().Errorf("mac address not found in the config %s", util.SanitizeString(mac.Mac))
+		c.Logger().Errorf("mac address not found in the config: %s", util.SanitizeString(mac.Mac))
 		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
 	}
 
 	if !result.Allowed {
-		c.Logger().Debugf("no rule evaluated to true %s", util.SanitizeString(mac.Mac))
+		c.Logger().Debugf("no rule evaluated to true: %s", util.SanitizeString(mac.Mac))
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,

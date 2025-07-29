@@ -5,11 +5,6 @@ import (
 	"net"
 )
 
-type NetworkInterface interface {
-	Addrs() ([]net.Addr, error)
-	MulticastAddrs() ([]net.Addr, error)
-}
-
 func getAllInterfaceAddresses() ([]net.Addr, error) {
 	// Get a list of network interfaces
 	interfaces, err := net.Interfaces()
