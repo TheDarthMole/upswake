@@ -3,7 +3,6 @@ module github.com/TheDarthMole/UPSWake
 go 1.24.5
 
 require (
-	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0

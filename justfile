@@ -15,6 +15,7 @@ lint: swagger
     swag fmt .
     golangci-lint fmt
     golangci-lint run
+    go mod tidy
 
 # Generate Swagger documentation
 swagger:
