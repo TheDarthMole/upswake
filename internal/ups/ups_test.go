@@ -3,7 +3,9 @@ package ups
 import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/google/uuid"
-	"reflect"
+	nut "github.com/robbiet480/go.nut"
+	"github.com/stretchr/testify/assert"
+	"net"
 	"testing"
 )
 
@@ -29,7 +31,7 @@ func TestConnect(t *testing.T) {
 			name: "Invalid Server",
 			args: args{
 				host:     "127.0.0.1",
-				port:     entity.DefaultNUTServerPort,
+				port:     12345, // Invalid port
 				username: randomUsername,
 				password: randomPassword,
 			},
@@ -47,7 +49,34 @@ func TestConnect(t *testing.T) {
 			want:    UPS{},
 			wantErr: true,
 		},
-		// TODO: Add tests that connect to a real NUT server and test authentication
+		{
+			name: "Valid Server",
+			args: args{
+				host:     "127.0.0.1",
+				port:     entity.DefaultNUTServerPort,
+				username: "upsmon",
+				password: "upsmon",
+			},
+			want: UPS{nut.Client{
+				Version:         "Network UPS Tools upsd 2.8.2 - https://www.networkupstools.org/",
+				ProtocolVersion: "1.3",
+				Hostname:        &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1).To4(), Port: entity.DefaultNUTServerPort},
+			}},
+			wantErr: false,
+		},
+		{
+			// This test is bad, as any username/password will work with the default NUT server, however
+			// empty username/password is not valid for the NUT server.
+			name: "Valid Server, empty credentials",
+			args: args{
+				host:     "127.0.0.1",
+				port:     entity.DefaultNUTServerPort,
+				username: "",
+				password: "",
+			},
+			want:    UPS{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -56,9 +85,9 @@ func TestConnect(t *testing.T) {
 				t.Errorf("connect() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("connect() got = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want.Version, got.Version)
+			assert.Equal(t, tt.want.ProtocolVersion, got.ProtocolVersion)
+			assert.Equal(t, tt.want.Hostname, got.Hostname)
 		})
 	}
 }
