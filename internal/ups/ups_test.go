@@ -138,7 +138,7 @@ func TestGetJSON(t *testing.T) {
 				return
 			}
 			// usage of Levenshtein distance as NUT server may return slightly different JSON, depending on state of the UPS
-			assert.LessOrEqual(t, levenshtein.Distance(tt.want, got), 9, "Levenshtein distance between expected and got JSON is too high, indicating a significant difference.")
+			assert.LessOrEqualf(t, levenshtein.Distance(tt.want, got), 9, "Levenshtein distance between expected and got JSON is too high, indicating a significant difference.\nexpected	(%s), \ngot			(%s).", tt.want, got)
 		})
 	}
 }
