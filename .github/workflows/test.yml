@@ -49,6 +49,8 @@ jobs:
           just-version: 1.42.4
       - name: ⚙️ Setup Nut Server
         run: |
+          podman machine init
+          podman machine start
           just run-nut-server
       - name: 🧪 Run `go test`
         run: |
