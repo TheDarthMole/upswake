@@ -23,7 +23,6 @@ jobs:
           allowed-endpoints: >
             api.github.com:443
             auth.docker.io:443
-            dl-cdn.alpinelinux.org:443
             github.com:443
             go.dev:443
             golang.org:443

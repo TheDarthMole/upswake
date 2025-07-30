@@ -1,9 +1,21 @@
 services:
   nut-server:
-    image: thedarthmole/nut-server:local
+    image: instantlinux/nut-upsd:latest
     restart: always
-    user: "100:101"
-    cap_drop: [ all ]
-    security_opt: [no-new-privileges:true]
+#    user: "100:101"
+#    cap_drop: [ all ]
+#    security_opt: [no-new-privileges:true]
+    environment:
+      API_USER: upsmon
+      API_PASSWORD: upsmon
+      GROUP: nut
+      SERVER: master
+      DESCRIPTION: "Simulated UPS for testing"
+      DRIVER: dummy-ups
+      PORT: dummy
+      SDORDER: -1
+      NAME: cyberpower900
     ports:
       - ${PORT_UPSD_1:-3493}:3493
+    volumes:
+      - ./files/dummy:/etc/nut/dummy:rw
