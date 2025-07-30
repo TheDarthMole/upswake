@@ -51,7 +51,6 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
       - name: ⚙️ Setup Nut Server
         run: |
-          podman machine init
           podman machine start
           just run-nut-server
       - name: 🧪 Run `go test`
