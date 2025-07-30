@@ -2,6 +2,8 @@ services:
   nut-server:
     image: instantlinux/nut-upsd:latest
     restart: always
+    pull_policy: always
+    container_name: nut-server
 #    user: "100:101"
 #    cap_drop: [ all ]
 #    security_opt: [no-new-privileges:true]
