@@ -42,18 +42,10 @@ and for creating rego rules for waking a target`,
 
 func init() {
 	rootCmd.AddCommand(jsonCmd)
-	jsonCmd.Flags().StringP("username", "u", "", "Username for the NUT server")
-	jsonCmd.Flags().StringP("password", "p", "", "Password for the NUT server")
+	jsonCmd.Flags().StringP("username", "u", "anonymous", "Username for the NUT server")
+	jsonCmd.Flags().StringP("password", "p", "anonymous", "Password for the NUT server")
 	jsonCmd.Flags().StringP("host", "H", "", "Host address of the NUT server")
 	jsonCmd.Flags().IntP("port", "P", entity.DefaultWoLPort, "Port number of the NUT server")
-	if err := jsonCmd.MarkFlagRequired("username"); err != nil {
-		_ = jsonCmd.Usage()
-		os.Exit(1)
-	}
-	if err := jsonCmd.MarkFlagRequired("password"); err != nil {
-		_ = jsonCmd.Usage()
-		os.Exit(1)
-	}
 	if err := jsonCmd.MarkFlagRequired("host"); err != nil {
 		_ = jsonCmd.Usage()
 		os.Exit(1)
