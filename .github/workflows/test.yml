@@ -21,6 +21,7 @@ jobs:
           disable-sudo: true
           egress-policy: block
           allowed-endpoints: >
+            download.docker.com:443
             api.github.com:443
             github.com:443
             go.dev:443
