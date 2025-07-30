@@ -22,6 +22,7 @@ jobs:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
+            download.docker.com:443
             github.com:443
             go.dev:443
             golang.org:443
