@@ -1,7 +1,8 @@
 FROM alpine:3.22
 ARG NUT_VERSION=2.8.2-r2
 ENV GROUP=nut \
-    USER=nut
+    USER=nut \
+    NAME=cyberpower900
 HEALTHCHECK CMD upsc $NAME@localhost:3493 2>&1|grep -q stale && \
     killall -TERM upsmon || true
 
