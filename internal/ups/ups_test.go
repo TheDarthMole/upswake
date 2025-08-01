@@ -2,13 +2,14 @@ package ups
 
 import (
 	"fmt"
+	"net"
+	"testing"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/google/uuid"
 	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	nut "github.com/robbiet480/go.nut"
 	"github.com/stretchr/testify/assert"
-	"net"
-	"testing"
 )
 
 var (
