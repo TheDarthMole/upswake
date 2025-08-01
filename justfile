@@ -55,7 +55,7 @@ build-container:
 run-container: build-container
     CONTAINER_TAG=local {{container-tool}} compose up --force-recreate
 
-run-nut-server:
+start-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
     {{container-tool}} compose -f tests/nut/compose.yaml up --force-recreate --remove-orphans --detach
 

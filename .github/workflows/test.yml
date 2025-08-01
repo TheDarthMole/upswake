@@ -51,7 +51,7 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
       - name: ⚙️ Setup Nut Server
         run: |
-          CONTAINER_TOOL=docker just run-nut-server
+          CONTAINER_TOOL=docker just start-nut-server
       - name: 🧪 Run `go test`
         run: |
           go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
