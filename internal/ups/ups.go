@@ -3,11 +3,9 @@ package ups
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-
 	"log"
 
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	nut "github.com/robbiet480/go.nut"
 )
 

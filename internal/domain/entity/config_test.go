@@ -2,9 +2,10 @@ package entity
 
 import (
 	"errors"
-	"github.com/go-playground/validator/v10"
 	"reflect"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func TestConfig_Validate(t *testing.T) {

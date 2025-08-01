@@ -1,21 +1,30 @@
 package handlers
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 	regoAlwaysTrue := newMemFS(t, map[string][]byte{
-		"always_true.rego": []byte(`package test
-default allow = true`),
+		"always_true.rego": []byte(`package upswake
+default wake := true`),
+	})
+	regoInvalidRule := newMemFS(t, map[string][]byte{
+		"always_true.rego": []byte(`package notValidPackage
+default wake := true`),
+	})
+	regoAlwaysFalse := newMemFS(t, map[string][]byte{
+		"always_true.rego": []byte(`package upswake
+default wake := false`),
 	})
 	validConfig := &entity.Config{
 		NutServers: []entity.NutServer{
@@ -23,13 +32,34 @@ default allow = true`),
 				Name:     "test-nut-server",
 				Host:     "127.0.0.1",
 				Port:     3493,
-				Username: "testuser",
-				Password: "testpass",
+				Username: "upsmon",
+				Password: "upsmon",
 				Targets: []entity.TargetServer{
 					{
 						Name:      "test-target",
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "127.0.0.255",
+						Port:      9,
+						Interval:  "15m",
+						Rules:     []string{"always_true.rego"},
+					},
+				},
+			},
+		},
+	}
+	invalidConfig := &entity.Config{
+		NutServers: []entity.NutServer{
+			{
+				Name:     "test-nut-server",
+				Host:     "127.0.0.1",
+				Port:     3493,
+				Username: "upsmon",
+				Password: "upsmon",
+				Targets: []entity.TargetServer{
+					{
+						Name:      "test-target",
+						MAC:       "00:11:22:33:44:55",
+						Broadcast: "777.666.555.444",
 						Port:      9,
 						Interval:  "15m",
 						Rules:     []string{"always_true.rego"},
@@ -60,21 +90,70 @@ default allow = true`),
 				body:    `invalid json`,
 			},
 			wantedResponse: wantedResponse{
-				body:       `{"message":"failed to parse request body"}`,
+				body:       `{"message":"failed to parse request body","woken":false}`,
 				statusCode: http.StatusBadRequest,
 			},
 		},
-		//{
-		//	name: "valid_request",
-		//	fields: fields{
-		//		cfg:     validConfig,
-		//		rulesFS: regoAlwaysTrue,
-		//	},
-		//	wantedResponse: wantedResponse{
-		//		body:       `{"body":"Wake on LAN sent","woken":true}`,
-		//		statusCode: http.StatusOK,
-		//	},
-		//},
+		{
+			name: "valid_request",
+			fields: fields{
+				cfg:     validConfig,
+				rulesFS: regoAlwaysTrue,
+				body:    `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"Wake on LAN sent","woken":true}`,
+				statusCode: http.StatusOK,
+			},
+		},
+		{
+			name: "valid_request_invalid_rule",
+			fields: fields{
+				cfg:     validConfig,
+				rulesFS: regoInvalidRule,
+				body:    `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"could not evaluate expression: rego rule must be in package 'upswake'","woken":false}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "rule_evaluates_to_false",
+			fields: fields{
+				cfg:     validConfig,
+				rulesFS: regoAlwaysFalse,
+				body:    `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"No rule evaluated to true","woken":false}`,
+				statusCode: http.StatusOK,
+			},
+		},
+		{
+			name: "mac_not_in_config",
+			fields: fields{
+				cfg:     validConfig,
+				rulesFS: regoAlwaysTrue,
+				body:    `{"mac":"99:11:22:33:44:44"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"MAC address not found in the config","woken":false}`,
+				statusCode: http.StatusConflict,
+			},
+		},
+		{
+			name: "invalid_broadcast_address",
+			fields: fields{
+				cfg:     invalidConfig,
+				rulesFS: regoAlwaysTrue,
+				body:    `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"Failed to create target server: broadcast is invalid, must be an IP address","woken":false}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
 	}
 	e := echo.New()
 	e.Validator = api.NewCustomValidator()

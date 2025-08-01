@@ -2,17 +2,18 @@ package handlers
 
 import (
 	"errors"
-	"github.com/TheDarthMole/UPSWake/internal/api"
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/util"
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/TheDarthMole/UPSWake/internal/api"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 )
 
 var (

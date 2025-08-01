@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
-	"github.com/hack-pad/hackpadfs"
-	"github.com/hack-pad/hackpadfs/mem"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/hack-pad/hackpadfs"
+	"github.com/hack-pad/hackpadfs/mem"
 )
 
 func newMemFS(t *testing.T, data map[string][]byte) hackpadfs.FS {

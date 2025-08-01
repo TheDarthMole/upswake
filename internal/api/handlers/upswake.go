@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -21,7 +22,7 @@ type macAddress struct {
 }
 
 type upsWakeResponse struct {
-	Message string `json:"body" example:"Wake on LAN sent"`
+	Message string `json:"message" example:"Wake on LAN sent"`
 	Woken   bool   `json:"woken" example:"true"`
 }
 
@@ -74,18 +75,27 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	mac := &macAddress{}
 	if err := c.Bind(mac); err != nil {
 		c.Logger().Errorf("failed to bind mac address: %s", err)
-		return c.JSON(http.StatusBadRequest, Response{Message: ErrorBindingRequest.Error()})
+		return c.JSON(http.StatusBadRequest, upsWakeResponse{
+			Message: ErrorBindingRequest.Error(),
+			Woken:   false,
+		})
 	}
 	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
-		c.Logger().Errorf("failed to evaluate expressions: %s", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
+		c.Logger().Errorf("Failed to evaluate expressions: %s", err)
+		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+			Message: err.Error(),
+			Woken:   false,
+		})
 	}
 
 	if !result.Found {
 		c.Logger().Errorf("mac address not found in the config: %s", util.SanitizeString(mac.Mac))
-		return c.JSON(http.StatusConflict, Response{Message: "MAC address not found in the config"})
+		return c.JSON(http.StatusConflict, upsWakeResponse{
+			Message: "MAC address not found in the config",
+			Woken:   false,
+		})
 	}
 
 	if !result.Allowed {
@@ -105,20 +115,26 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 		[]string{},
 	)
 	if err != nil {
-		c.Logger().Errorf("failed to create target server %s", err)
-		return err
+		c.Logger().Errorf("Failed to create target server: %s", err)
+		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+			Message: fmt.Sprintf("Failed to create target server: %s", err),
+			Woken:   false,
+		})
 	}
 
 	wolClient := wol.NewWoLClient(ts)
 
 	if err = wolClient.Wake(); err != nil {
-		c.Logger().Errorf("failed to send wake on lan %s", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
+		c.Logger().Errorf("Failed to send wake on lan %s", err)
+		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+			Message: fmt.Sprintf("Failed to send wake on LAN: %s", err),
+			Woken:   false,
+		})
 	}
 
-	c.Logger().Debugf("wake on lan sent to %s", util.SanitizeString(mac.Mac))
+	c.Logger().Debugf("Wake on LAN sent to %s", util.SanitizeString(mac.Mac))
 	return c.JSON(http.StatusOK, upsWakeResponse{
-		Message: "Wake on Lan sent",
+		Message: "Wake on LAN sent",
 		Woken:   true,
 	})
 }

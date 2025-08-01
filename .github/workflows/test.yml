@@ -22,11 +22,15 @@ jobs:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
+            auth.docker.io:443
             github.com:443
             go.dev:443
             golang.org:443
             objects.githubusercontent.com:443
+            production.cloudflare.docker.com:443
             proxy.golang.org:443
+            raw.githubusercontent.com:443
+            registry-1.docker.io:443
             release-assets.githubusercontent.com:443
             storage.googleapis.com:443
             sum.golang.org:443
@@ -39,12 +43,21 @@ jobs:
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: "go.mod"
-      - name: 📡 Run `go telemetry on`
+      - name: 🏗️Set up Just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff
+        with:
+          just-version: 1.42.4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
+      - name: ⚙️ Setup Nut Server
         run: |
-          go telemetry on
+          CONTAINER_TOOL=docker just start-nut-server
       - name: 🧪 Run `go test`
         run: |
           go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
+      - name: ⚙️ Shut down Nut Server
+        run: |
+          CONTAINER_TOOL=docker just stop-nut-server
       #- name: ☂️ Report coverage rates to Codecov
       #  uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
       #  with:

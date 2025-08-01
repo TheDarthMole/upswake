@@ -1,10 +1,11 @@
 package wol
 
 import (
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"io"
 	"reflect"
 	"testing"
+
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 )
 
 type readWriteCloser struct {
