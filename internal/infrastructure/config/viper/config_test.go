@@ -2,10 +2,11 @@ package viper
 
 import (
 	"errors"
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/spf13/afero"
 	"reflect"
 	"testing"
+
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/spf13/afero"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {

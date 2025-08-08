@@ -1,12 +1,13 @@
 package evaluator
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/hack-pad/hackpadfs"
 	"github.com/hack-pad/hackpadfs/mem"
-	"reflect"
-	"testing"
 )
 
 const (

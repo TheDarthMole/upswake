@@ -1,0 +1,4 @@
+[default]
+battery.charge: 85
+battery.runtime: 3600
+ups.status: OL
