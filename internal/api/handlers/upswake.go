@@ -45,7 +45,7 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 //	@Tags			UPSWake
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	config.Config
+//	@Success		200	{object}	[]entity.NutServer
 //	@Router			/api/upswake [get]
 func (h *UPSWakeHandler) ListNutServerMappings(c echo.Context) error {
 	nutServers := h.cfg.NutServers
