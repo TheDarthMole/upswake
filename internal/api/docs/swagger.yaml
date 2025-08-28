@@ -1,83 +1,39 @@
 definitions:
-  config.Config:
+  entity.NutServer:
     properties:
-      bundle:
-        description: 'Deprecated: Use `bundles` instead'
-        items:
-          type: integer
-        type: array
-      bundles:
-        items:
-          type: integer
-        type: array
-      caching:
-        items:
-          type: integer
-        type: array
-      decision_logs:
-        items:
-          type: integer
-        type: array
-      default_authorization_decision:
+      host:
         type: string
-      default_decision:
+      name:
         type: string
-      discovery:
+      password:
+        type: string
+      port:
+        type: integer
+      targets:
         items:
-          type: integer
+          $ref: '#/definitions/entity.TargetServer'
         type: array
-      distributed_tracing:
+      username:
+        type: string
+    type: object
+  entity.TargetServer:
+    properties:
+      broadcast:
+        type: string
+      interval:
+        default: 15m
+        type: string
+      mac:
+        type: string
+      name:
+        type: string
+      port:
+        default: 9
+        type: integer
+      rules:
         items:
-          type: integer
-        type: array
-      keys:
-        items:
-          type: integer
-        type: array
-      labels:
-        additionalProperties:
           type: string
-        type: object
-      nd_builtin_cache:
-        type: boolean
-      persistence_directory:
-        type: string
-      plugins:
-        additionalProperties:
-          items:
-            type: integer
-          type: array
-        type: object
-      server:
-        properties:
-          decoding:
-            items:
-              type: integer
-            type: array
-          encoding:
-            items:
-              type: integer
-            type: array
-          metrics:
-            items:
-              type: integer
-            type: array
-        type: object
-      services:
-        items:
-          type: integer
         type: array
-      status:
-        items:
-          type: integer
-        type: array
-      storage:
-        properties:
-          disk:
-            items:
-              type: integer
-            type: array
-        type: object
     type: object
   handlers.BroadcastWakeRequest:
     properties:
@@ -208,7 +164,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/config.Config'
+            items:
+              $ref: '#/definitions/entity.NutServer'
+            type: array
       summary: List NUT server mappings
       tags:
       - UPSWake

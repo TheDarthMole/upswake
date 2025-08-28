@@ -140,7 +140,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/config.Config"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.NutServer"
+                            }
                         }
                     }
                 }
@@ -233,123 +236,56 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "config.Config": {
+        "entity.NutServer": {
             "type": "object",
             "properties": {
-                "bundle": {
-                    "description": "Deprecated: Use ` + "`" + `bundles` + "`" + ` instead",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "bundles": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "caching": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "decision_logs": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "default_authorization_decision": {
+                "host": {
                     "type": "string"
                 },
-                "default_decision": {
+                "name": {
                     "type": "string"
                 },
-                "discovery": {
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "targets": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/entity.TargetServer"
                     }
                 },
-                "distributed_tracing": {
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TargetServer": {
+            "type": "object",
+            "properties": {
+                "broadcast": {
+                    "type": "string"
+                },
+                "interval": {
+                    "type": "string",
+                    "default": "15m"
+                },
+                "mac": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 9
+                },
+                "rules": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
-                    }
-                },
-                "keys": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "labels": {
-                    "type": "object",
-                    "additionalProperties": {
                         "type": "string"
-                    }
-                },
-                "nd_builtin_cache": {
-                    "type": "boolean"
-                },
-                "persistence_directory": {
-                    "type": "string"
-                },
-                "plugins": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "server": {
-                    "type": "object",
-                    "properties": {
-                        "decoding": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        },
-                        "encoding": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        },
-                        "metrics": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        }
-                    }
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "status": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "storage": {
-                    "type": "object",
-                    "properties": {
-                        "disk": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        }
                     }
                 }
             }

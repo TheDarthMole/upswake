@@ -65,12 +65,12 @@ func (c *Config) Validate() error {
 }
 
 type NutServer struct {
-	Name     string
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Targets  []TargetServer
+	Name     string         `json:"name"`
+	Host     string         `json:"host"`
+	Port     int            `json:"port"`
+	Username string         `json:"username"`
+	Password string         `json:"password"`
+	Targets  []TargetServer `json:"targets"`
 }
 
 func (ns *NutServer) Validate() error {
@@ -101,12 +101,12 @@ func (ns *NutServer) Validate() error {
 }
 
 type TargetServer struct {
-	Name      string
-	MAC       string
-	Broadcast string
-	Port      int    `default:"9"`
-	Interval  string `default:"15m"`
-	Rules     []string
+	Name      string   `json:"name"`
+	MAC       string   `json:"mac"`
+	Broadcast string   `json:"broadcast"`
+	Port      int      `json:"port" default:"9"`
+	Interval  string   `json:"interval" default:"15m"`
+	Rules     []string `json:"rules"`
 }
 
 func (ts *TargetServer) Validate() error {
