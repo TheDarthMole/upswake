@@ -1,5 +1,6 @@
 # 🌟 UPSWake
 
+[![Build](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg)](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
 [![Docker Image Size](https://img.shields.io/docker/image-size/thedarthmole/upswake/latest)](https://hub.docker.com/r/thedarthmole/upswake)
