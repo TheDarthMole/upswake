@@ -1,6 +1,6 @@
 services:
   nut-server:
-    image: instantlinux/nut-upsd:latest
+    image: instantlinux/nut-upsd:2.8.2-r2
     restart: always
     pull_policy: always
     container_name: nut-server
