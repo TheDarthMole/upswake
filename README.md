@@ -232,6 +232,7 @@ Available recipes:
     - [ ] Add feature request guidelines
     - [ ] Add release notes changelog
     - [ ] Add policy for writing tests
+    - [x] Add code of conduct
 - [ ] Add more examples
 - [ ] Add more rego examples
 - 
