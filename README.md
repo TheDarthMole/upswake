@@ -6,6 +6,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
 [![Docker Image Size](https://img.shields.io/docker/image-size/thedarthmole/upswake/latest)](https://hub.docker.com/r/thedarthmole/upswake)
 [![Docker Pulls](https://img.shields.io/docker/pulls/thedarthmole/upswake)](https://hub.docker.com/r/thedarthmole/upswake)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11143/badge)](https://www.bestpractices.dev/projects/11143)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
 
 A dynamic Wake on Lan application that wakes servers based on the status of a NUT UPS server using the Rego policy language.
@@ -221,17 +222,19 @@ Available recipes:
 
 ## Roadmap
 
-- [x] Add logic to wake hosts after evaluating rules
-- [x] Make serve command run continuously, add interval flag
-- [x] Add command to output all UPS json data (helps create rules)
-- [x] Bug fixes
-- [x] Add more tests
-- [ ] Add more documentation
-- [x] Better config validation
+- [ ] OpenSSF Best Practices
+  - [ ] Add SSL for the API
+  - [ ] Add fuzz testing
+  - [ ] Add more documentation
+    - [ ] Add contributing guidelines
+    - [ ] Add requirements for acceptable contributions
+    - [ ] Add bug reporting guidelines
+    - [ ] Add feature request guidelines
+    - [ ] Add release notes changelog
+    - [ ] Add policy for writing tests
 - [ ] Add more examples
-- [x] Change rego package name from authz to something else
 - [ ] Add more rego examples
-- [x] Add GitLab CI/CD to test, build and push Docker image
+- 
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)
