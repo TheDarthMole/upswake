@@ -5,5 +5,12 @@
     "group:allNonMajor",
     ":semanticCommitTypeAll(build)"
   ],
-  "postUpdateOptions": ["gomodTidy"]
+  "postUpdateOptions": ["gomodTidy"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "versioning": "github-actions"
+    }
+  ]
 }
