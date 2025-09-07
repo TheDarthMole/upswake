@@ -32,7 +32,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: 🏗 Install Swag cli
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: 🧹 Run Swag fmt
         run: swag fmt .
