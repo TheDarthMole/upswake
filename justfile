@@ -7,7 +7,7 @@ help:
     just -l
 
 # Run all Go tests
-test:
+test: start-nut-server && stop-nut-server
     go test ./...
 
 # Runs all linters
@@ -55,10 +55,12 @@ build-container:
 run-container: build-container
     CONTAINER_TAG=local {{container-tool}} compose up --force-recreate
 
+# Runs a NUT server in a container for testing
 start-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
     {{container-tool}} compose -f tests/nut/compose.yaml up --force-recreate --remove-orphans --detach
 
+# Stops the NUT server container
 stop-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
     {{container-tool}} compose -f tests/nut/compose.yaml down

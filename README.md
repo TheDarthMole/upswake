@@ -226,12 +226,12 @@ Available recipes:
   - [ ] Add SSL for the API
   - [ ] Add fuzz testing
   - [ ] Add more documentation
-    - [ ] Add contributing guidelines
-    - [ ] Add requirements for acceptable contributions
+    - [x] Add contributing guidelines
+    - [x] Add requirements for acceptable contributions
     - [ ] Add bug reporting guidelines
     - [ ] Add feature request guidelines
     - [ ] Add release notes changelog
-    - [ ] Add policy for writing tests
+    - [x] Add policy for writing tests
     - [x] Add code of conduct
 - [ ] Add more examples
 - [ ] Add more rego examples
