@@ -61,7 +61,7 @@ jobs:
         run: |
           CONTAINER_TOOL=docker just stop-nut-server
       - name: ☂️ Report coverage rates to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           fail_ci_if_error: true # default: false
           files: ./coverage.txt
