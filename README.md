@@ -7,6 +7,7 @@
 [![Docker Image Size](https://img.shields.io/docker/image-size/thedarthmole/upswake/latest)](https://hub.docker.com/r/thedarthmole/upswake)
 [![Docker Pulls](https://img.shields.io/docker/pulls/thedarthmole/upswake)](https://hub.docker.com/r/thedarthmole/upswake)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11143/badge)](https://www.bestpractices.dev/projects/11143)
+[![codecov](https://codecov.io/github/TheDarthMole/upswake/graph/badge.svg?token=B23QF8JDVJ)](https://codecov.io/github/TheDarthMole/upswake)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
 
 A dynamic Wake on Lan application that wakes servers based on the status of a NUT UPS server using the Rego policy language.
