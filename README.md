@@ -208,34 +208,21 @@ the [justfile](justfile).
 ```
 just -l
 Available recipes:
-    build           # Build upswake
-    build-container # Build the thedarthmole/upswake:local container
-    help            # Display this help message
-    install-deps    # Install development dependencies
-    lint            # Runs all linters
-    run *args       # Run upswake with arguments
-    run-container   # Builds and runs the upswake container
-    swagger         # Generate Swagger documentation
-    test            # Run all Go tests
+    build            # Build upswake
+    build-container  # Build the thedarthmole/upswake:local container
+    help             # Display this help message
+    install-deps     # Install development dependencies
+    lint             # Runs all linters
+    run *args        # Run upswake with arguments
+    run-container    # Builds and runs the upswake container
+    start-nut-server # Runs a NUT server in a container for testing
+    stop-nut-server  # Stops the NUT server container
+    swagger          # Generate Swagger documentation
+    test             # Run all Go tests
 ```
 
-
-## Roadmap
-
-- [ ] OpenSSF Best Practices
-  - [ ] Add SSL for the API
-  - [ ] Add fuzz testing
-  - [ ] Add more documentation
-    - [ ] Add contributing guidelines
-    - [ ] Add requirements for acceptable contributions
-    - [ ] Add bug reporting guidelines
-    - [ ] Add feature request guidelines
-    - [ ] Add release notes changelog
-    - [ ] Add policy for writing tests
-    - [x] Add code of conduct
-- [ ] Add more examples
-- [ ] Add more rego examples
-- 
+For more information about contributing to UPSWake, please read the [CONTRIBUTING.md](docs/CONTRIBUTING.md) and
+[MAINTAINERS.md](docs/MAINTAINERS.md) docs.
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)
