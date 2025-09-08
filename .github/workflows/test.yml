@@ -27,6 +27,7 @@ jobs:
             github.com:443
             go.dev:443
             golang.org:443
+            keybase.io:443
             objects.githubusercontent.com:443
             production.cloudflare.docker.com:443
             proxy.golang.org:443
