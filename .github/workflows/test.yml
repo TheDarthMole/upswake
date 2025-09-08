@@ -23,9 +23,12 @@ jobs:
           allowed-endpoints: >
             api.github.com:443
             auth.docker.io:443
+            cli.codecov.io:443
             github.com:443
             go.dev:443
             golang.org:443
+            ingest.codecov.io:443
+            keybase.io:443
             objects.githubusercontent.com:443
             production.cloudflare.docker.com:443
             proxy.golang.org:443
@@ -58,13 +61,13 @@ jobs:
       - name: ⚙️ Shut down Nut Server
         run: |
           CONTAINER_TOOL=docker just stop-nut-server
-      #- name: ☂️ Report coverage rates to Codecov
-      #  uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
-      #  with:
-      #    fail_ci_if_error: true # default: false
-      #    file: ./coverage.txt
-      #    flags: unittests
-      #    token: ${{ secrets.CODECOV_TOKEN }}
+      - name: ☂️ Report coverage rates to Codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        with:
+          fail_ci_if_error: true # default: false
+          files: ./coverage.txt
+          flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
   regenerate:
     name: Regenerate
     runs-on: ubuntu-latest
