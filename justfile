@@ -58,9 +58,9 @@ run-container: build-container
 # Runs a NUT server in a container for testing
 start-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
-    {{container-tool}} compose -f tests/nut/compose.yaml up --force-recreate --remove-orphans --detach
+    {{container-tool}} compose -f hack/nut/compose.yaml up --force-recreate --remove-orphans --detach
 
 # Stops the NUT server container
 stop-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
-    {{container-tool}} compose -f tests/nut/compose.yaml down
+    {{container-tool}} compose -f hack/nut/compose.yaml down
