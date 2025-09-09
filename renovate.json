@@ -13,7 +13,7 @@
       "versioning": "github-actions"
     }
   ],
-  "docker": {
+  "docker-compose": {
     "managerFilePatterns": [
     "/(^|/).*(?:docker-)?compose[^/]*\\.ya?ml$/"
   ]
