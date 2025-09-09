@@ -8,6 +8,7 @@ help:
 
 # Run all Go tests
 test: start-nut-server && stop-nut-server
+    go clean -testcache
     go test ./...
 
 # Runs all linters
