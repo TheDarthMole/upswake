@@ -12,5 +12,10 @@
       "pinDigests": true,
       "versioning": "github-actions"
     }
+  ],
+  "docker": {
+    "managerFilePatterns": [
+    "/(^|/).*(?:docker-)?compose[^/]*\\.ya?ml$/"
   ]
+  }
 }
