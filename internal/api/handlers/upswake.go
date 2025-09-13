@@ -8,13 +8,13 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
-	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 )
 
 type UPSWakeHandler struct {
 	cfg     *entity.Config
-	rulesFS hackpadfs.FS
+	rulesFS afero.Fs
 }
 
 type macAddress struct {
@@ -26,7 +26,7 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *entity.Config, rulesFS hackpadfs.FS) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, rulesFS afero.Fs) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,
