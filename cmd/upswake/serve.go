@@ -4,15 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -29,45 +26,12 @@ const (
 )
 
 var (
-	cfgFile, baseURL string
-	tlsConfig        *tls.Config
-	listenHost       net.IP
-	listenPort       int
-	listenScheme     = "http://"
+	cfgFile   string
 	regoFiles afero.Fs
 	serveCmd  = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Flag("ssl").Value.String() == "true" {
-				listenScheme = "https://"
-				if cmd.Flag("certFile").Value.String() == "" || cmd.Flag("keyFile").Value.String() == "" {
-					return fmt.Errorf("SSL is enabled but certFile or keyFile is not set")
-				}
-				err := errors.New("")
-				tlsConfig, err = x509Cert(cmd.Flag("certFile").Value.String())
-				if err != nil {
-					return fmt.Errorf("error loading SSL certificate: %s", err)
-				}
-			}
-
-			listenHost = net.ParseIP(cmd.Flag("host").Value.String())
-			if listenHost == nil {
-				return fmt.Errorf("invalid listen host IP address: %s", cmd.Flag("host").Value.String())
-			}
-			err := error(nil)
-			listenPort, err = strconv.Atoi(cmd.Flag("port").Value.String())
-			if err != nil || listenPort <= 0 || listenPort > 65535 {
-				return fmt.Errorf("invalid listen port %s", cmd.Flag("port").Value.String())
-			}
-
-			baseURL = fmt.Sprintf("%s%s:%d", listenScheme, listenHost.String(), listenPort)
-			if listenHost.IsUnspecified() {
-				baseURL = fmt.Sprintf("%s127.0.0.1:%d", listenScheme, listenPort)
-			}
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := viper.Load()
 			if err != nil {
@@ -75,6 +39,17 @@ var (
 			}
 			if err := cfg.Validate(); err != nil {
 				return fmt.Errorf("error validating config: %s", err)
+			}
+			cliArgs, err := config.NewCLIArgs(
+				cmd.Flag("config").Value.String(),
+				cmd.Flag("ssl").Value.String() == "true",
+				cmd.Flag("certFile").Value.String(),
+				cmd.Flag("keyFile").Value.String(),
+				cmd.Flag("host").Value.String(),
+				cmd.Flag("port").Value.String(),
+			)
+			if err != nil {
+				return err
 			}
 
 			ctx := context.Background()
@@ -92,12 +67,12 @@ var (
 
 			for _, mapping := range cfg.NutServers {
 				for _, target := range mapping.Targets {
-					go processTarget(ctx, target, baseURL+"/api/upswake")
+					go processTarget(ctx, target, cliArgs.Address()+"/api/upswake", cliArgs.TLSConfig)
 				}
 			}
 
 			return server.Start(
-				fmt.Sprintf("%s:%d", listenHost.String(), listenPort),
+				fmt.Sprintf("%s:%s", cliArgs.Host.String(), cliArgs.Port),
 				cmd.Flag("ssl").Value.String() == "true",
 				cmd.Flag("certFile").Value.String(),
 				cmd.Flag("keyFile").Value.String(),
@@ -122,7 +97,7 @@ func init() {
 		"location of config file")
 }
 
-func processTarget(ctx context.Context, target config.TargetServer, endpoint string) {
+func processTarget(ctx context.Context, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	sugar.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
@@ -136,38 +111,13 @@ func processTarget(ctx context.Context, target config.TargetServer, endpoint str
 			sugar.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			sendWakeRequest(ctx, target, endpoint)
+			sendWakeRequest(ctx, target, endpoint, tlsConfig)
 			ticker.Reset(interval)
 		}
 	}
 }
 
-func x509Cert(certPath string) (*tls.Config, error) {
-	certFile, err := os.ReadFile(certPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decode the PEM certificate
-	data, _ := pem.Decode(certFile)
-	if data == nil {
-		return nil, errors.New("failed to parse PEM certificate")
-	}
-
-	// Parse the certificate
-	cert, err := x509.ParseCertificate(data.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	conf := &tls.Config{}
-	conf.RootCAs = x509.NewCertPool()
-	conf.RootCAs.AddCert(cert)
-
-	return conf, nil
-}
-
-func sendWakeRequest(ctx context.Context, target config.TargetServer, address string) {
+func sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
