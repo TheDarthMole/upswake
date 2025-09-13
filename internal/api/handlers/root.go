@@ -6,21 +6,21 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/TheDarthMole/UPSWake/internal/util"
-	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type RootHandler struct {
 	cfg     *entity.Config
-	rulesFS hackpadfs.FS
+	rulesFS afero.Fs
 }
 
 type Response struct {
 	Message string `json:"message"`
 }
 
-func NewRootHandler(cfg *entity.Config, rulesFS hackpadfs.FS) *RootHandler {
+func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,

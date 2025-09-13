@@ -7,9 +7,8 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/hack-pad/hackpadfs"
-	"github.com/hack-pad/hackpadfs/mem"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,15 +36,12 @@ var (
 	}
 )
 
-func newMemFS(t *testing.T, data map[string][]byte) hackpadfs.FS {
+func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 	t.Helper()
-	memfs, err := mem.NewFS()
-	if err != nil {
-		t.Fatalf("could not create memfs: %s", err)
-	}
+	memfs := afero.NewMemMapFs()
 
 	for x := range data {
-		err = hackpadfs.WriteFullFile(memfs, x, data[x], 0644)
+		err := afero.WriteFile(memfs, x, data[x], 0644)
 		if err != nil {
 			t.Fatalf("could not write file to memfs: %s", err)
 		}
@@ -72,7 +68,7 @@ func TestRootHandlerRoot(t *testing.T) {
 func TestRootHandler_Health(t *testing.T) {
 	type fields struct {
 		cfg     *entity.Config
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 	}
 	type wantedResponse struct {
 		body       string
@@ -173,7 +169,7 @@ func TestRootHandler_Register(t *testing.T) {
 func TestNewRootHandler(t *testing.T) {
 	type args struct {
 		cfg     *entity.Config
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 	}
 	memFS1 := newMemFS(t, map[string][]byte{})
 	memFS2 := newMemFS(t, map[string][]byte{

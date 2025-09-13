@@ -8,8 +8,8 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/hack-pad/hackpadfs"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,7 +70,7 @@ default wake := false`),
 	}
 	type fields struct {
 		cfg     *entity.Config
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 		body    string
 	}
 	type wantedResponse struct {

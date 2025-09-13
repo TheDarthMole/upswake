@@ -7,12 +7,12 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/TheDarthMole/UPSWake/internal/util"
-	"github.com/hack-pad/hackpadfs"
+	"github.com/spf13/afero"
 )
 
 type RegoEvaluator struct {
 	config  *entity.Config
-	rulesFS hackpadfs.FS
+	rulesFS afero.Fs
 	mac     string
 }
 
@@ -22,7 +22,7 @@ type EvaluationResult struct {
 	Target  *entity.TargetServer
 }
 
-func NewRegoEvaluator(config *entity.Config, mac string, rulesFS hackpadfs.FS) *RegoEvaluator {
+func NewRegoEvaluator(config *entity.Config, mac string, rulesFS afero.Fs) *RegoEvaluator {
 	return &RegoEvaluator{
 		config:  config,
 		mac:     mac,

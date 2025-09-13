@@ -6,8 +6,7 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
-	"github.com/hack-pad/hackpadfs"
-	"github.com/hack-pad/hackpadfs/mem"
+	"github.com/spf13/afero"
 )
 
 const (
@@ -17,32 +16,27 @@ const (
 
 var (
 	defaultConfig, _ = viper.CreateDefaultConfig()
-	tempFS, _        = mem.NewFS()
+	tempFS           = afero.NewMemMapFs()
 	alwaysTrueRego   = []byte("package upswake\n\ndefault wake := true")
 	alwaysFalseRego  = []byte("package upswake\n\ndefault wake := false")
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
-	alwaysTrueRegoFS, err := mem.NewFS()
-	if err != nil {
-		t.Fatal("Failed to setup memfs")
-	}
-	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t) != nil {
+	alwaysTrueRegoFS := afero.NewMemMapFs()
+
+	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t); err != nil {
 		t.Fatal(err)
 	}
 
-	alwaysFalseRegoFS, err := mem.NewFS()
-	if err != nil {
-		t.Fatal("Failed to setup memfs")
-	}
-	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysFalseRego, t) != nil {
+	alwaysFalseRegoFS := afero.NewMemMapFs()
+	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysFalseRego, t); err != nil {
 		t.Fatal(err)
 	}
 
 	type args struct {
 		config  *entity.Config
 		mac     string
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 	}
 
 	tests := []struct {
@@ -90,7 +84,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 	type fields struct {
 		config  *entity.Config
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 		mac     string
 	}
 	var tests []struct {
@@ -113,15 +107,12 @@ func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
-	testFS, err := mem.NewFS()
-	if err != nil {
-		t.Fatal("Failed to setup memfs")
-	}
-	if writeMemFile(testFS, "alwaysTrue.rego", alwaysTrueRego, t) != nil {
+	testFS := afero.NewMemMapFs()
+	if err := writeMemFile(testFS, "alwaysTrue.rego", alwaysTrueRego, t); err != nil {
 		t.Fatal(err)
 	}
 
-	if writeMemFile(testFS, "alwaysFalse.rego", alwaysFalseRego, t) != nil {
+	if err := writeMemFile(testFS, "alwaysFalse.rego", alwaysFalseRego, t); err != nil {
 		t.Fatal(err)
 	}
 
@@ -132,12 +123,12 @@ wake if {
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value == 100
 }`
-	if writeMemFile(testFS, "check100Percent.rego", []byte(check100Percent), t) != nil {
+	if err := writeMemFile(testFS, "check100Percent.rego", []byte(check100Percent), t); err != nil {
 		t.Fatal(err)
 	}
 
 	type fields struct {
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 	}
 	type args struct {
 		target *entity.TargetServer
@@ -263,30 +254,19 @@ wake if {
 	}
 }
 
-func writeMemFile(fs hackpadfs.FS, fileName string, contents []byte, t *testing.T) error {
-	create, err := hackpadfs.Create(fs, fileName)
-	if err != nil {
-		t.Fatalf("failed to create memfs file: %s", err)
-	}
-	_, err = hackpadfs.WriteFile(create, contents)
-	if err != nil {
-		t.Fatalf("failed to write file %s", err)
-	}
-	return err
+func writeMemFile(fs afero.Fs, fileName string, contents []byte, t *testing.T) error {
+	return afero.WriteFile(fs, fileName, contents, 0644)
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
-	alwaysTrueRegoFS, err := mem.NewFS()
-	if err != nil {
-		t.Fatal("Failed to setup memfs")
-	}
-	if writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t) != nil {
+	alwaysTrueRegoFS := afero.NewMemMapFs()
+	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t); err != nil {
 		t.Fatal(err)
 	}
 
 	type fields struct {
 		config  *entity.Config
-		rulesFS hackpadfs.FS
+		rulesFS afero.Fs
 		mac     string
 	}
 
