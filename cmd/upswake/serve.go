@@ -5,10 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -16,6 +14,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +26,7 @@ const (
 
 var (
 	cfgFile   string
-	regoFiles fs.FS
+	regoFiles afero.Fs
 	serveCmd  = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
@@ -78,7 +77,8 @@ var (
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	regoFiles = os.DirFS("rules")
+	fileSystem := afero.NewOsFs()
+	regoFiles = afero.NewBasePathFs(fileSystem, "rules")
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
 	serveCmd.PersistentFlags().StringVar(
