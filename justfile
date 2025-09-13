@@ -65,3 +65,9 @@ start-nut-server:
 stop-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
     {{container-tool}} compose -f hack/nut/compose.yaml down
+
+generate-cert:
+    mkdir -p certs
+    openssl req  -nodes -new -x509 -keyout certs/server.key -out certs/server.cert \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"

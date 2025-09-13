@@ -44,7 +44,10 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	}
 }
 
-func (s *Server) Start(address string) error {
+func (s *Server) Start(address string, useSSL bool, certFile, keyFile string) error {
+	if useSSL {
+		return s.echo.StartTLS(address, certFile, keyFile)
+	}
 	return s.echo.Start(address)
 }
 

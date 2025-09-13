@@ -8,6 +8,7 @@ output.json
 /upswake
 coverage.txt
 cmd/test*
+certs/
 
 # User-specific stuff
 .idea/**/workspace.xml
