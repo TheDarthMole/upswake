@@ -6,10 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/fs"
-	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -26,9 +23,10 @@ const (
 )
 
 var (
-	cfgFile   string
-	regoFiles afero.Fs
-	serveCmd  = &cobra.Command{
+	cfgFile    string
+	regoFiles  afero.Fs
+	fileSystem afero.Fs
+	serveCmd   = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
@@ -40,7 +38,12 @@ var (
 			if err := cfg.Validate(); err != nil {
 				return fmt.Errorf("error validating config: %s", err)
 			}
+
+			//if err != nil {
+			//	return fmt.Errorf("could not get local filesystem: %s", err)
+			//}
 			cliArgs, err := config.NewCLIArgs(
+				fileSystem,
 				cmd.Flag("config").Value.String(),
 				cmd.Flag("ssl").Value.String() == "true",
 				cmd.Flag("certFile").Value.String(),
@@ -83,7 +86,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	fileSystem := afero.NewOsFs()
+	fileSystem = afero.NewOsFs()
 	regoFiles = afero.NewBasePathFs(fileSystem, "rules")
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")

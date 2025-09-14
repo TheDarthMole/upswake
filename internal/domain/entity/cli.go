@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"strconv"
+
+	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/spf13/afero"
 )
 
 type CLIArgs struct {
@@ -21,7 +23,7 @@ type CLIArgs struct {
 	TLSConfig  *tls.Config
 }
 
-func NewCLIArgs(configFile string, useSSL bool, certFile, keyFile, host, port string) (*CLIArgs, error) {
+func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, keyFile, host, port string) (*CLIArgs, error) {
 	cliArgs := &CLIArgs{
 		ConfigFile: configFile,
 		UseSSL:     useSSL,
@@ -32,7 +34,7 @@ func NewCLIArgs(configFile string, useSSL bool, certFile, keyFile, host, port st
 	}
 	err := error(nil)
 	if useSSL {
-		cliArgs.TLSConfig, err = cliArgs.x509Cert()
+		cliArgs.TLSConfig, err = cliArgs.x509Cert(fileSystem)
 		if err != nil {
 			return nil, err
 		}
@@ -68,8 +70,8 @@ func (c *CLIArgs) Validate() error {
 	return nil
 }
 
-func (c *CLIArgs) x509Cert() (*tls.Config, error) {
-	certFile, err := os.ReadFile(c.CertFile)
+func (c *CLIArgs) x509Cert(fileSystem afero.Fs) (*tls.Config, error) {
+	certFile, err := util.GetFile(fileSystem, c.CertFile)
 	if err != nil {
 		return nil, err
 	}
