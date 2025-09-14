@@ -156,7 +156,7 @@ default wake := false`),
 		},
 	}
 	e := echo.New()
-	e.Validator = api.NewCustomValidator()
+	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/upswake", strings.NewReader(tt.fields.body))

@@ -18,14 +18,18 @@ type Server struct {
 
 type CustomValidator struct {
 	validator *validator.Validate
+	ctx       context.Context
 }
 
-func NewCustomValidator() *CustomValidator {
-	return &CustomValidator{validator: validator.New()}
+func NewCustomValidator(ctx context.Context) *CustomValidator {
+	return &CustomValidator{
+		validator: validator.New(),
+		ctx:       ctx,
+	}
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
+	if err := cv.validator.StructCtx(cv.ctx, i); err != nil {
 		return err
 	}
 	return nil
@@ -33,7 +37,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app := echo.New()
-	app.Validator = NewCustomValidator()
+	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.Logger())
 
