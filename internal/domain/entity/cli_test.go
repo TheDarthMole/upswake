@@ -11,11 +11,11 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 func genEcdsaKey() (*ecdsa.PrivateKey, error) {
@@ -26,15 +26,33 @@ func genRsaKey() (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, 2048)
 }
 
+func encodeEcdsa(t *testing.T, privateKey *ecdsa.PrivateKey, certificate []byte) ([]byte, []byte) {
+	x509Encoded, err := x509.MarshalECPrivateKey(privateKey)
+	assert.NoError(t, err)
+	pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
+
+	pemEncodedCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificate})
+
+	return pemEncoded, pemEncodedCert
+}
+
+func encodeRSA(_ *testing.T, privateKey *rsa.PrivateKey, certificate []byte) ([]byte, []byte) {
+	x509Encoded := x509.MarshalPKCS1PrivateKey(privateKey)
+	pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
+
+	pemEncodedCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificate})
+
+	return pemEncoded, pemEncodedCert
+}
+
 func generateTestCert(t *testing.T, priv, public any) ([]byte, error) {
 	t.Helper()
 
 	notBefore := time.Now()
 	notAfter := notBefore.Add(1 * time.Hour)
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	if err != nil {
-		return nil, err
-	}
+	assert.NoError(t, err)
+
 	template := x509.Certificate{
 		SerialNumber:          serialNumber,
 		NotBefore:             notBefore,
@@ -47,12 +65,25 @@ func generateTestCert(t *testing.T, priv, public any) ([]byte, error) {
 		},
 	}
 
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, public, priv)
-	if err != nil {
-		return nil, err
-	}
+	return x509.CreateCertificate(rand.Reader, &template, &template, public, priv)
+}
 
-	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes}), nil
+func genRSACertAndKey(t *testing.T) ([]byte, []byte) {
+	rsaKey, err := genRsaKey()
+	assert.NoError(t, err)
+	rsaCert, err := generateTestCert(t, rsaKey, &rsaKey.PublicKey)
+	assert.NoError(t, err)
+	rsaKeyPEM, rsaCertPEM := encodeRSA(t, rsaKey, rsaCert)
+	return rsaKeyPEM, rsaCertPEM
+}
+
+func genEcdsaCertAndKey(t *testing.T) ([]byte, []byte) {
+	ecdsaKey, err := genEcdsaKey()
+	assert.NoError(t, err)
+	ecdsaCert, err := generateTestCert(t, ecdsaKey, &ecdsaKey.PublicKey)
+	assert.NoError(t, err)
+	ecdsaKeyPEM, ecdsaCertPEM := encodeEcdsa(t, ecdsaKey, ecdsaCert)
+	return ecdsaKeyPEM, ecdsaCertPEM
 }
 
 func TestCLIArgs_Address(t *testing.T) {
@@ -344,31 +375,19 @@ func TestCLIArgs_Validate(t *testing.T) {
 
 func TestCLIArgs_x509Cert(t *testing.T) {
 	fileSystem := afero.NewMemMapFs()
+	rsaPrivPEM, rsaCertPEM := genRSACertAndKey(t)
+	ecdsaPrivPEM, ecdsaCertPEM := genEcdsaCertAndKey(t)
+	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.cert", rsaCertPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.key", rsaPrivPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.cert", []byte("invalid cert"), 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.key", []byte("invalid key"), 0644))
+
 	rsaKey, err := genRsaKey()
-	if err != nil {
-		t.Fatalf("Failed to generate RSA key: %v", err)
-	}
-	ecdsaKey, err := genEcdsaKey()
-	if err != nil {
-		t.Fatalf("Failed to generate ECDSA key: %v", err)
-	}
-	rsaCertPEM, err := generateTestCert(t, rsaKey, &rsaKey.PublicKey)
-	if err != nil {
-		t.Fatalf("Failed to generate test certificate: %v", err)
-	}
-	ecdsaCertPEM, err := generateTestCert(t, ecdsaKey, &ecdsaKey.PublicKey)
-	if err != nil {
-		t.Fatalf("Failed to generate test certificate: %v", err)
-	}
-	if err = afero.WriteFile(fileSystem, "rsaServer.cert", rsaCertPEM, 0644); err != nil {
-		t.Fatalf("failed to write to file system: %v", err)
-	}
-	if err = afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0644); err != nil {
-		t.Fatalf("failed to write to file system: %v", err)
-	}
-	if err = afero.WriteFile(fileSystem, "invalidServer.cert", []byte("invalid cert"), 0644); err != nil {
-		t.Fatalf("failed to write to file system: %v", err)
-	}
+	assert.NoError(t, err)
+	_, invalidRSACertPEM := encodeRSA(t, rsaKey, []byte("invalid cert"))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidCert.cert", invalidRSACertPEM, 0644))
 	type fields struct {
 		ConfigFile string
 		UseSSL     bool
@@ -398,7 +417,7 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Invalid Cert",
+			name: "Invalid Cert format",
 			fields: fields{
 				CertFile: "invalidServer.cert",
 			},
@@ -408,6 +427,13 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 			name: "Cert file does not exist",
 			fields: fields{
 				CertFile: "doesNotExist.cert",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Cert file PEM encoded but invalid",
+			fields: fields{
+				CertFile: "invalidCert.cert",
 			},
 			wantErr: true,
 		},
@@ -434,6 +460,9 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 
 func TestNewCLIArgs(t *testing.T) {
 	fileSystem := afero.NewMemMapFs()
+	ecdsaPrivPEM, ecdsaCertPEM := genEcdsaCertAndKey(t)
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0644))
 	type args struct {
 		configFile string
 		useSSL     bool
@@ -441,6 +470,7 @@ func TestNewCLIArgs(t *testing.T) {
 		keyFile    string
 		host       string
 		port       string
+		fileSystem afero.Fs
 	}
 	tests := []struct {
 		name    string
@@ -448,17 +478,99 @@ func TestNewCLIArgs(t *testing.T) {
 		want    *CLIArgs
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Valid HTTP Config",
+			args: args{
+				configFile: "",
+				useSSL:     false,
+				certFile:   "",
+				keyFile:    "",
+				host:       "127.0.0.1",
+				port:       "8080",
+				fileSystem: fileSystem,
+			},
+			want: &CLIArgs{
+				ConfigFile: "",
+				UseSSL:     false,
+				CertFile:   "",
+				KeyFile:    "",
+				Host:       net.ParseIP("127.0.0.1"),
+				Port:       "8080",
+				TLSConfig:  nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid HTTPS Config",
+			args: args{
+				configFile: "",
+				useSSL:     true,
+				certFile:   "ecdsaServer.cert",
+				keyFile:    "ecdsaServer.key",
+				host:       "127.0.0.1",
+				port:       "8443",
+				fileSystem: fileSystem,
+			},
+			want: &CLIArgs{
+				ConfigFile: "",
+				UseSSL:     true,
+				CertFile:   "ecdsaServer.cert",
+				KeyFile:    "ecdsaServer.key",
+				Host:       net.ParseIP("127.0.0.1"),
+				Port:       "8443",
+				TLSConfig:  &tls.Config{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid HTTPS Config",
+			args: args{
+				configFile: "",
+				useSSL:     true,
+				certFile:   "ecdsaServer.cert",
+				keyFile:    "ecdsaServer.key",
+				host:       "999.999.999.999",
+				port:       "8080",
+				fileSystem: fileSystem,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "HTTPS Certificate Not Found",
+			args: args{
+				configFile: "",
+				useSSL:     true,
+				certFile:   "not-found.cert",
+				keyFile:    "ecdsaServer.key",
+				host:       "127.0.0.1",
+				port:       "8443",
+				fileSystem: fileSystem,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCLIArgs(fileSystem, tt.args.configFile, tt.args.useSSL, tt.args.certFile, tt.args.keyFile, tt.args.host, tt.args.port)
+			got, err := NewCLIArgs(tt.args.fileSystem, tt.args.configFile, tt.args.useSSL, tt.args.certFile, tt.args.keyFile, tt.args.host, tt.args.port)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewCLIArgs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewCLIArgs() got = %v, want %v", got, tt.want)
+			if tt.wantErr {
+				assert.Nil(t, got)
+				return
+			}
+			assert.Equal(t, tt.want.ConfigFile, got.ConfigFile, "ConfigFile")
+			assert.Equal(t, tt.want.UseSSL, got.UseSSL, "UseSSL")
+			assert.Equal(t, tt.want.CertFile, got.CertFile, "CertFile")
+			assert.Equal(t, tt.want.KeyFile, got.KeyFile, "KeyFile")
+			assert.Equal(t, tt.want.Host, got.Host, "Host")
+			assert.Equal(t, tt.want.Port, got.Port, "Port")
+			// comparing tls config is tricky, so just check if it's nil or not
+			if tt.want.UseSSL {
+				assert.NotNil(t, got.TLSConfig, "TLSConfig should not be nil")
 			}
 		})
 	}
