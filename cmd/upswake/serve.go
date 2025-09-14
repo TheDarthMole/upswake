@@ -39,9 +39,6 @@ var (
 				return fmt.Errorf("error validating config: %s", err)
 			}
 
-			//if err != nil {
-			//	return fmt.Errorf("could not get local filesystem: %s", err)
-			//}
 			cliArgs, err := config.NewCLIArgs(
 				fileSystem,
 				cmd.Flag("config").Value.String(),
