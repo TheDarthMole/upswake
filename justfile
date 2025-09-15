@@ -6,10 +6,13 @@ set unstable
 help:
     just -l
 
-# Run all Go tests
-test: generate-certs start-nut-server && stop-nut-server
+# Run all Go tests locally
+test-local: generate-certs start-nut-server test && stop-nut-server
+
+# Run all Go tests, assuming the NUT server is already running and certs are generated
+test:
     go clean -testcache
-    go test ./...
+    go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
 
 # Runs all linters
 lint: swagger

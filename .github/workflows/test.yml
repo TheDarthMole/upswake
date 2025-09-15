@@ -55,9 +55,12 @@ jobs:
       - name: ⚙️ Setup Nut Server
         run: |
           CONTAINER_TOOL=docker just start-nut-server
+      - name: 📝 Generate SSL certificates
+        run: |
+          just generate-certs
       - name: 🧪 Run `go test`
         run: |
-          go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
+          just test
       - name: ⚙️ Shut down Nut Server
         run: |
           CONTAINER_TOOL=docker just stop-nut-server
