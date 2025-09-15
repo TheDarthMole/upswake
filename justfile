@@ -7,7 +7,7 @@ help:
     just -l
 
 # Run all Go tests
-test: start-nut-server && stop-nut-server
+test: generate-certs start-nut-server && stop-nut-server
     go clean -testcache
     go test ./...
 
@@ -45,7 +45,7 @@ run *args:
 
 # Build upswake
 build:
-    go build ./cmd/upswake -o ./upswake
+    go build -o ./upswake ./cmd/upswake
 
 # Build the thedarthmole/upswake:local container
 build-container:
@@ -66,8 +66,12 @@ stop-nut-server:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
     {{container-tool}} compose -f hack/nut/compose.yaml down
 
-generate-cert:
+generate-certs:
     mkdir -p certs
-    openssl req  -nodes -new -x509 -keyout certs/server.key -out certs/server.cert \
+    openssl req -nodes -new -x509 -keyout certs/rsa.key -out certs/rsa.cert \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+    openssl ecparam -out certs/ecc.key -name prime256v1 -genkey
+    openssl req -new -x509 -key certs/ecc.key -out certs/ecc.cert \
         -subj "/CN=localhost" \
         -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
