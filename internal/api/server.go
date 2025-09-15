@@ -50,6 +50,7 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 
 func (s *Server) Start(address string, useSSL bool, certFile, keyFile string) error {
 	if useSSL {
+		s.echo.Pre(middleware.HTTPSRedirect())
 		return s.echo.StartTLS(address, certFile, keyFile)
 	}
 	return s.echo.Start(address)
@@ -65,10 +66,4 @@ func (s *Server) Root() *echo.Group {
 
 func (s *Server) API() *echo.Group {
 	return s.echo.Group("/api")
-}
-
-func (s *Server) PrintRoutes() {
-	for _, route := range s.echo.Routes() {
-		s.sugar.Infof("%s %s", route.Method, route.Path)
-	}
 }

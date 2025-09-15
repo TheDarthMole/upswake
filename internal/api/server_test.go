@@ -2,10 +2,13 @@ package api
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+	"time"
 
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/go-playground/validator/v10"
@@ -174,87 +177,22 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServer_API(t *testing.T) {
-	type fields struct {
-		ctx   context.Context
-		echo  *echo.Echo
-		sugar *zap.SugaredLogger
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   *echo.Group
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				ctx:   tt.fields.ctx,
-				echo:  tt.fields.echo,
-				sugar: tt.fields.sugar,
-			}
-			if got := s.API(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("API() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	e := NewServer(context.Background(), zap.NewExample().Sugar())
+	expected := e.echo.Group("/api")
 
-func TestServer_PrintRoutes(t *testing.T) {
-	type fields struct {
-		ctx   context.Context
-		echo  *echo.Echo
-		sugar *zap.SugaredLogger
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				ctx:   tt.fields.ctx,
-				echo:  tt.fields.echo,
-				sugar: tt.fields.sugar,
-			}
-			s.PrintRoutes()
-		})
-	}
+	assert.Equal(t, expected, e.API())
 }
 
 func TestServer_Root(t *testing.T) {
-	type fields struct {
-		ctx   context.Context
-		echo  *echo.Echo
-		sugar *zap.SugaredLogger
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   *echo.Group
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				ctx:   tt.fields.ctx,
-				echo:  tt.fields.echo,
-				sugar: tt.fields.sugar,
-			}
-			if got := s.Root(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Root() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	e := NewServer(context.Background(), zap.NewExample().Sugar())
+	expected := e.echo.Group("")
+
+	assert.Equal(t, expected, e.Root())
 }
 
-func TestServer_Start(t *testing.T) {
+func TestServer_Start_Stop(t *testing.T) {
 	type fields struct {
 		ctx   context.Context
-		echo  *echo.Echo
 		sugar *zap.SugaredLogger
 	}
 	type args struct {
@@ -264,49 +202,121 @@ func TestServer_Start(t *testing.T) {
 		keyFile  string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name         string
+		fields       fields
+		args         args
+		wantStartErr bool
+		wantStopErr  bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Start server without SSL",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				useSSL:   false,
+				certFile: "",
+				keyFile:  "",
+			},
+			wantStartErr: false,
+			wantStopErr:  false,
+		},
+		{
+			name: "Start server with SSL using RSA certs",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				useSSL:   true,
+				certFile: "../../certs/rsa.cert",
+				keyFile:  "../../certs/rsa.key",
+			},
+			wantStartErr: false,
+			wantStopErr:  false,
+		},
+		{
+			name: "Start server with SSL using ECC certs",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				useSSL:   true,
+				certFile: "../../certs/ecc.cert",
+				keyFile:  "../../certs/ecc.key",
+			},
+			wantStartErr: false,
+			wantStopErr:  false,
+		},
+		{
+			name: "Start server with SSL without certs",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				useSSL:   true,
+				certFile: "",
+				keyFile:  "",
+			},
+			wantStartErr: true,
+			wantStopErr:  false,
+		},
+		{
+			name: "Start server with no port",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  "127.0.0.1",
+				useSSL:   false,
+				certFile: "",
+				keyFile:  "",
+			},
+			wantStartErr: true,
+			wantStopErr:  false,
+		},
+		{
+			name: "Start server with no address",
+			fields: fields{
+				ctx:   context.Background(),
+				sugar: zap.NewExample().Sugar(),
+			},
+			args: args{
+				address:  fmt.Sprintf(":%d", rand.IntN(65535-49152)+49152),
+				useSSL:   false,
+				certFile: "",
+				keyFile:  "",
+			},
+			wantStartErr: false,
+			wantStopErr:  false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				ctx:   tt.fields.ctx,
-				echo:  tt.fields.echo,
-				sugar: tt.fields.sugar,
-			}
-			if err := s.Start(tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile); (err != nil) != tt.wantErr {
-				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
+			t.Parallel()
 
-func TestServer_Stop(t *testing.T) {
-	type fields struct {
-		ctx   context.Context
-		echo  *echo.Echo
-		sugar *zap.SugaredLogger
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				ctx:   tt.fields.ctx,
-				echo:  tt.fields.echo,
-				sugar: tt.fields.sugar,
-			}
-			if err := s.Stop(); (err != nil) != tt.wantErr {
-				t.Errorf("Stop() error = %v, wantErr %v", err, tt.wantErr)
+			srv := NewServer(tt.fields.ctx, tt.fields.sugar)
+
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				err := srv.Stop()
+				if (err != nil) != tt.wantStopErr {
+					t.Errorf("Stop() error = %v, wantErr %v", err, tt.wantStopErr)
+				}
+			}()
+
+			err := srv.Start(tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
+			// http.ErrServerClosed is returned when the server is shut down normally
+			if (err != nil && !errors.Is(err, http.ErrServerClosed)) != tt.wantStartErr {
+				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantStartErr)
 			}
 		})
 	}
