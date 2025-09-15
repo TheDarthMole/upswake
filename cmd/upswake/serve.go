@@ -3,11 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -21,34 +20,36 @@ import (
 const (
 	defaultListenHost = "0.0.0.0"
 	defaultListenPort = "8080"
-	listenScheme      = "http://"
 )
 
 var (
-	cfgFile   string
-	regoFiles afero.Fs
-	serveCmd  = &cobra.Command{
+	cfgFile    string
+	regoFiles  afero.Fs
+	fileSystem afero.Fs
+	serveCmd   = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := viper.Load()
 			if err != nil {
-				sugar.Fatal("Error loading config", err)
+				return fmt.Errorf("error loading config: %s", err)
+			}
+			if err := cfg.Validate(); err != nil {
+				return fmt.Errorf("error validating config: %s", err)
 			}
 
-			listenHost := net.ParseIP(cmd.Flag("host").Value.String())
-			if listenHost == nil {
-				sugar.Fatalf("Invalid listen host IP address: %s", cmd.Flag("host").Value.String())
-			}
-			listenPort, err := strconv.Atoi(cmd.Flag("port").Value.String())
-			if err != nil || listenPort <= 0 || listenPort > 65535 {
-				sugar.Fatalf("Invalid listen port %s", cmd.Flag("port").Value.String())
-			}
-
-			baseURL := fmt.Sprintf("%s%s:%d", listenScheme, listenHost.String(), listenPort)
-			if listenHost.IsUnspecified() {
-				baseURL = fmt.Sprintf("%s127.0.0.1:%d", listenScheme, listenPort)
+			cliArgs, err := config.NewCLIArgs(
+				fileSystem,
+				cmd.Flag("config").Value.String(),
+				cmd.Flag("ssl").Value.String() == "true",
+				cmd.Flag("certFile").Value.String(),
+				cmd.Flag("keyFile").Value.String(),
+				cmd.Flag("host").Value.String(),
+				cmd.Flag("port").Value.String(),
+			)
+			if err != nil {
+				return err
 			}
 
 			ctx := context.Background()
@@ -66,21 +67,29 @@ var (
 
 			for _, mapping := range cfg.NutServers {
 				for _, target := range mapping.Targets {
-					go processTarget(ctx, target, baseURL+"/api/upswake")
+					go processTarget(ctx, target, cliArgs.Address()+"/api/upswake", cliArgs.TLSConfig)
 				}
 			}
 
-			sugar.Fatal(server.Start(fmt.Sprintf("%s:%d", listenHost.String(), listenPort)))
+			return server.Start(
+				fmt.Sprintf("%s:%s", cliArgs.Host.String(), cliArgs.Port),
+				cmd.Flag("ssl").Value.String() == "true",
+				cmd.Flag("certFile").Value.String(),
+				cmd.Flag("keyFile").Value.String(),
+			)
 		},
 	}
 )
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	fileSystem := afero.NewOsFs()
+	fileSystem = afero.NewOsFs()
 	regoFiles = afero.NewBasePathFs(fileSystem, "rules")
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
+	serveCmd.Flags().BoolP("ssl", "s", false, "Enable SSL (HTTPS)")
+	serveCmd.Flags().StringP("certFile", "c", "", "SSL Certificate file (required if SSL is enabled)")
+	serveCmd.Flags().StringP("keyFile", "k", "", "SSL Key file (required if SSL is enabled)")
 	serveCmd.PersistentFlags().StringVar(
 		&cfgFile,
 		"config",
@@ -88,7 +97,7 @@ func init() {
 		"location of config file")
 }
 
-func processTarget(ctx context.Context, target config.TargetServer, endpoint string) {
+func processTarget(ctx context.Context, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	sugar.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
@@ -102,20 +111,26 @@ func processTarget(ctx context.Context, target config.TargetServer, endpoint str
 			sugar.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			sendWakeRequest(ctx, target, endpoint)
+			sendWakeRequest(ctx, target, endpoint, tlsConfig)
 			ticker.Reset(interval)
 		}
 	}
 }
 
-func sendWakeRequest(ctx context.Context, target config.TargetServer, address string) {
+func sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
 		sugar.Errorf("Error creating post request: %s", err)
 	}
 	r.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: time.Duration(30) * time.Second}
+
+	if err != nil {
+		sugar.Fatalf("Error creating TLS configuration: %v", err)
+	}
+	client := &http.Client{
+		Timeout:   time.Duration(30) * time.Second,
+		Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	resp, err := client.Do(r)
 	if err != nil {
 		sugar.Errorf("Error sending post request: %s", err)

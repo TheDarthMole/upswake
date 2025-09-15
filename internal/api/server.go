@@ -18,14 +18,18 @@ type Server struct {
 
 type CustomValidator struct {
 	validator *validator.Validate
+	ctx       context.Context
 }
 
-func NewCustomValidator() *CustomValidator {
-	return &CustomValidator{validator: validator.New()}
+func NewCustomValidator(ctx context.Context) *CustomValidator {
+	return &CustomValidator{
+		validator: validator.New(),
+		ctx:       ctx,
+	}
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
+	if err := cv.validator.StructCtx(cv.ctx, i); err != nil {
 		return err
 	}
 	return nil
@@ -33,7 +37,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app := echo.New()
-	app.Validator = NewCustomValidator()
+	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.Logger())
 
@@ -44,7 +48,11 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	}
 }
 
-func (s *Server) Start(address string) error {
+func (s *Server) Start(address string, useSSL bool, certFile, keyFile string) error {
+	if useSSL {
+		s.echo.Pre(middleware.HTTPSRedirect())
+		return s.echo.StartTLS(address, certFile, keyFile)
+	}
 	return s.echo.Start(address)
 }
 
@@ -58,10 +66,4 @@ func (s *Server) Root() *echo.Group {
 
 func (s *Server) API() *echo.Group {
 	return s.echo.Group("/api")
-}
-
-func (s *Server) PrintRoutes() {
-	for _, route := range s.echo.Routes() {
-		s.sugar.Infof("%s %s", route.Method, route.Path)
-	}
 }

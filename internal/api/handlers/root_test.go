@@ -51,7 +51,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 
 func TestRootHandlerRoot(t *testing.T) {
 	e := echo.New()
-	e.Validator = api.NewCustomValidator()
+	e.Validator = api.NewCustomValidator(t.Context())
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -126,7 +126,7 @@ func TestRootHandler_Health(t *testing.T) {
 		// 		    and test when the GetAllBroadcastAddresses fails
 	}
 	e := echo.New()
-	e.Validator = api.NewCustomValidator()
+	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -144,7 +144,7 @@ func TestRootHandler_Health(t *testing.T) {
 
 func TestRootHandler_Register(t *testing.T) {
 	e := echo.New()
-	e.Validator = api.NewCustomValidator()
+	e.Validator = api.NewCustomValidator(t.Context())
 	rulesFS := newMemFS(t, map[string][]byte{})
 	h := NewRootHandler(cfg, rulesFS)
 
