@@ -1,11 +1,7 @@
 package viper
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -15,11 +11,10 @@ const (
 )
 
 var (
-	fileSystem          = afero.NewOsFs()
-	config              = entity.Config{}
-	configFilePath      string
-	ErrorConfigNotFound = fmt.Errorf("the config at '%s' was not found", DefaultConfigFile)
-	DefaultConfig       = Config{
+	fileSystem     = afero.NewOsFs()
+	config         = entity.Config{}
+	configFilePath = DefaultConfigFile
+	DefaultConfig  = Config{
 		NutServers: []NutServer{
 			{
 				Name:     "NUT Server 1",
@@ -44,34 +39,29 @@ var (
 	}
 )
 
-func init() {
+func InitConfig(cfgPath string) {
+	configFilePath = DefaultConfigFile
+	if cfgPath != "" {
+		configFilePath = cfgPath
+	}
+	viper.SetFs(fileSystem)
+	viper.SetConfigFile(configFilePath)
+	viper.AddConfigPath(".")
 	viper.SetEnvPrefix("UPSWAKE")
 	viper.AutomaticEnv() // read in environment variables that match
-	configFilePath = DefaultConfigFile
-	if viper.GetString("CONFIG_FILE") != "" {
-		log.Printf("Loading config file from environment")
-		configFilePath = viper.GetString("CONFIG_FILE")
-	}
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		if _, err := load(fileSystem, configFilePath); err != nil {
-			log.Fatal(err)
-		}
-	})
+	//viper.OnConfigChange(func(in fsnotify.Event) { # TODO: investigate how to mock this in tests
+	//	fmt.Println("Config file changed:", in.Name)
+	//	err := viper.Unmarshal(&config)
+	//	if err != nil {
+	//		return
+	//	}
+	//})
+	viper.WatchConfig()
 }
 
 func Load() (*entity.Config, error) {
-	return load(fileSystem, configFilePath)
-}
-
-func load(fs afero.Fs, configFile string) (*entity.Config, error) {
-	viper.SetFs(fs)
-	viper.SetConfigFile(configFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-			return &entity.Config{}, ErrorConfigNotFound
-		}
 		// Config file was found but another error was produced
 		return &entity.Config{}, err
 	}

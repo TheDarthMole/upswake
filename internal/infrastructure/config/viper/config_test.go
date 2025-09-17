@@ -2,11 +2,14 @@ package viper
 
 import (
 	"errors"
+	"io/fs"
 	"reflect"
+	"syscall"
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {
@@ -138,12 +141,39 @@ func Test_load(t *testing.T) {
 			wantErrMsg: entity.ErrorInvalidMac,
 			want:       &entity.Config{},
 		},
+		{
+			name: "config file does not exist",
+			args: args{
+				fs:       testFS,
+				filePath: "does_not_exist.yaml",
+			},
+			wantErr:    true,
+			wantErrMsg: fs.PathError{Err: syscall.Errno(2)}.Err,
+			want:       &entity.Config{},
+		},
+		{
+			name: "config file username is array",
+			args: args{
+				fs:       testFS,
+				filePath: "invalid_type.yaml",
+			},
+			wantErr:    true,
+			wantErrMsg: nil, // TODO: tricky error to replicate, just checking that an error occurred
+			want:       &entity.Config{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := load(tt.args.fs, tt.args.filePath)
+			fileSystem = tt.args.fs
+			InitConfig(tt.args.filePath)
+			got, err := Load()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("load() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.wantErrMsg == nil {
+				// If the error is tool specific, we might not have a predefined error to compare to
+				// So we just check that an error occurred and skip the message comparison
 				return
 			}
 			if !errors.Is(err, tt.wantErrMsg) {
@@ -153,5 +183,38 @@ func Test_load(t *testing.T) {
 				t.Errorf("load() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestCreateDefaultConfig1(t *testing.T) {
+	got, err := CreateDefaultConfig()
+	assert.NoError(t, err)
+
+	want := &entity.Config{
+		NutServers: []entity.NutServer{
+			{
+				Name:     "NUT Server 1",
+				Host:     "192.168.1.13",
+				Port:     entity.DefaultNUTServerPort,
+				Username: "",
+				Password: "",
+				Targets: []entity.TargetServer{
+					{
+						Name:      "NAS 1",
+						MAC:       "00:00:00:00:00:00",
+						Broadcast: "192.168.1.255",
+						Port:      entity.DefaultWoLPort,
+						Interval:  "15m",
+						Rules: []string{
+							"80percentOn.rego",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("CreateDefaultConfig() got = %v, want %v", got, want)
 	}
 }

@@ -31,14 +31,6 @@ var (
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := viper.Load()
-			if err != nil {
-				return fmt.Errorf("error loading config: %s", err)
-			}
-			if err := cfg.Validate(); err != nil {
-				return fmt.Errorf("error validating config: %s", err)
-			}
-
 			cliArgs, err := config.NewCLIArgs(
 				fileSystem,
 				cmd.Flag("config").Value.String(),
@@ -50,6 +42,16 @@ var (
 			)
 			if err != nil {
 				return err
+			}
+
+			viper.InitConfig(cliArgs.ConfigFile)
+
+			cfg, err := viper.Load()
+			if err != nil {
+				return fmt.Errorf("error loading config: %s", err)
+			}
+			if err := cfg.Validate(); err != nil {
+				return fmt.Errorf("error validating config: %s", err)
 			}
 
 			ctx := context.Background()
