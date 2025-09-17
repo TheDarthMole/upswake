@@ -1,6 +1,6 @@
 services:
   nut-server:
-    image: instantlinux/nut-upsd:2.8.3-r2@sha256:59baf48f5db7924d306306bcbe2dfe9cd8e0d9cfbd695453db79644440e5e6a0
+    image: instantlinux/nut-upsd:2.8.3-r2@sha256:8566b71aa4d7b1bbb9cbd6f72b436f42d87e6bf316df5d85a20985795e65311e
     restart: always
     pull_policy: always
     container_name: nut-server
