@@ -92,10 +92,10 @@ jobs:
             ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}
             ghcr.io/${{ github.repository }}
           tags: |
-            type=edge
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
+            type=edge
           annotations: |
             io.artifacthub.package.license=MIT
             io.artifacthub.package.readme-url=https://github.com/${{ github.repository }}/blob/main/README.md
@@ -115,6 +115,7 @@ jobs:
 #          cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
+            ${{ format('COMMIT_SHA={0}', github.sha) }}
           platforms: ${{ env.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
