@@ -4,9 +4,9 @@ WORKDIR "/build/"
 
 # To improve layer caching
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
-COPY . ./
+COPY . .
 
 ARG GIT_DESCRIBE
 ARG TARGETOS
@@ -15,7 +15,9 @@ ARG TARGETVARIANT
 ARG COMMIT_SHA
 ARG BUILD_DATE
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
+RUN --mount=type=cache,target=/root/.cache/go-build,id=build-$TARGETPLATFORM \
+    --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
     go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${GIT_DESCRIBE}' -X 'main.Commit=${COMMIT_SHA}' -X 'main.Date=$(date '+%Y-%m-%d %H:%M:%S %z')'" \
     -o /opt/upswake/UPSWake ./cmd/upswake
 
