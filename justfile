@@ -51,9 +51,9 @@ build:
     go build -o ./upswake ./cmd/upswake
 
 # Build the thedarthmole/upswake:local container
-build-container $VERSION=`git describe --tags --always --long` $COMMIT_SHA=`git rev-parse HEAD`:
+build-container $GIT_DESCRIBE=`git describe --tags --always --long` $COMMIT_SHA=`git rev-parse HEAD`:
     {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
-    {{container-tool}} build -t thedarthmole/upswake:local -f ./Containerfile . --build-arg VERSION=${VERSION} --build-arg COMMIT_SHA=${COMMIT_SHA}
+    {{container-tool}} build -t thedarthmole/upswake:local -f ./Containerfile . --build-arg VERSION=${GIT_DESCRIBE} --build-arg COMMIT_SHA=${COMMIT_SHA}
 
 # Builds and runs the upswake container
 run-container: build-container

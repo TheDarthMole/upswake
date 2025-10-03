@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . ./
 
-ARG VERSION
+ARG GIT_DESCRIBE
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
@@ -16,7 +16,7 @@ ARG COMMIT_SHA
 ARG BUILD_DATE
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
-    go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${VERSION}' -X 'main.Commit=${COMMIT_SHA}' -X 'main.Date=$(date '+%Y-%m-%d %H:%M:%S %z')'" \
+    go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${GIT_DESCRIBE}' -X 'main.Commit=${COMMIT_SHA}' -X 'main.Date=$(date '+%Y-%m-%d %H:%M:%S %z')'" \
     -o /opt/upswake/UPSWake ./cmd/upswake
 
 FROM scratch AS minimal
