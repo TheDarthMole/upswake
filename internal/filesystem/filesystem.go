@@ -1,4 +1,4 @@
-package util
+package filesystem
 
 import (
 	"github.com/spf13/afero"

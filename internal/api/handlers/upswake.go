@@ -3,10 +3,10 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
-	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
@@ -91,7 +91,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	}
 
 	if !result.Found {
-		c.Logger().Errorf("mac address not found in the config: %s", util.SanitizeString(mac.Mac))
+		c.Logger().Errorf("mac address not found in the config: %s", strconv.QuoteToASCII(mac.Mac))
 		return c.JSON(http.StatusConflict, upsWakeResponse{
 			Message: "MAC address not found in the config",
 			Woken:   false,
@@ -99,7 +99,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 	}
 
 	if !result.Allowed {
-		c.Logger().Debugf("no rule evaluated to true: %s", util.SanitizeString(mac.Mac))
+		c.Logger().Debugf("no rule evaluated to true: %s", strconv.QuoteToASCII(mac.Mac))
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
@@ -132,7 +132,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c echo.Context) error {
 		})
 	}
 
-	c.Logger().Debugf("Wake on LAN sent to %s", util.SanitizeString(mac.Mac))
+	c.Logger().Debugf("Wake on LAN sent to %s", strconv.QuoteToASCII(mac.Mac))
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,

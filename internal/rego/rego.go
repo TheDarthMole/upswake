@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -17,20 +18,20 @@ func IsValidRego(rego string) error {
 		return err
 	}
 	if mod.Package.String() != "package upswake" {
-		return fmt.Errorf("rego rule must be in package 'upswake'")
+		return errors.New("rego rule must be in package 'upswake'")
 	}
 	return nil
 }
 
-func EvaluateExpression(rawJson, regoRule string) (bool, error) {
-	var input interface{}
+func EvaluateExpression(rawJSON, regoRule string) (bool, error) {
+	var input any
 	ctx := context.Background()
 
 	if err := IsValidRego(regoRule); err != nil {
 		return false, err
 	}
 
-	d := json.NewDecoder(bytes.NewBufferString(rawJson))
+	d := json.NewDecoder(bytes.NewBufferString(rawJSON))
 
 	// Numeric values must be represented using json.Number.
 	d.UseNumber()

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
 )
@@ -13,12 +13,12 @@ var (
 )
 
 func init() {
-	bc, err := util.GetAllBroadcastAddresses()
+	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
 		sugar.Panic(err)
 		return
 	}
-	stringBroadcasts := util.IPsToStrings(bc)
+	stringBroadcasts := network.IPsToStrings(bc)
 	wakeCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", stringBroadcasts, "Broadcast addresses to send the WoL packets to")
 	wakeCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
 	err = wakeCmd.MarkFlagRequired("mac")
@@ -33,8 +33,8 @@ var wakeCmd = &cobra.Command{
 	Use:   "wake -b [mac address]",
 	Short: "Manually wake a computer",
 	Long:  `Manually wake a computer without using a UPS's status`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ipBroadcasts, err := util.StringsToIPs(broadcasts)
+	Run: func(_ *cobra.Command, _ []string) {
+		ipBroadcasts, err := network.StringsToIPs(broadcasts)
 		if err != nil {
 			sugar.Fatal(err)
 		}

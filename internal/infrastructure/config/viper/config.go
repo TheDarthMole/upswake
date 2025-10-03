@@ -1,6 +1,7 @@
 package viper
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -52,7 +53,7 @@ func init() {
 		log.Printf("Loading config file from environment")
 		configFilePath = viper.GetString("CONFIG_FILE")
 	}
-	viper.OnConfigChange(func(in fsnotify.Event) {
+	viper.OnConfigChange(func(_ fsnotify.Event) {
 		if _, err := load(fileSystem, configFilePath); err != nil {
 			log.Fatal(err)
 		}
@@ -68,7 +69,8 @@ func load(fs afero.Fs, configFile string) (*entity.Config, error) {
 	viper.SetConfigFile(configFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
 			// Config file not found; ignore error if desired
 			return &entity.Config{}, ErrorConfigNotFound
 		}

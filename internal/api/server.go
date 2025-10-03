@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	_ "github.com/TheDarthMole/UPSWake/internal/api/docs"
+	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -28,7 +28,7 @@ func NewCustomValidator(ctx context.Context) *CustomValidator {
 	}
 }
 
-func (cv *CustomValidator) Validate(i interface{}) error {
+func (cv *CustomValidator) Validate(i any) error {
 	if err := cv.validator.StructCtx(cv.ctx, i); err != nil {
 		return err
 	}

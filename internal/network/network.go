@@ -1,4 +1,4 @@
-package util
+package network
 
 import (
 	"fmt"
@@ -24,12 +24,8 @@ func filterAddressesFromInterfaces(interfaces []net.Interface) ([]net.Addr, erro
 			continue
 		}
 		for _, addr := range addrs {
-			switch v := addr.(type) {
-			case *net.IPNet:
-				if v.IP.To4() != nil && !v.IP.IsLoopback() {
-					// This is an IPv4 address that isn't a loopback
-					validAddresses = append(validAddresses, addr)
-				}
+			if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil && !ipNet.IP.IsLoopback() {
+				validAddresses = append(validAddresses, addr)
 			}
 		}
 		if validAddresses == nil {
@@ -57,14 +53,8 @@ func GetAllBroadcastAddresses() ([]net.IP, error) {
 }
 
 func getIPBroadcast(addr net.Addr) net.IP {
-	switch v := addr.(type) {
-	case *net.IPNet:
-		if v.IP.To4() != nil {
-			// This is an IPv4 address
-			broadcast := calculateIPv4Broadcast(v)
-			// fmt.Printf("IPv4 %s, Broadcast Address: %s\n", v.IP.To4(), broadcast)
-			return broadcast
-		}
+	if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil {
+		return calculateIPv4Broadcast(ipNet)
 	}
 	return nil
 }
@@ -93,11 +83,11 @@ func IPsToStrings(input []net.IP) []string {
 func StringsToIPs(ips []string) ([]net.IP, error) {
 	parsedIps := make([]net.IP, len(ips))
 	for i, ip := range ips {
-		parsedIp := net.ParseIP(ip)
-		if parsedIp == nil {
+		parsedIP := net.ParseIP(ip)
+		if parsedIP == nil {
 			return nil, fmt.Errorf("invalid ip address: %s", ip)
 		}
-		parsedIps[i] = parsedIp
+		parsedIps[i] = parsedIP
 	}
 	return parsedIps, nil
 }

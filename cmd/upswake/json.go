@@ -17,7 +17,7 @@ var jsonCmd = &cobra.Command{
 
 This is useful for testing the connection to a NUT server
 and for creating rego rules for waking a target`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		port, err := cmd.Flags().GetInt("port")
 		if err != nil {
 			sugar.Fatalf("could not get port: %s", err)

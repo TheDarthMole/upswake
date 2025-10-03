@@ -138,7 +138,7 @@ func TestGetJSON(t *testing.T) {
 			if !tt.wantErr(t, err, fmt.Sprintf("GetJSON(%v)", tt.args.ns)) {
 				return
 			}
-			if len(got) != 0 {
+			if got != "" {
 				// usage of Levenshtein distance as NUT server may return slightly different JSON, depending on state of the UPS
 				levenshteinDistPercent := (float64(levenshtein.Distance(tt.want, got)) / float64(len(tt.want))) * 100
 				assert.LessOrEqualf(t, levenshteinDistPercent, float64(4), "Levenshtein distance between expected and got JSON is too high, indicating a significant difference.\nexpected	(%s), \ngot			(%s).", tt.want, got)

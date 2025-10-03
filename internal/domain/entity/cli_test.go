@@ -61,7 +61,7 @@ func generateTestCert(t *testing.T, priv, public any) ([]byte, error) {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		Subject: pkix.Name{
-			Organization: []string{"Test Organization"},
+			Organization: []string{"Test Organization"}, //nolint:misspell
 		},
 	}
 

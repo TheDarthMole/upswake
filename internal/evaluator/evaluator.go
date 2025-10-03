@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/filesystem"
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
-	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/spf13/afero"
 )
 
@@ -44,7 +44,7 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 	}
 
 	for _, nutServer := range r.config.NutServers {
-		inputJson, err := getUPSJSON(&nutServer)
+		inputJSON, err := getUPSJSON(&nutServer)
 		if err != nil {
 			return EvaluationResult{
 				Allowed: false,
@@ -55,39 +55,40 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 
 		// For each target
 		for _, target := range nutServer.Targets {
-			if target.MAC == r.mac {
-				allowed, err := r.evaluateExpression(&target, inputJson)
-				if err != nil {
-					return EvaluationResult{
-						Allowed: false,
-						Found:   true,
-						Target:  &target,
-					}, err
-				}
-
-				evaluationResult.Found = true
-				evaluationResult.Allowed = evaluationResult.Allowed || allowed
-				evaluationResult.Target = &target
+			if target.MAC != r.mac {
+				continue
 			}
+			allowed, err := r.evaluateExpression(&target, inputJSON)
+			if err != nil {
+				return EvaluationResult{
+					Allowed: false,
+					Found:   true,
+					Target:  &target,
+				}, err
+			}
+
+			evaluationResult.Found = true
+			evaluationResult.Allowed = evaluationResult.Allowed || allowed
+			evaluationResult.Target = &target
 		}
 	}
 
 	return evaluationResult, nil
 }
 
-func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJson string) (bool, error) {
+func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSON string) (bool, error) {
 	if target == nil {
 		return false, nil
 	}
 
 	for _, ruleName := range target.Rules {
-		regoRule, err := util.GetFile(r.rulesFS, ruleName)
+		regoRule, err := filesystem.GetFile(r.rulesFS, ruleName)
 		if err != nil {
-			return false, fmt.Errorf("could not get file: %s", err)
+			return false, fmt.Errorf("could not get file: %w", err)
 		}
-		allowed, err := rego.EvaluateExpression(inputJson, string(regoRule))
+		allowed, err := rego.EvaluateExpression(inputJSON, string(regoRule))
 		if err != nil {
-			return false, fmt.Errorf("could not evaluate expression: %s", err)
+			return false, fmt.Errorf("could not evaluate expression: %w", err)
 		}
 		if allowed {
 			return true, nil

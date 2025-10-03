@@ -24,12 +24,12 @@ var (
 func TestNewRegoEvaluator(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
 
-	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t); err != nil {
+	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
 		t.Fatal(err)
 	}
 
 	alwaysFalseRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysFalseRego, t); err != nil {
+	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysFalseRego); err != nil {
 		t.Fatal(err)
 	}
 
@@ -81,38 +81,13 @@ func TestNewRegoEvaluator(t *testing.T) {
 	}
 }
 
-func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
-	type fields struct {
-		config  *entity.Config
-		rulesFS afero.Fs
-		mac     string
-	}
-	var tests []struct {
-		name   string
-		fields fields
-		want   EvaluationResult
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &RegoEvaluator{
-				config:  tt.fields.config,
-				rulesFS: tt.fields.rulesFS,
-				mac:     tt.fields.mac,
-			}
-			if got, _ := r.EvaluateExpressions(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("EvaluateExpressions() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	testFS := afero.NewMemMapFs()
-	if err := writeMemFile(testFS, "alwaysTrue.rego", alwaysTrueRego, t); err != nil {
+	if err := writeMemFile(t, testFS, "alwaysTrue.rego", alwaysTrueRego); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := writeMemFile(testFS, "alwaysFalse.rego", alwaysFalseRego, t); err != nil {
+	if err := writeMemFile(t, testFS, "alwaysFalse.rego", alwaysFalseRego); err != nil {
 		t.Fatal(err)
 	}
 
@@ -123,7 +98,7 @@ wake if {
 	input[i].Variables[j].Name == "battery.charge"
 	input[i].Variables[j].Value == 100
 }`
-	if err := writeMemFile(testFS, "check100Percent.rego", []byte(check100Percent), t); err != nil {
+	if err := writeMemFile(t, testFS, "check100Percent.rego", []byte(check100Percent)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -254,13 +229,13 @@ wake if {
 	}
 }
 
-func writeMemFile(fs afero.Fs, fileName string, contents []byte, t *testing.T) error {
+func writeMemFile(_ *testing.T, fs afero.Fs, fileName string, contents []byte) error {
 	return afero.WriteFile(fs, fileName, contents, 0o644)
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(alwaysTrueRegoFS, "test.rego", alwaysTrueRego, t); err != nil {
+	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
 		t.Fatal(err)
 	}
 
@@ -310,7 +285,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     "00:11:22:33:44:55",
 			},
 			args: args{
-				getUPSJSON: func(server *entity.NutServer) (string, error) { return validNUTOutput, nil },
+				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
 			},
 			want: EvaluationResult{
 				Allowed: true,
@@ -358,7 +333,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     "00:11:22:33:44:55",
 			},
 			args: args{
-				getUPSJSON: func(server *entity.NutServer) (string, error) { return validNUTOutput, nil },
+				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
 			},
 			want: EvaluationResult{
 				Allowed: false,
@@ -397,7 +372,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     "00:11:22:33:44:55",
 			},
 			args: args{
-				getUPSJSON: func(server *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
+				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
 			},
 			want: EvaluationResult{
 				Allowed: false,
@@ -430,6 +405,39 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("evaluateExpressions() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
+	type fields struct {
+		config  *entity.Config
+		rulesFS afero.Fs
+		mac     string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    EvaluationResult
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &RegoEvaluator{
+				config:  tt.fields.config,
+				rulesFS: tt.fields.rulesFS,
+				mac:     tt.fields.mac,
+			}
+			got, err := r.EvaluateExpressions()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EvaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("EvaluateExpressions() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

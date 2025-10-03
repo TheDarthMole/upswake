@@ -18,13 +18,13 @@ default wake := false
 wake if {
     true
 }`
-	validJson   = `{"foo": "bar"}`
-	invalidJson = `{"foo": "bar" "baz"}`
+	validJSON   = `{"foo": "bar"}`
+	invalidJSON = `{"foo": "bar" "baz"}`
 )
 
 func TestEvaluateExpression(t *testing.T) {
 	type args struct {
-		rawJson  string
+		rawJSON  string
 		regoRule string
 	}
 	tests := []struct {
@@ -36,7 +36,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "Valid Rego Rule and Valid JSON",
 			args: args{
-				rawJson:  validJson,
+				rawJSON:  validJSON,
 				regoRule: validRegoRule,
 			},
 			want:    true,
@@ -45,7 +45,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "Valid Rego Rule and Invalid JSON",
 			args: args{
-				rawJson:  invalidJson,
+				rawJSON:  invalidJSON,
 				regoRule: validRegoRule,
 			},
 			want:    false,
@@ -54,7 +54,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "Invalid Rego Rule and Valid JSON",
 			args: args{
-				rawJson:  validJson,
+				rawJSON:  validJSON,
 				regoRule: invalidRegoRule,
 			},
 			want:    false,
@@ -63,7 +63,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "Invalid Rego Rule and Invalid JSON",
 			args: args{
-				rawJson:  invalidJson,
+				rawJSON:  invalidJSON,
 				regoRule: invalidRegoRule,
 			},
 			want:    false,
@@ -72,7 +72,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "Invalid Package Name Rego Rule and Valid JSON",
 			args: args{
-				rawJson:  validJson,
+				rawJSON:  validJSON,
 				regoRule: invalidPackageNameRule,
 			},
 			want:    false,
@@ -81,7 +81,7 @@ func TestEvaluateExpression(t *testing.T) {
 		{
 			name: "UPS server data positive",
 			args: args{
-				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
+				rawJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 				regoRule: `package upswake
 default wake := false
 wake if {
@@ -96,7 +96,7 @@ wake if {
 		{
 			name: "UPS server data negative",
 			args: args{
-				rawJson: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":50,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
+				rawJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":50,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 				regoRule: `package upswake
 default wake := false
 wake if {
@@ -111,7 +111,7 @@ wake if {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := EvaluateExpression(tt.args.rawJson, tt.args.regoRule)
+			got, err := EvaluateExpression(tt.args.rawJSON, tt.args.regoRule)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EvaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return

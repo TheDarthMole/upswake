@@ -9,7 +9,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/TheDarthMole/UPSWake/internal/filesystem"
 	"github.com/spf13/afero"
 )
 
@@ -49,7 +49,7 @@ func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, k
 func (c *CLIArgs) Validate() error {
 	if c.UseSSL {
 		if c.CertFile == "" || c.KeyFile == "" {
-			return fmt.Errorf("SSL is enabled but certFile or keyFile is not set")
+			return errors.New("SSL is enabled but certFile or keyFile is not set")
 		}
 		if c.TLSConfig == nil {
 			return errors.New("TLSConfig cannot be null")
@@ -62,7 +62,7 @@ func (c *CLIArgs) Validate() error {
 
 	portInt, err := strconv.Atoi(c.Port)
 	if err != nil {
-		return fmt.Errorf("invalid port number: %s", err)
+		return fmt.Errorf("invalid port number: %w", err)
 	}
 	if portInt <= 0 || portInt > 65535 {
 		return fmt.Errorf("invalid listen port %d", portInt)
@@ -71,7 +71,7 @@ func (c *CLIArgs) Validate() error {
 }
 
 func (c *CLIArgs) x509Cert(fileSystem afero.Fs) (*tls.Config, error) {
-	certFile, err := util.GetFile(fileSystem, c.CertFile)
+	certFile, err := filesystem.GetFile(fileSystem, c.CertFile)
 	if err != nil {
 		return nil, err
 	}

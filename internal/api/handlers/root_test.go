@@ -50,7 +50,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 func TestRootHandlerRoot(t *testing.T) {
 	e := echo.New()
 	e.Validator = api.NewCustomValidator(t.Context())
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -127,7 +127,7 @@ func TestRootHandler_Health(t *testing.T) {
 	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/health", nil)
+			req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS)
