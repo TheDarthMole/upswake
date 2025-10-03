@@ -15,7 +15,7 @@ ARG TARGETVARIANT
 ARG COMMIT_SHA
 ARG BUILD_DATE
 
-RUN --mount=type=cache,target=/root/.cache/go-build,id=build-$TARGETPLATFORM \
+RUN --mount=type=cache,target=/root/.cache/go-build,id=build-${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
     --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
     go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${GIT_DESCRIBE}' -X 'main.Commit=${COMMIT_SHA}' -X 'main.Date=$(date '+%Y-%m-%d %H:%M:%S %z')'" \
