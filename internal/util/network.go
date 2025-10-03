@@ -62,7 +62,7 @@ func getIPBroadcast(addr net.Addr) net.IP {
 		if v.IP.To4() != nil {
 			// This is an IPv4 address
 			broadcast := calculateIPv4Broadcast(v)
-			//fmt.Printf("IPv4 %s, Broadcast Address: %s\n", v.IP.To4(), broadcast)
+			// fmt.Printf("IPv4 %s, Broadcast Address: %s\n", v.IP.To4(), broadcast)
 			return broadcast
 		}
 	}

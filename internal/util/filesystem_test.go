@@ -12,7 +12,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 	memfs := afero.NewMemMapFs()
 
 	for x := range data {
-		err := afero.WriteFile(memfs, x, data[x], 0644)
+		err := afero.WriteFile(memfs, x, data[x], 0o644)
 		if err != nil {
 			t.Fatalf("could not write file to memfs: %s", err)
 		}

@@ -58,6 +58,5 @@ var wakeCmd = &cobra.Command{
 			}
 			sugar.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
 		}
-
 	},
 }

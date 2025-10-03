@@ -14,7 +14,6 @@ func fromFileConfig(config *Config) *entity.Config {
 }
 
 func fromFileNutServer(nutServer *NutServer) *entity.NutServer {
-
 	targets := make([]entity.TargetServer, len(nutServer.Targets))
 	for i, target := range nutServer.Targets {
 		targets[i] = *fromFileTargetServer(&target)

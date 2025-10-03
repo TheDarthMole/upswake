@@ -170,7 +170,6 @@ default wake := false`),
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-
 		})
 	}
 }

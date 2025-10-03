@@ -132,7 +132,7 @@ wake if {
 	}
 	type args struct {
 		target *entity.TargetServer
-		//nutServer *entity.NutServer
+		// nutServer *entity.NutServer
 		inputJSON string
 	}
 	tests := []struct {
@@ -255,7 +255,7 @@ wake if {
 }
 
 func writeMemFile(fs afero.Fs, fileName string, contents []byte, t *testing.T) error {
-	return afero.WriteFile(fs, fileName, contents, 0644)
+	return afero.WriteFile(fs, fileName, contents, 0o644)
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
@@ -304,7 +304,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 								},
 							},
 						},
-					}},
+					},
+				},
 				rulesFS: alwaysTrueRegoFS,
 				mac:     "00:11:22:33:44:55",
 			},
@@ -351,7 +352,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 								},
 							},
 						},
-					}},
+					},
+				},
 				rulesFS: alwaysTrueRegoFS,
 				mac:     "00:11:22:33:44:55",
 			},
@@ -389,7 +391,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 								},
 							},
 						},
-					}},
+					},
+				},
 				rulesFS: alwaysTrueRegoFS,
 				mac:     "00:11:22:33:44:55",
 			},

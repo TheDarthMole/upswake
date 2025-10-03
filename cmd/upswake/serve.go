@@ -130,7 +130,8 @@ func sendWakeRequest(ctx context.Context, target config.TargetServer, address st
 	}
 	client := &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
-		Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+		Transport: &http.Transport{TLSClientConfig: tlsConfig},
+	}
 	resp, err := client.Do(r)
 	if err != nil {
 		sugar.Errorf("Error sending post request: %s", err)

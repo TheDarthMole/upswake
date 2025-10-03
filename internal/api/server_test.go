@@ -171,7 +171,6 @@ func TestNewServer(t *testing.T) {
 				assert.Equal(t, http.StatusOK, rec.Code)
 				assert.Equal(t, "pong", rec.Body.String())
 			}
-
 		})
 	}
 }

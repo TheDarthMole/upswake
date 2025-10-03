@@ -377,17 +377,17 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 	fileSystem := afero.NewMemMapFs()
 	rsaPrivPEM, rsaCertPEM := genRSACertAndKey(t)
 	ecdsaPrivPEM, ecdsaCertPEM := genEcdsaCertAndKey(t)
-	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.cert", rsaCertPEM, 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.key", rsaPrivPEM, 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.cert", []byte("invalid cert"), 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.key", []byte("invalid key"), 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.cert", rsaCertPEM, 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "rsaServer.key", rsaPrivPEM, 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.cert", []byte("invalid cert"), 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidServer.key", []byte("invalid key"), 0o644))
 
 	rsaKey, err := genRsaKey()
 	assert.NoError(t, err)
 	_, invalidRSACertPEM := encodeRSA(t, rsaKey, []byte("invalid cert"))
-	assert.NoError(t, afero.WriteFile(fileSystem, "invalidCert.cert", invalidRSACertPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "invalidCert.cert", invalidRSACertPEM, 0o644))
 	type fields struct {
 		ConfigFile string
 		UseSSL     bool
@@ -461,8 +461,8 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 func TestNewCLIArgs(t *testing.T) {
 	fileSystem := afero.NewMemMapFs()
 	ecdsaPrivPEM, ecdsaCertPEM := genEcdsaCertAndKey(t)
-	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0644))
-	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0o644))
+	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0o644))
 	type args struct {
 		configFile string
 		useSSL     bool

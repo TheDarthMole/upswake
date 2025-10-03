@@ -32,14 +32,14 @@ func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, k
 		Host:       net.ParseIP(host),
 		Port:       port,
 	}
-	err := error(nil)
 	if useSSL {
-		cliArgs.TLSConfig, err = cliArgs.x509Cert(fileSystem)
+		tlsConfig, err := cliArgs.x509Cert(fileSystem)
 		if err != nil {
 			return nil, err
 		}
+		cliArgs.TLSConfig = tlsConfig
 	}
-	err = cliArgs.Validate()
+	err := cliArgs.Validate()
 	if err != nil {
 		return nil, err
 	}

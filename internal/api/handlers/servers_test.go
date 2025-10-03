@@ -16,11 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
-		return []net.IP{net.ParseIP("127.0.0.1")}, nil
-	}
-)
+var mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
+	return []net.IP{net.ParseIP("127.0.0.1")}, nil
+}
 
 const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
 
@@ -42,7 +40,7 @@ func TestServerHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 2, len(e.Routes()), "Expected 2 routes to be registered")
+	assert.Len(t, e.Routes(), 2, "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 
@@ -238,7 +236,6 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			NewTargetServer = entity.NewTargetServer                 // Reset to original function after test
 		})
 	}
-
 }
 
 func TestServerHandler_WakeServer(t *testing.T) {
