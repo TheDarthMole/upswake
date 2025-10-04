@@ -1,8 +1,6 @@
 package viper
 
 import (
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -16,11 +14,10 @@ const (
 )
 
 var (
-	fileSystem          = afero.NewOsFs()
-	config              = entity.Config{}
-	configFilePath      string
-	ErrorConfigNotFound = fmt.Errorf("the config at '%s' was not found", DefaultConfigFile)
-	DefaultConfig       = Config{
+	fileSystem     = afero.NewOsFs()
+	config         = entity.Config{}
+	configFilePath string
+	DefaultConfig  = Config{
 		NutServers: []NutServer{
 			{
 				Name:     "NUT Server 1",
@@ -69,12 +66,6 @@ func load(fs afero.Fs, configFile string) (*entity.Config, error) {
 	viper.SetConfigFile(configFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if errors.As(err, &configFileNotFoundError) {
-			// Config file not found; ignore error if desired
-			return &entity.Config{}, ErrorConfigNotFound
-		}
-		// Config file was found but another error was produced
 		return &entity.Config{}, err
 	}
 
