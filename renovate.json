@@ -11,6 +11,11 @@
       "matchManagers": ["github-actions"],
       "pinDigests": true,
       "versioning": "github-actions"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["instantlinux/nut-upsd"],
+      "matchUpdateTypes": ["major", "minor", "patch"]
     }
   ],
   "docker-compose": {
