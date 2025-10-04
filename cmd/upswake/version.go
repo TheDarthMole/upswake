@@ -12,7 +12,7 @@ var (
 		Use:   "version",
 		Short: "Show the version information",
 		Long:  `Shows the version, commit hash, and build date of the application`,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			sugar.Infof("UPSWake version %s, commit %s, built at %s", Version, Commit, Date)
 		},
 	}

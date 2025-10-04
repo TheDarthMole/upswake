@@ -12,36 +12,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	cfg = &entity.Config{
-		NutServers: []entity.NutServer{
-			{
-				Name:     "testNUTServer",
-				Host:     "127.0.0.1",
-				Port:     1234,
-				Username: "test-user",
-				Password: "test-password",
-				Targets: []entity.TargetServer{
-					{
-						Name:      "testTarget",
-						MAC:       "00:00:00:00:00:00",
-						Broadcast: "192.168.1.255",
-						Port:      9,
-						Interval:  "15s",
-						Rules:     nil,
-					},
+var cfg = &entity.Config{
+	NutServers: []entity.NutServer{
+		{
+			Name:     "testNUTServer",
+			Host:     "127.0.0.1",
+			Port:     1234,
+			Username: "test-user",
+			Password: "test-password",
+			Targets: []entity.TargetServer{
+				{
+					Name:      "testTarget",
+					MAC:       "00:00:00:00:00:00",
+					Broadcast: "192.168.1.255",
+					Port:      9,
+					Interval:  "15s",
+					Rules:     nil,
 				},
 			},
 		},
-	}
-)
+	},
+}
 
 func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 	t.Helper()
 	memfs := afero.NewMemMapFs()
 
 	for x := range data {
-		err := afero.WriteFile(memfs, x, data[x], 0644)
+		err := afero.WriteFile(memfs, x, data[x], 0o644)
 		if err != nil {
 			t.Fatalf("could not write file to memfs: %s", err)
 		}
@@ -52,7 +50,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 func TestRootHandlerRoot(t *testing.T) {
 	e := echo.New()
 	e.Validator = api.NewCustomValidator(t.Context())
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -129,7 +127,7 @@ func TestRootHandler_Health(t *testing.T) {
 	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/health", nil)
+			req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS)
@@ -162,7 +160,7 @@ func TestRootHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, lenExpectedRoutes, len(e.Routes()), "Expected 2 routes to be registered")
+	assert.Len(t, e.Routes(), lenExpectedRoutes, "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 

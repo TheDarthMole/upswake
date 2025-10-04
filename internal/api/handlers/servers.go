@@ -6,13 +6,13 @@ import (
 	"strconv"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v4"
 )
 
 var (
-	GetAllBroadcastAddresses  = util.GetAllBroadcastAddresses
+	GetAllBroadcastAddresses  = network.GetAllBroadcastAddresses
 	NewTargetServer           = entity.NewTargetServer
 	ErrorBindingRequest       = errors.New("failed to parse request body")
 	ErrorValidatingRequest    = errors.New("failed to validate request body")
@@ -72,7 +72,7 @@ func (h *ServerHandler) Register(g *echo.Group) {
 //	@Failure		400					{object}	Response			"Input validation failed"
 //	@Failure		500					{object}	Response			"Wake on LAN packet failed to send"
 //	@Router			/api/servers/wake [post]
-func (h *ServerHandler) WakeServer(c echo.Context) error {
+func (*ServerHandler) WakeServer(c echo.Context) error {
 	wsRequest := NewWakeServerRequest()
 	if err := c.Bind(wsRequest); err != nil {
 		c.Logger().Errorf("failed to bind wake server request %s", err)
@@ -104,7 +104,7 @@ func (h *ServerHandler) WakeServer(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 	}
 
-	c.Logger().Infof("wake on lan packet sent to %s", util.SanitizeString(wsRequest.Mac))
+	c.Logger().Infof("wake on lan packet sent to %s", sanitizeString(wsRequest.Mac))
 	return c.JSON(http.StatusCreated, Response{Message: WoLSentMessage})
 }
 
@@ -120,7 +120,7 @@ func (h *ServerHandler) WakeServer(c echo.Context) error {
 //	@Failure		400						{object}	Response				"Input validation failed"
 //	@Failure		500						{object}	Response				"Wake on LAN packet failed to send"
 //	@Router			/api/servers/broadcastwake [post]
-func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
+func (*ServerHandler) BroadcastWakeServer(c echo.Context) error {
 	wsRequest := NewBroadcastWakeRequest()
 	if err := c.Bind(wsRequest); err != nil {
 		c.Logger().Errorf("failed to bind wake server request: %s", err)
@@ -166,7 +166,7 @@ func (h *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 			c.Logger().Errorf("failed to send wake on lan %s", err)
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 		}
-		c.Logger().Infof("sent wake on lan to %s:%s with mac %s", util.SanitizeString(broadcast.String()), strconv.Itoa(wsRequest.Port), util.SanitizeString(wsRequest.Mac))
+		c.Logger().Infof("sent wake on lan to %s:%s with mac %s", sanitizeString(broadcast.String()), strconv.Itoa(wsRequest.Port), sanitizeString(wsRequest.Mac))
 	}
 	return c.JSON(http.StatusCreated, Response{Message: BroadcastWoLSentMessage})
 }

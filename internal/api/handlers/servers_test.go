@@ -11,16 +11,14 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/util"
+	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
-		return []net.IP{net.ParseIP("127.0.0.1")}, nil
-	}
-)
+var mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
+	return []net.IP{net.ParseIP("127.0.0.1")}, nil
+}
 
 const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
 
@@ -42,7 +40,7 @@ func TestServerHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 2, len(e.Routes()), "Expected 2 routes to be registered")
+	assert.Len(t, e.Routes(), 2, "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 
@@ -192,7 +190,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			fields: fields{
 				body:                   validMac,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
-				mockNewTargetServer: func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error) {
+				mockNewTargetServer: func(_, _, _, _ string, _ int, _ []string) (*entity.TargetServer, error) {
 					return nil, errors.New("mock_new_target_server_error")
 				},
 			},
@@ -234,11 +232,10 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
 
-			GetAllBroadcastAddresses = util.GetAllBroadcastAddresses // Reset to original function after test
-			NewTargetServer = entity.NewTargetServer                 // Reset to original function after test
+			GetAllBroadcastAddresses = network.GetAllBroadcastAddresses // Reset to original function after test
+			NewTargetServer = entity.NewTargetServer                    // Reset to original function after test
 		})
 	}
-
 }
 
 func TestServerHandler_WakeServer(t *testing.T) {
@@ -336,7 +333,7 @@ func TestServerHandler_WakeServer(t *testing.T) {
 			name: "mock_new_target_server_error",
 			fields: fields{
 				body: validMacBroadcast,
-				mockNewTargetServer: func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error) {
+				mockNewTargetServer: func(_, _, _, _ string, _ int, _ []string) (*entity.TargetServer, error) {
 					return nil, errors.New("mock_new_target_server_error")
 				},
 			},

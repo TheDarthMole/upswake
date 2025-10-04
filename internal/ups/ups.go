@@ -2,6 +2,7 @@ package ups
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
@@ -25,7 +26,7 @@ func connect(host string, port int, username, password string) (UPS, error) {
 	}
 	if !authenticate {
 		log.Printf("Authentication failed to host '%s' as user '%s'", host, username)
-		return UPS{}, fmt.Errorf("authentication failed")
+		return UPS{}, errors.New("authentication failed")
 	}
 	return UPS{client}, nil
 }
@@ -33,23 +34,23 @@ func connect(host string, port int, username, password string) (UPS, error) {
 func GetJSON(ns *entity.NutServer) (string, error) {
 	client, err := connect(ns.Host, ns.Port, ns.Username, ns.Password)
 	if err != nil {
-		return "", fmt.Errorf("could not connect to NUT server: %s", err)
+		return "", fmt.Errorf("could not connect to NUT server: %w", err)
 	}
 	defer func(client *UPS) {
-		_, err := client.Disconnect()
+		_, err = client.Disconnect()
 		if err != nil {
 			log.Printf("Could not disconnect from NUT server: %s", err)
 		}
 	}(&client)
 
-	inputJson, err := client.toJson()
+	inputJSON, err := client.toJSON()
 	if err != nil {
-		return "", fmt.Errorf("could not get UPS list: %s", err)
+		return "", fmt.Errorf("could not get UPS list: %w", err)
 	}
-	return inputJson, nil
+	return inputJSON, nil
 }
 
-func (u *UPS) toJson() (string, error) {
+func (u *UPS) toJSON() (string, error) {
 	ups, err := u.GetUPSList()
 	if err != nil {
 		return "", err

@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
-	"github.com/TheDarthMole/UPSWake/internal/util"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -27,6 +29,15 @@ func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs) *RootHandler {
 	}
 }
 
+func sanitizeString(input string) string {
+	// Replace any non-printable characters with an empty string
+	sanatised := strconv.QuoteToASCII(input)
+	sanatised = strings.TrimSpace(sanatised)
+	sanatised = strings.ReplaceAll(sanatised, "\n", "")
+	sanatised = strings.ReplaceAll(sanatised, "\r", "")
+	return sanatised
+}
+
 func (h *RootHandler) Register(g *echo.Group) {
 	g.GET("/", h.Root)
 	g.GET("/health", h.Health)
@@ -41,7 +52,7 @@ func (h *RootHandler) Register(g *echo.Group) {
 //	@Accept			plain
 //	@Produce		html
 //	@Router			/ [get]
-func (h *RootHandler) Root(c echo.Context) error {
+func (*RootHandler) Root(c echo.Context) error {
 	return c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 }
 
@@ -61,7 +72,7 @@ func (h *RootHandler) Health(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	if _, err := util.GetAllBroadcastAddresses(); err != nil {
+	if _, err := network.GetAllBroadcastAddresses(); err != nil {
 		c.Logger().Errorf("Error getting broadcast addresses: %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}

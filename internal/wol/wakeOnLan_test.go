@@ -26,11 +26,11 @@ func (rwc *readWriteCloser) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (rwc *readWriteCloser) Close() error {
+func (*readWriteCloser) Close() error {
 	return nil
 }
 
-func (rwc *readWriteCloserError) Write(_ []byte) (n int, err error) {
+func (*readWriteCloserError) Write(_ []byte) (int, error) {
 	return 15, nil
 }
 
@@ -237,7 +237,7 @@ func Test_wakeInternal(t *testing.T) {
 				return
 			}
 
-			var sent = make([]byte, MagicPacketSize)
+			sent := make([]byte, MagicPacketSize)
 			_, err := tt.args.dst.Read(sent)
 			if err != nil {
 				t.Errorf("wakeInternal() error reading from dst = %v", err)

@@ -25,7 +25,7 @@ using a set of Rego rules defined and the servers in the config file`,
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
+		log.Fatalf("can't initialise zap logger: %v", err)
 	}
 	sugar = logger.Sugar()
 	err = rootCmd.Execute()

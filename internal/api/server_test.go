@@ -26,7 +26,7 @@ func TestCustomValidator_Validate(t *testing.T) {
 		validator *validator.Validate
 	}
 	type args struct {
-		i interface{}
+		i any
 	}
 	tests := []struct {
 		name    string
@@ -54,7 +54,7 @@ func TestCustomValidator_Validate(t *testing.T) {
 			wantErr: false,
 		},
 		// TODO: This test case makes me think that the validate function isn't working as expected.
-		//{
+		// {
 		//	name:   "Test with invalid TargetServer struct",
 		//	fields: fields{validator: validator.New()},
 		//	args: args{i: config.TargetServer{
@@ -66,7 +66,7 @@ func TestCustomValidator_Validate(t *testing.T) {
 		//		Rules:     []string{"test"},
 		//	}},
 		//	wantErr: true,
-		//},
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -160,10 +160,7 @@ func TestNewServer(t *testing.T) {
 			assert.True(t, ok, "echo.Validator should be *CustomValidator")
 			assert.Equal(t, tt.want.ctx, cv.ctx)
 
-			//testRoute := got.echo.GET("/ping", func(c echo.Context) error {
-			//	return c.String(http.StatusOK, "pong")
-			//})
-			req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+			req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := got.echo.NewContext(req, rec)
 
@@ -171,7 +168,6 @@ func TestNewServer(t *testing.T) {
 				assert.Equal(t, http.StatusOK, rec.Code)
 				assert.Equal(t, "pong", rec.Body.String())
 			}
-
 		})
 	}
 }
