@@ -9,7 +9,6 @@ func getAllInterfaceAddresses() ([]net.Addr, error) {
 	// Get a list of network interfaces
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		fmt.Println("Error getting network interfaces:", err)
 		return nil, err
 	}
 	return filterAddressesFromInterfaces(interfaces)
@@ -20,8 +19,7 @@ func filterAddressesFromInterfaces(interfaces []net.Interface) ([]net.Addr, erro
 	for _, iface := range interfaces {
 		addrs, err := iface.Addrs()
 		if err != nil {
-			fmt.Printf("Error getting addresses for interface %s: %v\n", iface.Name, err)
-			continue
+			return nil, err
 		}
 		for _, addr := range addrs {
 			if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil && !ipNet.IP.IsLoopback() {
