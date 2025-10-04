@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/filesystem"
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/afero"
@@ -82,7 +81,7 @@ func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSO
 	}
 
 	for _, ruleName := range target.Rules {
-		regoRule, err := filesystem.GetFile(r.rulesFS, ruleName)
+		regoRule, err := afero.ReadFile(r.rulesFS, ruleName)
 		if err != nil {
 			return false, fmt.Errorf("could not get file: %w", err)
 		}

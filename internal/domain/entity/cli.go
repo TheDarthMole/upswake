@@ -9,7 +9,6 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/TheDarthMole/UPSWake/internal/filesystem"
 	"github.com/spf13/afero"
 )
 
@@ -71,7 +70,7 @@ func (c *CLIArgs) Validate() error {
 }
 
 func (c *CLIArgs) x509Cert(fileSystem afero.Fs) (*tls.Config, error) {
-	certFile, err := filesystem.GetFile(fileSystem, c.CertFile)
+	certFile, err := afero.ReadFile(fileSystem, c.CertFile)
 	if err != nil {
 		return nil, err
 	}
