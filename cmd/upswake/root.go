@@ -7,16 +7,23 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	sugar *zap.SugaredLogger
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
-		Use:   "upswake",
-		Short: "UPSWake sends Wake on LAN packets based on a UPS's status",
-		Long: `UPSWake sends Wake on LAN packets to target servers
+const (
+	shortAppDesc = "UPSWake sends Wake on LAN packets based on a UPS's status"
+	longAppDesc  = `UPSWake sends Wake on LAN packets to target servers
 
 It uses the status of a UPS to determine which servers to wake
-using a set of Rego rules defined and the servers in the config file`,
+using a set of Rego rules defined and the servers in the config file`
+)
+
+var (
+	Version string
+	sugar   *zap.SugaredLogger
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd = &cobra.Command{
+		Use:     "upswake",
+		Short:   shortAppDesc,
+		Long:    longAppDesc,
+		Version: Version,
 	}
 )
 
