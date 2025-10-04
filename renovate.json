@@ -13,7 +13,7 @@
       "versioning": "github-actions"
     },
     {
-      "matchDatasources": ["docker"],
+      "matchDatasources": ["docker-compose"],
       "matchPackageNames": ["instantlinux/nut-upsd"],
       "matchUpdateTypes": ["major", "minor", "patch"]
     }
