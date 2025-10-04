@@ -1,9 +1,12 @@
 package network
 
 import (
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_getIPBroadcast(t *testing.T) {
@@ -403,6 +406,60 @@ func TestStringsToIPs(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StringsToIPs() got = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestGetAllBroadcastAddresses(t *testing.T) {
+	got, err := GetAllBroadcastAddresses()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, got)
+}
+
+func Test_filterAddressesFromInterfaces(t *testing.T) {
+	type args struct {
+		interfaces []net.Interface
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []net.Addr
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "No Interfaces",
+			args: args{
+				interfaces: []net.Interface{},
+			},
+			want:    []net.Addr(nil),
+			wantErr: assert.NoError,
+		},
+		{
+			name: "Loopback Interface",
+			args: args{
+				interfaces: []net.Interface{
+					{
+						Index:        1,
+						MTU:          65536,
+						Name:         "lo",
+						HardwareAddr: nil,
+						Flags:        net.FlagLoopback | net.FlagUp,
+					},
+				},
+			},
+			want:    []net.Addr(nil),
+			wantErr: assert.NoError,
+		},
+		// Unfortunately, we cannot easily mock net.Interfaces() to return custom interfaces.
+		// Therefore, we will just test with the actual interfaces on the system running the tests.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := filterAddressesFromInterfaces(tt.args.interfaces)
+			if !tt.wantErr(t, err, fmt.Sprintf("filterAddressesFromInterfaces(%v)", tt.args.interfaces)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "filterAddressesFromInterfaces(%v)", tt.args.interfaces)
 		})
 	}
 }

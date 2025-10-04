@@ -174,5 +174,4 @@ func Test_load(t *testing.T) {
 		assert.Error(t, err, "Expected error when config file is malformed")
 		assert.ErrorContains(t, err, "decoding failed due to the following error(s):\n\n'nut_servers[0].password' expected type 'string', got unconvertible type '[]interface {}'")
 	})
-
 }
