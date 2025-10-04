@@ -111,7 +111,7 @@ jobs:
           context: .
           file: ./Containerfile
           push: ${{ github.event_name != 'pull_request' }}
-#          cache-from: type=gha
+#          cache-from: type=gha # caching actually increases build time from 5m to 8m
 #          cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
