@@ -1,8 +1,6 @@
 package viper
 
 import (
-	"log"
-
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
@@ -51,18 +49,17 @@ func InitConfig(cfgPath string) {
 	viper.AddConfigPath(".")
 	viper.SetEnvPrefix("UPSWAKE")
 	viper.AutomaticEnv() // read in environment variables that match
-	//viper.OnConfigChange(func(in fsnotify.Event) { # TODO: investigate how to mock this in tests
-	//	fmt.Println("Config file changed:", in.Name)
-	//	err := viper.Unmarshal(&config)
-	//	if err != nil {
-	//		return
-	//	}
-	//})
+	//  viper.OnConfigChange(func(in fsnotify.Event) { # TODO: investigate how to mock this in tests
+	//	  fmt.Println("Config file changed:", in.Name)
+	//	  err := viper.Unmarshal(&config)
+	//	  if err != nil {
+	//  		return
+	// 	  }
+	//  })
 	viper.WatchConfig()
 }
 
 func Load() (*entity.Config, error) {
-
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file was found but another error was produced
 		return &entity.Config{}, err
