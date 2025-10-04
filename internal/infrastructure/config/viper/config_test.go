@@ -41,7 +41,7 @@ func TestCreateDefaultConfig(t *testing.T) {
 	reflect.DeepEqual(got, expected)
 }
 
-func Test_load(t *testing.T) {
+func Test_Load(t *testing.T) {
 	type args struct {
 		fs       afero.Fs
 		filePath string
@@ -193,13 +193,17 @@ func Test_load(t *testing.T) {
 	}
 
 	t.Run("config doesn't exist", func(t *testing.T) {
-		_, err := load(afero.NewMemMapFs(), "non_existent_config.yaml")
+		fileSystem = afero.NewMemMapFs()
+		InitConfig("non_existent_config.yaml")
+		_, err := Load()
 		assert.Error(t, err, "Expected error when config file does not exist")
 		assert.ErrorContains(t, err, "file does not exist")
 	})
 
 	t.Run("malformed yaml", func(t *testing.T) {
-		_, err := load(testFS, "malformed_file.yaml")
+		fileSystem = testFS
+		InitConfig("malformed_file.yaml")
+		_, err := Load()
 		assert.Error(t, err, "Expected error when config file is malformed")
 		assert.ErrorContains(t, err, "decoding failed due to the following error(s):\n\n'nut_servers[0].password' expected type 'string', got unconvertible type '[]interface {}'")
 	})
