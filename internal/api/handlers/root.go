@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/network"
@@ -25,6 +27,15 @@ func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs) *RootHandler {
 		cfg:     cfg,
 		rulesFS: rulesFS,
 	}
+}
+
+func sanitizeString(input string) string {
+	// Replace any non-printable characters with an empty string
+	sanatised := strconv.QuoteToASCII(input)
+	sanatised = strings.TrimSpace(sanatised)
+	sanatised = strings.ReplaceAll(sanatised, "\n", "")
+	sanatised = strings.ReplaceAll(sanatised, "\r", "")
+	return sanatised
 }
 
 func (h *RootHandler) Register(g *echo.Group) {
