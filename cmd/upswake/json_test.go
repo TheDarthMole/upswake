@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
@@ -63,9 +62,8 @@ func Test_JSONRunE(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			cmd := NewJSONCommand()
 
-			_, output, err := executeCommandWithContextC(t.Context(), cmd, testCase.in...)
+			_, output, err := executeCommandWithContextC(t, t.Context(), cmd, testCase.in...)
 
-			fmt.Println(err)
 			if testCase.err != "" {
 				assert.ErrorContains(t, err, testCase.err)
 			}

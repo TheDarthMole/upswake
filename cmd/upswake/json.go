@@ -58,7 +58,3 @@ func setupJSONFlags(cmd *cobra.Command) error {
 	_ = cmd.MarkFlagRequired("host")
 	return nil
 }
-
-func init() {
-
-}

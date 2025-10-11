@@ -2,23 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
 )
 
-var (
-	mac        string
-	broadcasts []string
-)
-
-func init() {
-
-}
-
-func NewWakeCmd(broadcasts []string) *cobra.Command {
+func NewWakeCmd(broadcasts []net.IP) *cobra.Command {
 	wakeCmd := &cobra.Command{
 		Use:   "wake -b [mac address]",
 		Short: "Manually wake a computer",
@@ -26,20 +17,26 @@ func NewWakeCmd(broadcasts []string) *cobra.Command {
 		RunE:  wakeCmdRunE,
 	}
 
-	wakeCmd.Flags().StringArrayVarP(&broadcasts, "broadcasts", "b", broadcasts, "Broadcast addresses to send the WoL packets to")
-	wakeCmd.Flags().StringVarP(&mac, "mac", "m", "", "MAC address of the computer to wake")
+	wakeCmd.Flags().IPSliceP("broadcasts", "b", broadcasts, "Broadcast addresses to send the WoL packets to")
+	wakeCmd.Flags().StringP("mac", "m", "", "MAC address of the computer to wake")
 	_ = wakeCmd.MarkFlagRequired("mac")
 
 	return wakeCmd
 }
 
-func wakeCmdRunE(_ *cobra.Command, _ []string) error {
-	ipBroadcasts, err := network.StringsToIPs(broadcasts)
+func wakeCmdRunE(cmd *cobra.Command, _ []string) error {
+
+	mac, err := cmd.Flags().GetString("mac")
 	if err != nil {
 		return err
 	}
 
-	for _, broadcast := range ipBroadcasts {
+	broadcasts, err := cmd.Flags().GetIPSlice("broadcasts")
+	if err != nil {
+		return err
+	}
+
+	for _, broadcast := range broadcasts {
 		ts, err := entity.NewTargetServer(
 			"CLI Request",
 			mac,
