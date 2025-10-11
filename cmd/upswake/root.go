@@ -29,7 +29,7 @@ var (
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func main() {
+func Execute() {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("can't initialise zap logger: %v", err)
@@ -37,6 +37,10 @@ func main() {
 	sugar = logger.Sugar()
 	err = rootCmd.Execute()
 	if err != nil {
-		log.Fatalf("Error executing root command: %s", err)
+		logger.Fatal("Error executing root command: " + err.Error())
 	}
+}
+
+func main() {
+	Execute()
 }

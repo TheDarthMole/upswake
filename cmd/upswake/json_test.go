@@ -1,0 +1,83 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+)
+
+func init() {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialise zap logger: %v", err)
+	}
+	sugar = logger.Sugar()
+}
+
+func Test_NewJSONCommand(t *testing.T) {
+	t.Run("json command", func(t *testing.T) {
+		jsonCmd := NewJSONCommand()
+		assert.Equal(t, "json", jsonCmd.Use, "json command should be 'json'")
+		assert.Equal(t, "Retrieve JSON from a NUT server", jsonCmd.Short, "json command short description mismatch")
+		assert.Contains(t, jsonCmd.Long, "Retrieve JSON from a NUT server and print it to stdout", "json command long description mismatch")
+		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("username").DefValue, "default username should be 'anonymous'")
+		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("password").DefValue, "default password should be 'anonymous'")
+		assert.Equal(t, "", jsonCmd.Flags().Lookup("host").DefValue, "default host should be empty")
+		assert.Equal(t, "3493", jsonCmd.Flags().Lookup("port").DefValue, "default port should be '3493'")
+		assert.NotNil(t, jsonCmd.RunE, "json command RunE function should not be nil")
+	})
+}
+
+func Test_JSONRunE(t *testing.T) {
+	var tests = []struct {
+		name string
+		in   []string
+		err  string
+		out  string
+	}{
+		{
+			name: "invalid port",
+			in:   []string{"json", "--host", "localhost", "--username", "testuser", "--password", "testpass", "--port", "invalid"},
+			out:  `invalid argument "invalid" for "-P, --port" flag`,
+		},
+		{
+			name: "valid input but server not reachable",
+			in:   []string{"json", "--host", "127.0.0.1", "--username", "testuser", "--password", "testpass", "--port", "1234"},
+			err:  "could not connect to NUT server: dial tcp 127.0.0.1:1234",
+		},
+		{
+			name: "valid cli args",
+			in:   []string{"json", "--host", "localhost", "--username", "testuser", "--password", "testpass", "--port", "3493"},
+		},
+		{
+			name: "missing host",
+			in:   []string{},
+			err:  `required flag(s) "host" not set`,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			cmd := NewJSONCommand()
+
+			_, output, err := executeCommandWithContextC(t.Context(), cmd, testCase.in...)
+
+			fmt.Println(err)
+			if testCase.err != "" {
+				assert.ErrorContains(t, err, testCase.err)
+			}
+
+			assert.Contains(t, output, testCase.out, "expected output not found")
+		})
+	}
+
+	//t.Run("json run function", func(t *testing.T) {
+	//	setupJSONFlags(cmd)
+	//	cmd.SetArgs([]string{"json", "--host", "localhost", "--username", "testuser", "--password", "testpass", "--port", "3493"})
+	//	err := cmd.Execute()
+	//	assert.NoError(t, err, "json command execution should not return an error")
+	//})
+}
