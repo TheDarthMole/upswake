@@ -24,69 +24,17 @@ const (
 
 var (
 	cfgFile    string
-	regoFiles  afero.Fs
-	fileSystem afero.Fs
-	serveCmd   = &cobra.Command{
+	fileSystem = afero.NewOsFs()
+	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
+)
+
+func NewServeCommand() *cobra.Command {
+	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliArgs, err := config.NewCLIArgs(
-				fileSystem,
-				cmd.Flag("config").Value.String(),
-				cmd.Flag("ssl").Value.String() == "true",
-				cmd.Flag("certFile").Value.String(),
-				cmd.Flag("keyFile").Value.String(),
-				cmd.Flag("host").Value.String(),
-				cmd.Flag("port").Value.String(),
-			)
-			if err != nil {
-				return err
-			}
-
-			viper.InitConfig(cliArgs.ConfigFile)
-
-			cfg, err := viper.Load()
-			if err != nil {
-				return fmt.Errorf("error loading config: %w", err)
-			}
-			if err := cfg.Validate(); err != nil {
-				return fmt.Errorf("error validating config: %w", err)
-			}
-
-			ctx := context.Background()
-
-			server := api.NewServer(ctx, sugar)
-
-			rootHandler := handlers.NewRootHandler(cfg, regoFiles)
-			rootHandler.Register(server.Root())
-
-			serverHandler := handlers.NewServerHandler()
-			serverHandler.Register(server.API().Group("/servers"))
-
-			upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
-			upsWakeHandler.Register(server.API().Group("/upswake"))
-
-			for _, mapping := range cfg.NutServers {
-				for _, target := range mapping.Targets {
-					go processTarget(ctx, target, cliArgs.Address()+"/api/upswake", cliArgs.TLSConfig)
-				}
-			}
-
-			return server.Start(
-				fmt.Sprintf("%s:%s", cliArgs.Host.String(), cliArgs.Port),
-				cmd.Flag("ssl").Value.String() == "true",
-				cmd.Flag("certFile").Value.String(),
-				cmd.Flag("keyFile").Value.String(),
-			)
-		},
+		RunE:  serveCmdRunE,
 	}
-)
-
-func init() {
-	rootCmd.AddCommand(serveCmd)
-	fileSystem = afero.NewOsFs()
-	regoFiles = afero.NewBasePathFs(fileSystem, "rules")
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
 	serveCmd.Flags().BoolP("ssl", "s", false, "Enable SSL (HTTPS)")
@@ -96,7 +44,60 @@ func init() {
 		&cfgFile,
 		"config",
 		"./config.yaml",
-		"location of config file")
+		"location of config file",
+	)
+	return serveCmd
+}
+
+func serveCmdRunE(cmd *cobra.Command, _ []string) error {
+	cliArgs, err := config.NewCLIArgs(
+		fileSystem,
+		cmd.Flag("config").Value.String(),
+		cmd.Flag("ssl").Value.String() == "true",
+		cmd.Flag("certFile").Value.String(),
+		cmd.Flag("keyFile").Value.String(),
+		cmd.Flag("host").Value.String(),
+		cmd.Flag("port").Value.String(),
+	)
+	if err != nil {
+		return err
+	}
+
+	viper.InitConfig(cliArgs.ConfigFile)
+
+	cfg, err := viper.Load()
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("error validating config: %w", err)
+	}
+
+	ctx := context.Background()
+
+	server := api.NewServer(ctx, sugar)
+
+	rootHandler := handlers.NewRootHandler(cfg, regoFiles)
+	rootHandler.Register(server.Root())
+
+	serverHandler := handlers.NewServerHandler()
+	serverHandler.Register(server.API().Group("/servers"))
+
+	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
+	upsWakeHandler.Register(server.API().Group("/upswake"))
+
+	for _, mapping := range cfg.NutServers {
+		for _, target := range mapping.Targets {
+			go processTarget(ctx, target, cliArgs.Address()+"/api/upswake", cliArgs.TLSConfig)
+		}
+	}
+
+	return server.Start(
+		fmt.Sprintf("%s:%s", cliArgs.Host.String(), cliArgs.Port),
+		cmd.Flag("ssl").Value.String() == "true",
+		cmd.Flag("certFile").Value.String(),
+		cmd.Flag("keyFile").Value.String(),
+	)
 }
 
 func processTarget(ctx context.Context, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {

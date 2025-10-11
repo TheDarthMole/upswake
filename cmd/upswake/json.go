@@ -60,6 +60,5 @@ func setupJSONFlags(cmd *cobra.Command) error {
 }
 
 func init() {
-	jsonCmd := NewJSONCommand()
-	rootCmd.AddCommand(jsonCmd)
+
 }
