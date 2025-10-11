@@ -123,8 +123,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			_, output, err := executeCommandWithContextC(t, t.Context(), tt.args.cmd, tt.args.args...)
+			output, err := executeCommandWithContext(t, tt.args.cmd, tt.args.args...)
 			fmt.Println("OUTPUT: " + output)
 
 			tt.wantErr(t, err, fmt.Sprintf("wakeCmdRunE(%v, %v)", tt.args.cmd, tt.args.args))

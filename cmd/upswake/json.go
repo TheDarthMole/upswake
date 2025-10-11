@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
@@ -19,11 +18,7 @@ This is useful for testing the connection to a NUT server
 and for creating rego rules for waking a target`,
 		RunE: JSONRunE,
 	}
-	err := setupJSONFlags(cmd)
-	if err != nil {
-		_ = cmd.Usage()
-		os.Exit(1)
-	}
+	setupJSONFlags(cmd)
 	return cmd
 }
 
@@ -50,11 +45,10 @@ func JSONRunE(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func setupJSONFlags(cmd *cobra.Command) error {
+func setupJSONFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("username", "u", "anonymous", "Username for the NUT server")
 	cmd.Flags().StringP("password", "p", "anonymous", "Password for the NUT server")
 	cmd.Flags().StringP("host", "H", "", "Host address of the NUT server")
 	cmd.Flags().IntP("port", "P", entity.DefaultNUTServerPort, "Port number of the NUT server")
 	_ = cmd.MarkFlagRequired("host")
-	return nil
 }

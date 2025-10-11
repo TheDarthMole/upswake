@@ -25,7 +25,6 @@ func NewWakeCmd(broadcasts []net.IP) *cobra.Command {
 }
 
 func wakeCmdRunE(cmd *cobra.Command, _ []string) error {
-
 	mac, err := cmd.Flags().GetString("mac")
 	if err != nil {
 		return err
@@ -51,7 +50,7 @@ func wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 		wolClient := wol.NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
-			return fmt.Errorf("failed to wake %s: %s", mac, err)
+			return fmt.Errorf("failed to wake %s: %w", mac, err)
 		}
 		sugar.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
 	}

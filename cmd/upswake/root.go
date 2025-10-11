@@ -35,19 +35,20 @@ func NewRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute() int {
 	logger, err := zap.NewProduction(zap.WithCaller(false))
 	if err != nil {
 		log.Fatalf("can't initialise zap logger: %v", err)
 	}
-	defer logger.Sync()
+	defer func(logger *zap.Logger) {
+		_ = logger.Sync()
+	}(logger)
 	sugar = logger.Sugar()
 
 	bc, err := network.GetAllBroadcastAddresses()
-
 	if err != nil {
 		sugar.Fatal(err)
-		return
+		return 1
 	}
 
 	wakeCmd := NewWakeCmd(bc)
@@ -62,10 +63,11 @@ func Execute() {
 	err = rootCmd.Execute()
 	if err != nil {
 		logger.Debug("Error executing root command: " + err.Error())
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 func main() {
-	Execute()
+	os.Exit(Execute())
 }

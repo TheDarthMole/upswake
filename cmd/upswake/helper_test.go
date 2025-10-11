@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"os"
 	"testing"
@@ -13,23 +12,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type syncWriter interface {
-	Sync() error
-	Write([]byte) (int, error)
-	Read([]byte) (int, error)
-}
-
-func executeCommandWithContextC(t *testing.T, ctx context.Context, cmd *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
+func executeCommandWithContext(t *testing.T, cmd *cobra.Command, args ...string) (output string, err error) {
 	var buf bytes.Buffer
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 	defer r.Close()
 	defer w.Close()
 
-	//beforeSugar := sugar
-	//defer func() {
-	//	sugar = beforeSugar
-	//}()
+	beforeSugar := sugar
+	defer func() {
+		sugar = beforeSugar
+	}()
 
 	sugar = newTestLogger(w)
 
@@ -37,13 +30,14 @@ func executeCommandWithContextC(t *testing.T, ctx context.Context, cmd *cobra.Co
 	cmd.SetErr(w)
 	cmd.SetArgs(args)
 
-	err = cmd.ExecuteContext(ctx)
+	err = cmd.ExecuteContext(t.Context())
 
 	w.Close()
 
-	io.Copy(&buf, r)
+	_, err1 := io.Copy(&buf, r)
+	require.NoError(t, err1)
 
-	return c, buf.String(), err
+	return buf.String(), err
 }
 
 func newTestLogger(buf zapcore.WriteSyncer, options ...zap.Option) *zap.SugaredLogger {

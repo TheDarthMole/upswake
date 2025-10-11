@@ -23,7 +23,6 @@ const (
 )
 
 var (
-	cfgFile    string
 	fileSystem = afero.NewOsFs()
 	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
 )
@@ -40,11 +39,10 @@ func NewServeCommand() *cobra.Command {
 	serveCmd.Flags().BoolP("ssl", "s", false, "Enable SSL (HTTPS)")
 	serveCmd.Flags().StringP("certFile", "c", "", "SSL Certificate file (required if SSL is enabled)")
 	serveCmd.Flags().StringP("keyFile", "k", "", "SSL Key file (required if SSL is enabled)")
-	serveCmd.PersistentFlags().StringVar(
-		&cfgFile,
+	serveCmd.PersistentFlags().String(
 		"config",
 		"./config.yaml",
-		"location of config file",
+		"The location of config file",
 	)
 	return serveCmd
 }

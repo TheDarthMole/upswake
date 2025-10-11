@@ -14,12 +14,3 @@ func Test_root(t *testing.T) {
 		assert.Contains(t, testRootCmd.Long, "UPSWake sends Wake on LAN packets to target servers", "root command long description mismatch")
 	})
 }
-
-//func Test_main(t *testing.T) {
-//	t.Run("main function", func(t *testing.T) {
-//		// Since main() calls rootCmd.Execute(), we can test if the rootCmd is set up correctly
-//		main()
-//		assert.NotNil(t, rootCmd, "rootCmd should not be nil")
-//		assert.NotNil(t, sugar, "sugar logger should not be nil")
-//	})
-//}

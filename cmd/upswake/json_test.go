@@ -24,14 +24,14 @@ func Test_NewJSONCommand(t *testing.T) {
 		assert.Contains(t, jsonCmd.Long, "Retrieve JSON from a NUT server and print it to stdout", "json command long description mismatch")
 		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("username").DefValue, "default username should be 'anonymous'")
 		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("password").DefValue, "default password should be 'anonymous'")
-		assert.Equal(t, "", jsonCmd.Flags().Lookup("host").DefValue, "default host should be empty")
+		assert.Empty(t, jsonCmd.Flags().Lookup("host").DefValue, "default host should be empty")
 		assert.Equal(t, "3493", jsonCmd.Flags().Lookup("port").DefValue, "default port should be '3493'")
 		assert.NotNil(t, jsonCmd.RunE, "json command RunE function should not be nil")
 	})
 }
 
 func Test_JSONRunE(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		name string
 		in   []string
 		err  string
@@ -62,7 +62,7 @@ func Test_JSONRunE(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			cmd := NewJSONCommand()
 
-			_, output, err := executeCommandWithContextC(t, t.Context(), cmd, testCase.in...)
+			output, err := executeCommandWithContext(t, cmd, testCase.in...)
 
 			if testCase.err != "" {
 				assert.ErrorContains(t, err, testCase.err)
@@ -71,11 +71,4 @@ func Test_JSONRunE(t *testing.T) {
 			assert.Contains(t, output, testCase.out, "expected output not found")
 		})
 	}
-
-	//t.Run("json run function", func(t *testing.T) {
-	//	setupJSONFlags(cmd)
-	//	cmd.SetArgs([]string{"json", "--host", "localhost", "--username", "testuser", "--password", "testpass", "--port", "3493"})
-	//	err := cmd.Execute()
-	//	assert.NoError(t, err, "json command execution should not return an error")
-	//})
 }
