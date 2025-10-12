@@ -61,7 +61,7 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	viper.InitConfig(cliArgs.ConfigFile)
+	viper.InitConfig(fileSystem, cliArgs.ConfigFile)
 
 	cfg, err := viper.Load()
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -123,8 +124,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := executeCommandWithContext(t, tt.args.cmd, tt.args.args...)
-			fmt.Println("OUTPUT: " + output)
+			output, err := executeCommandWithContext(t, tt.args.cmd, 1*time.Second, tt.args.args...)
 
 			tt.wantErr(t, err, fmt.Sprintf("wakeCmdRunE(%v, %v)", tt.args.cmd, tt.args.args))
 			assert.Contains(t, output, tt.output)

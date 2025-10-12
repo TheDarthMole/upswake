@@ -11,7 +11,6 @@ const (
 )
 
 var (
-	fileSystem     = afero.NewOsFs()
 	config         = entity.Config{}
 	configFilePath = DefaultConfigFile
 	DefaultConfig  = Config{
@@ -39,12 +38,12 @@ var (
 	}
 )
 
-func InitConfig(cfgPath string) {
+func InitConfig(fs afero.Fs, cfgPath string) {
 	configFilePath = DefaultConfigFile
 	if cfgPath != "" {
 		configFilePath = cfgPath
 	}
-	viper.SetFs(fileSystem)
+	viper.SetFs(fs)
 	viper.SetConfigFile(configFilePath)
 	viper.AddConfigPath(".")
 	viper.SetEnvPrefix("UPSWAKE")

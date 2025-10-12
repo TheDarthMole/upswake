@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -12,7 +14,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func executeCommandWithContext(t *testing.T, cmd *cobra.Command, args ...string) (output string, err error) {
+var ErrTimeout = errors.New("timeout")
+
+func executeCommandWithContext(t *testing.T, cmd *cobra.Command, timeout time.Duration, args ...string) (output string, err error) {
 	var buf bytes.Buffer
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
@@ -24,13 +28,34 @@ func executeCommandWithContext(t *testing.T, cmd *cobra.Command, args ...string)
 		sugar = beforeSugar
 	}()
 
-	sugar = newTestLogger(w)
+	beforeStderr := os.Stderr
+	beforeStdout := os.Stdout
+	defer func() {
+		os.Stderr = beforeStderr
+		os.Stdout = beforeStdout
+	}()
+
+	os.Stderr = w
+	os.Stdout = w
+
+	sugar = newMockLogger(w)
 
 	cmd.SetOut(w)
 	cmd.SetErr(w)
 	cmd.SetArgs(args)
+	os.Stderr = w
 
-	err = cmd.ExecuteContext(t.Context())
+	// setup timeout for commands that can run indefinitely
+	c := make(chan error, 1)
+	go func() { c <- cmd.ExecuteContext(t.Context()) }()
+	select {
+	case err = <-c:
+		// use err and reply
+	case <-time.After(timeout):
+		// set the error to be a timeout error
+		err = ErrTimeout
+		t.Context().Done()
+	}
 
 	w.Close()
 
@@ -40,7 +65,7 @@ func executeCommandWithContext(t *testing.T, cmd *cobra.Command, args ...string)
 	return buf.String(), err
 }
 
-func newTestLogger(buf zapcore.WriteSyncer, options ...zap.Option) *zap.SugaredLogger {
+func newMockLogger(buf zapcore.WriteSyncer, options ...zap.Option) *zap.SugaredLogger {
 	encoderCfg := zapcore.EncoderConfig{
 		MessageKey:     "msg",
 		LevelKey:       "level",

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -62,7 +63,7 @@ func Test_JSONRunE(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			cmd := NewJSONCommand()
 
-			output, err := executeCommandWithContext(t, cmd, testCase.in...)
+			output, err := executeCommandWithContext(t, cmd, 1*time.Second, testCase.in...)
 
 			if testCase.err != "" {
 				assert.ErrorContains(t, err, testCase.err)

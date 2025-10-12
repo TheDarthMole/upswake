@@ -171,8 +171,8 @@ func Test_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fileSystem = tt.args.fs
-			InitConfig(tt.args.filePath)
+			fileSystem := tt.args.fs
+			InitConfig(fileSystem, tt.args.filePath)
 			got, err := Load()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("load() error = %v, wantErr %v", err, tt.wantErr)
@@ -193,16 +193,16 @@ func Test_Load(t *testing.T) {
 	}
 
 	t.Run("config doesn't exist", func(t *testing.T) {
-		fileSystem = afero.NewMemMapFs()
-		InitConfig("non_existent_config.yaml")
+		fileSystem := afero.NewMemMapFs()
+		InitConfig(fileSystem, "non_existent_config.yaml")
 		_, err := Load()
 		assert.Error(t, err, "Expected error when config file does not exist")
 		assert.ErrorContains(t, err, "file does not exist")
 	})
 
 	t.Run("malformed yaml", func(t *testing.T) {
-		fileSystem = testFS
-		InitConfig("malformed_file.yaml")
+		fileSystem := testFS
+		InitConfig(fileSystem, "malformed_file.yaml")
 		_, err := Load()
 		assert.Error(t, err, "Expected error when config file is malformed")
 		assert.ErrorContains(t, err, "decoding failed due to the following error(s):\n\n'nut_servers[0].password' expected type 'string', got unconvertible type '[]interface {}'")
