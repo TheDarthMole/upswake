@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -27,13 +29,14 @@ var (
 	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
 )
 
-func NewServeCommand() *cobra.Command {
+func NewServeCommand(ctx context.Context) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
 		RunE:  serveCmdRunE,
 	}
+	serveCmd.SetContext(ctx)
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
 	serveCmd.Flags().BoolP("ssl", "s", false, "Enable SSL (HTTPS)")
@@ -67,13 +70,11 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
-	if err := cfg.Validate(); err != nil {
+	if err = cfg.Validate(); err != nil {
 		return fmt.Errorf("error validating config: %w", err)
 	}
 
-	ctx := context.Background()
-
-	server := api.NewServer(ctx, sugar)
+	server := api.NewServer(cmd.Context(), sugar)
 
 	rootHandler := handlers.NewRootHandler(cfg, regoFiles)
 	rootHandler.Register(server.Root())
@@ -84,21 +85,34 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
+	var wg sync.WaitGroup
+
 	for _, mapping := range cfg.NutServers {
 		for _, target := range mapping.Targets {
-			go processTarget(ctx, target, cliArgs.Address()+"/api/upswake", cliArgs.TLSConfig)
+			wg.Add(1)
+			go processTarget(cmd.Context(), &wg, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
 		}
 	}
 
-	return server.Start(
-		fmt.Sprintf("%s:%s", cliArgs.Host.String(), cliArgs.Port),
-		cmd.Flag("ssl").Value.String() == "true",
-		cmd.Flag("certFile").Value.String(),
-		cmd.Flag("keyFile").Value.String(),
+	go func() {
+		<-cmd.Context().Done()
+		wg.Wait()
+		sugar.Info("Shutting down server")
+		_ = server.Stop()
+	}()
+	err = server.Start(
+		cliArgs.ListenAddress(),
+		cliArgs.UseSSL,
+		cliArgs.CertFile,
+		cliArgs.KeyFile,
 	)
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+	return err
 }
 
-func processTarget(ctx context.Context, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+func processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	sugar.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
@@ -109,6 +123,7 @@ func processTarget(ctx context.Context, target config.TargetServer, endpoint str
 	for {
 		select {
 		case <-ctx.Done():
+			wg.Done()
 			sugar.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:

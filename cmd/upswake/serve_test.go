@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -22,12 +19,12 @@ func TestNewServeCommand(t *testing.T) {
 	}{
 		{
 			name: "NewServeCommand",
-			want: NewServeCommand(),
+			want: NewServeCommand(t.Context()),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewServeCommand()
+			got := NewServeCommand(t.Context())
 
 			var gotFlagNames []string
 			got.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -43,46 +40,6 @@ func TestNewServeCommand(t *testing.T) {
 			assert.Equal(t, tt.want.Short, got.Short)
 			assert.Equal(t, tt.want.Long, got.Long)
 			assert.ElementsMatch(t, gotFlagNames, wantFlagNames)
-		})
-	}
-}
-
-func Test_processTarget(t *testing.T) {
-	type args struct {
-		ctx       context.Context
-		target    entity.TargetServer
-		endpoint  string
-		tlsConfig *tls.Config
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			processTarget(tt.args.ctx, tt.args.target, tt.args.endpoint, tt.args.tlsConfig)
-		})
-	}
-}
-
-func Test_sendWakeRequest(t *testing.T) {
-	type args struct {
-		ctx       context.Context
-		target    entity.TargetServer
-		address   string
-		tlsConfig *tls.Config
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sendWakeRequest(tt.args.ctx, tt.args.target, tt.args.address, tt.args.tlsConfig)
 		})
 	}
 }
@@ -105,11 +62,11 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "empty config",
 			args: args{
-				cmd:  NewServeCommand(),
+				cmd:  NewServeCommand(t.Context()),
 				args: []string{"serve", "--config", "upswake.yml", "--port", "8081"},
 				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()
-					err := afero.WriteFile(fs, "upswake.yml", []byte(" "), 0o644)
+					err := afero.WriteFile(fs, "upswake.yml", []byte(""), 0o644)
 					require.NoError(t, err)
 					return fs
 				},
@@ -126,7 +83,7 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "valid config no rules",
 			args: args{
-				cmd:  NewServeCommand(),
+				cmd:  NewServeCommand(t.Context()),
 				args: []string{"serve", "--config", "upswake.yml", "--port", "8082"},
 				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()

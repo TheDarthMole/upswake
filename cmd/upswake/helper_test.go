@@ -77,3 +77,29 @@ func newMockLogger(buf zapcore.WriteSyncer, options ...zap.Option) *zap.SugaredL
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), buf, zap.DebugLevel)
 	return zap.New(core).WithOptions(options...).Sugar()
 }
+
+func getStdoutStderr(t *testing.T, a func()) string {
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+
+	beforeStderr := os.Stderr
+	beforeStdout := os.Stdout
+	defer func() {
+		os.Stderr = beforeStderr
+		os.Stdout = beforeStdout
+		w.Close()
+		r.Close()
+	}()
+
+	os.Stderr = w
+	os.Stdout = w
+
+	a()
+
+	var buf bytes.Buffer
+	w.Close()
+	_, err1 := io.Copy(&buf, r)
+	require.NoError(t, err1)
+
+	return buf.String()
+}

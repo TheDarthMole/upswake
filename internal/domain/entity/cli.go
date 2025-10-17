@@ -101,11 +101,22 @@ func (c *CLIArgs) URLPrefix() string {
 	return "http://"
 }
 
-func (c *CLIArgs) Address() string {
-	baseURL := fmt.Sprintf("%s%s:%s", c.URLPrefix(), c.Host.String(), c.Port)
+func (c *CLIArgs) address(unspecifiedAddr string) string {
+	address := fmt.Sprintf("%s:%s", c.Host.String(), c.Port)
 	if c.Host.IsUnspecified() {
-		baseURL = fmt.Sprintf("%s127.0.0.1:%s", c.URLPrefix(), c.Port)
+		address = fmt.Sprintf("%s:%s", unspecifiedAddr, c.Port)
 	}
+	return address
+}
 
-	return baseURL
+func (c *CLIArgs) Address() string {
+	return c.address("127.0.0.1")
+}
+
+func (c *CLIArgs) ListenAddress() string {
+	return c.address("[::]")
+}
+
+func (c *CLIArgs) URL() string {
+	return fmt.Sprintf("%s%s", c.URLPrefix(), c.Address())
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -20,7 +21,6 @@ using a set of Rego rules defined and the servers in the config file`
 var (
 	Version string
 	sugar   *zap.SugaredLogger
-	rootCmd = NewRootCommand()
 )
 
 func NewRootCommand() *cobra.Command {
@@ -35,7 +35,7 @@ func NewRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() int {
+func Execute(ctx context.Context) int {
 	logger, err := zap.NewProduction(zap.WithCaller(false))
 	if err != nil {
 		log.Fatalf("can't initialise zap logger: %v", err)
@@ -50,6 +50,7 @@ func Execute() int {
 		sugar.Fatal(err)
 		return 1
 	}
+	rootCmd := NewRootCommand()
 
 	wakeCmd := NewWakeCmd(bc)
 	rootCmd.AddCommand(wakeCmd)
@@ -57,10 +58,10 @@ func Execute() int {
 	jsonCmd := NewJSONCommand()
 	rootCmd.AddCommand(jsonCmd)
 
-	serveCmd := NewServeCommand()
+	serveCmd := NewServeCommand(ctx)
 	rootCmd.AddCommand(serveCmd)
 
-	err = rootCmd.Execute()
+	err = rootCmd.ExecuteContext(ctx)
 	if err != nil {
 		logger.Debug("Error executing root command: " + err.Error())
 		return 1
@@ -69,5 +70,5 @@ func Execute() int {
 }
 
 func main() {
-	os.Exit(Execute())
+	os.Exit(Execute(context.Background()))
 }
