@@ -64,6 +64,10 @@ build-container: _check-container-tool
 run-container: build-container
     CONTAINER_TAG=local {{container-tool}} compose up --force-recreate
 
+# Stops the upswake container
+stop-container: _check-container-tool
+    CONTAINER_TAG=local {{container-tool}} compose down
+
 # Runs a NUT server in a container for testing
 start-nut-server: _check-container-tool
     {{container-tool}} compose -f hack/nut/compose.yaml up --force-recreate --remove-orphans --detach
@@ -81,3 +85,9 @@ generate-certs:
     openssl req -new -x509 -key certs/ecc.key -out certs/ecc.cert \
         -subj "/CN=localhost" \
         -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+
+clean:
+    rm coverage.txt || true
+    rm upswake || true
+    rm -rf certs || true
+    go clean -testcache
