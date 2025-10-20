@@ -30,12 +30,12 @@ var (
 	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
 )
 
-type serve struct {
+type jsonCMD struct {
 	logger *zap.SugaredLogger
 }
 
 func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Command {
-	serve := &serve{logger: logger}
+	serve := &jsonCMD{logger: logger}
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
@@ -57,7 +57,7 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 	return serveCmd
 }
 
-func (serve *serve) serveCmdRunE(cmd *cobra.Command, _ []string) error {
+func (serve *jsonCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	cliArgs, err := config.NewCLIArgs(
 		fileSystem,
 		cmd.Flag("config").Value.String(),
@@ -121,7 +121,7 @@ func (serve *serve) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func (serve *serve) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+func (serve *jsonCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	serve.logger.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
@@ -142,7 +142,7 @@ func (serve *serve) processTarget(ctx context.Context, wg *sync.WaitGroup, targe
 	}
 }
 
-func (serve *serve) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
+func (serve *jsonCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
