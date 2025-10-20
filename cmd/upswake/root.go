@@ -44,7 +44,7 @@ func Execute(ctx context.Context) int {
 
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
-		sugar.Fatal(err)
+		sugar.Error(err)
 		return 1
 	}
 	rootCmd := NewRootCommand()
