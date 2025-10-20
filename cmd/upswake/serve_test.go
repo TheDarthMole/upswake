@@ -143,7 +143,7 @@ nut_servers:
 			regoFiles = tt.args.regoFS(t)
 
 			gotOutput, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
-			fmt.Println(gotOutput)
+			t.Log(gotOutput)
 
 			tt.wantErr(t, err, fmt.Sprintf("serveCmdRunE(%v)", tt.args.args))
 
