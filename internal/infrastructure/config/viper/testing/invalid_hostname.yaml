@@ -1,6 +1,6 @@
 nut_servers:
-  - name: nut_server_1
-    host: nut!.example.com
+  - name: "nut_server_1"
+    host: "nut!.example.com"
     port: 3493
-    username: upsmon
-    password: password
+    username: "upsmon"
+    password: "password"
