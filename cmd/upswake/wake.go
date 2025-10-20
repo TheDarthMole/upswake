@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
+
+var errorNoBroadcasts = fmt.Errorf("no broadcast addresses provided; supply with --broadcasts or configure defaults")
 
 type wakeCMD struct {
 	logger *zap.SugaredLogger
@@ -43,6 +46,11 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if len(broadcasts) == 0 {
+		return errorNoBroadcasts
+	}
+
+	var joined error
 	for _, broadcast := range broadcasts {
 		ts, err := entity.NewTargetServer(
 			"CLI Request",
@@ -53,14 +61,16 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			[]string{},
 		)
 		if err != nil {
-			return err
+			joined = errors.Join(joined, fmt.Errorf("invalid target for %s: %w", broadcast, err))
+			continue
 		}
 		wolClient := wol.NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
-			return fmt.Errorf("failed to wake %s: %w", mac, err)
+			joined = errors.Join(joined, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
+			continue
 		}
 		wake.logger.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
 	}
-	return nil
+	return joined
 }

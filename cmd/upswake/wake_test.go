@@ -129,6 +129,17 @@ func Test_wakeCmdRunE(t *testing.T) {
 			wantErr: assert.NoError,
 			output:  `Sent WoL packet to 127.0.0.255 to wake 00:00:00:00:00:00`,
 		},
+		{
+			name: "no broadcasts",
+			args: args{
+				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+					return NewWakeCmd(logger, []net.IP{})
+				},
+				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
+			},
+			wantErr: assert.Error,
+			output:  errorNoBroadcasts.Error(),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
