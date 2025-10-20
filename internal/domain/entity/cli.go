@@ -101,17 +101,12 @@ func (c *CLIArgs) URLPrefix() string {
 	return "http://"
 }
 
-func (c *CLIArgs) address(unspecifiedAddr string) string {
-	switch {
-	case c.Host.IsUnspecified():
-		return fmt.Sprintf("%s:%s", unspecifiedAddr, c.Port)
-	case c.Host.To4() != nil:
-		return fmt.Sprintf("%s:%s", c.Host.String(), c.Port)
-	case c.Host.To16() != nil:
-		return fmt.Sprintf("[%s]:%s", c.Host.String(), c.Port)
-	default:
-		return ""
+func (c *CLIArgs) address(unspecifiedHost string) string {
+	host := c.Host.String()
+	if c.Host.IsUnspecified() {
+		host = unspecifiedHost
 	}
+	return net.JoinHostPort(host, c.Port)
 }
 
 func (c *CLIArgs) Address() string {
@@ -119,7 +114,7 @@ func (c *CLIArgs) Address() string {
 }
 
 func (c *CLIArgs) ListenAddress() string {
-	return c.address("[::]")
+	return c.address("::")
 }
 
 func (c *CLIArgs) URL() string {
