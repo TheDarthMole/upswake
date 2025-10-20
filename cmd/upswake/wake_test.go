@@ -82,7 +82,7 @@ func TestNewWakeCmd(t *testing.T) {
 			})
 
 			var wantFlagNames []string
-			got.Flags().VisitAll(func(flag *pflag.Flag) {
+			want.Flags().VisitAll(func(flag *pflag.Flag) {
 				wantFlagNames = append(wantFlagNames, flag.Name)
 			})
 
