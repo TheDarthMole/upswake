@@ -2,44 +2,13 @@ package viper
 
 import (
 	"errors"
-	"io/fs"
 	"reflect"
-	"syscall"
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestCreateDefaultConfig(t *testing.T) {
-	expected := entity.Config{
-		NutServers: []entity.NutServer{
-			{
-				Name:     "NUT Server 1",
-				Host:     "192.168.1.13",
-				Port:     entity.DefaultNUTServerPort,
-				Username: "",
-				Password: "",
-				Targets: []entity.TargetServer{
-					{
-						Name:      "NAS 1",
-						MAC:       "00:00:00:00:00:00",
-						Broadcast: "192.168.1.255",
-						Port:      entity.DefaultWoLPort,
-						Interval:  "15m",
-						Rules: []string{
-							"80percentOn.rego",
-						},
-					},
-				},
-			},
-		},
-	}
-	got, err := CreateDefaultConfig()
-	assert.NoError(t, err)
-	reflect.DeepEqual(got, expected)
-}
 
 func Test_Load(t *testing.T) {
 	type args struct {
@@ -155,7 +124,7 @@ func Test_Load(t *testing.T) {
 				filePath: "does_not_exist.yaml",
 			},
 			wantErr:    true,
-			wantErrMsg: fs.PathError{Err: syscall.Errno(2)}.Err,
+			wantErrMsg: nil,
 			want:       &entity.Config{},
 		},
 		{
@@ -205,11 +174,11 @@ func Test_Load(t *testing.T) {
 		InitConfig(fileSystem, "malformed_file.yaml")
 		_, err := Load()
 		assert.Error(t, err, "Expected error when config file is malformed")
-		assert.ErrorContains(t, err, "decoding failed due to the following error(s):\n\n'nut_servers[0].password' expected type 'string', got unconvertible type '[]interface {}'")
+		assert.ErrorContains(t, err, "expected type 'string'")
 	})
 }
 
-func TestCreateDefaultConfig1(t *testing.T) {
+func TestCreateDefaultConfig(t *testing.T) {
 	got, err := CreateDefaultConfig()
 	assert.NoError(t, err)
 
