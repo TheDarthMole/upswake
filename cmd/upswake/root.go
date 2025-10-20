@@ -60,7 +60,7 @@ func Execute(ctx context.Context) int {
 
 	err = rootCmd.ExecuteContext(ctx)
 	if err != nil {
-		logger.Debug("Error executing root command: " + err.Error())
+		logger.Error("Error executing root command: " + err.Error())
 		return 1
 	}
 	return 0
