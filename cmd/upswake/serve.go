@@ -53,7 +53,7 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 	serveCmd.Flags().BoolP("ssl", "s", false, "Enable SSL (HTTPS)")
 	serveCmd.Flags().StringP("certFile", "c", "", "SSL Certificate file (required if SSL is enabled)")
 	serveCmd.Flags().StringP("keyFile", "k", "", "SSL Key file (required if SSL is enabled)")
-	serveCmd.PersistentFlags().String(
+	serveCmd.Flags().String(
 		"config",
 		"./config.yaml",
 		"The location of config file",
@@ -62,15 +62,18 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 }
 
 func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
-	cliArgs, err := config.NewCLIArgs(
-		fileSystem,
-		cmd.Flag("config").Value.String(),
-		cmd.Flag("ssl").Value.String() == "true",
-		cmd.Flag("certFile").Value.String(),
-		cmd.Flag("keyFile").Value.String(),
-		cmd.Flag("host").Value.String(),
-		cmd.Flag("port").Value.String(),
-	)
+	cfgPath, _ := cmd.Flags().GetString("config")
+	certFile, _ := cmd.Flags().GetString("certFile")
+	keyFile, _ := cmd.Flags().GetString("keyFile")
+	host, _ := cmd.Flags().GetString("host")
+	port, _ := cmd.Flags().GetString("port")
+	useSSL, err := cmd.Flags().GetBool("ssl")
+	if err != nil {
+		return err
+	}
+
+	cliArgs, err := config.NewCLIArgs(fileSystem, cfgPath, useSSL, certFile, keyFile, host, port)
+
 	if err != nil {
 		return err
 	}
