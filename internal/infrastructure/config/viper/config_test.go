@@ -205,8 +205,5 @@ func TestCreateDefaultConfig(t *testing.T) {
 			},
 		},
 	}
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("CreateDefaultConfig() got = %v, want %v", got, want)
-	}
+	assert.Equal(t, want, got)
 }
