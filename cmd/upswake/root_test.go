@@ -251,7 +251,6 @@ nut_servers:
 					assert.Equal(t, tt.exitCode, exitCode)
 					cancel()
 				case <-time.After(tt.timeout):
-					ctx.Done()
 					cancel()
 					wg.Wait()
 					// set the error to be a timeout error
