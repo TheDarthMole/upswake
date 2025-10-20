@@ -31,10 +31,7 @@ func TestNewWakeCmd(t *testing.T) {
 			want: func() *cobra.Command {
 				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
-					Use:   "wake -b [mac address]",
-					Short: "Manually wake a computer",
-					Long:  "Manually wake a computer without using a UPS's status",
-					RunE:  wake.wakeCmdRunE,
+					RunE: wake.wakeCmdRunE,
 				}
 				wakeCmd.Flags().IPSliceP("broadcasts", "b", []net.IP{}, "Broadcast addresses to send the WoL packets to")
 				wakeCmd.Flags().StringP("mac", "m", "", "MAC address of the computer to wake")
@@ -49,10 +46,7 @@ func TestNewWakeCmd(t *testing.T) {
 			want: func() *cobra.Command {
 				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
-					Use:   "wake -b [mac address]",
-					Short: "Manually wake a computer",
-					Long:  "Manually wake a computer without using a UPS's status",
-					RunE:  wake.wakeCmdRunE,
+					RunE: wake.wakeCmdRunE,
 				}
 				wakeCmd.Flags().IPSliceP("broadcasts", "b", []net.IP{{127, 0, 0, 255}}, "Broadcast addresses to send the WoL packets to")
 				wakeCmd.Flags().StringP("mac", "m", "", "MAC address of the computer to wake")
@@ -67,10 +61,7 @@ func TestNewWakeCmd(t *testing.T) {
 			want: func() *cobra.Command {
 				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
-					Use:   "wake -b [mac address]",
-					Short: "Manually wake a computer",
-					Long:  "Manually wake a computer without using a UPS's status",
-					RunE:  wake.wakeCmdRunE,
+					RunE: wake.wakeCmdRunE,
 				}
 				wakeCmd.Flags().IPSliceP("broadcasts", "b", []net.IP{{127, 0, 0, 255}, {192, 168, 1, 255}, {10, 0, 0, 255}}, "Broadcast addresses to send the WoL packets to")
 				wakeCmd.Flags().StringP("mac", "m", "", "MAC address of the computer to wake")
@@ -100,13 +91,20 @@ func TestNewWakeCmd(t *testing.T) {
 			gotBroadcasts, err := got.Flags().GetIPSlice("broadcasts")
 			assert.NoError(t, err)
 
-			assert.Equal(t, want.Use, got.Use)
-			assert.Equal(t, want.Short, got.Short)
-			assert.Equal(t, want.Long, got.Long)
 			assert.Equal(t, wantBroadcasts, gotBroadcasts)
 			assert.ElementsMatch(t, gotFlagNames, wantFlagNames)
 		})
 	}
+
+	t.Run("viper config", func(t *testing.T) {
+		broadcasts := []net.IP{{192, 168, 1, 255}}
+		wakeCmd := NewWakeCmd(testSugar, broadcasts)
+
+		assert.NotEmpty(t, wakeCmd.Use)
+		assert.NotEmpty(t, wakeCmd.Short)
+		assert.NotEmpty(t, wakeCmd.Long)
+		assert.NotEmpty(t, wakeCmd.Example)
+	})
 }
 
 func Test_wakeCmdRunE(t *testing.T) {

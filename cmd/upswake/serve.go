@@ -41,7 +41,11 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		RunE:  sc.serveCmdRunE,
+		Example: `  upswake serve --port 8080
+  upswake serve -p 8080 -H 192.168.1.10
+  upswake serve --port 8443 --ssl --certFile /path/to/cert.pem --keyFile /path/to/key.pem
+  upswake serve -p 8443 -s -c /path/to/cert.pem -k /path/to/key.pem`,
+		RunE: sc.serveCmdRunE,
 	}
 	serveCmd.SetContext(ctx)
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")

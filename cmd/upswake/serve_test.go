@@ -18,35 +18,24 @@ func TestNewServeCommand(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testSugar := logger.Sugar()
 
-	tests := []struct {
-		name string
-		want *cobra.Command
-	}{
-		{
-			name: "NewServeCommand",
-			want: NewServeCommand(t.Context(), testSugar),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := NewServeCommand(t.Context(), testSugar)
+	got := NewServeCommand(t.Context(), testSugar)
 
-			var gotFlagNames []string
-			got.Flags().VisitAll(func(flag *pflag.Flag) {
-				gotFlagNames = append(gotFlagNames, flag.Name)
-			})
+	var gotFlagNames []string
+	got.Flags().VisitAll(func(flag *pflag.Flag) {
+		gotFlagNames = append(gotFlagNames, flag.Name)
+	})
 
-			var wantFlagNames []string
-			got.Flags().VisitAll(func(flag *pflag.Flag) {
-				wantFlagNames = append(wantFlagNames, flag.Name)
-			})
+	var wantFlagNames []string
+	got.Flags().VisitAll(func(flag *pflag.Flag) {
+		wantFlagNames = append(wantFlagNames, flag.Name)
+	})
 
-			assert.Equal(t, tt.want.Use, got.Use)
-			assert.Equal(t, tt.want.Short, got.Short)
-			assert.Equal(t, tt.want.Long, got.Long)
-			assert.ElementsMatch(t, gotFlagNames, wantFlagNames)
-		})
-	}
+	assert.NotEmpty(t, got.Use)
+	assert.NotEmpty(t, got.Short)
+	assert.NotEmpty(t, got.Long)
+	assert.NotEmpty(t, got.Example)
+
+	assert.ElementsMatch(t, gotFlagNames, wantFlagNames)
 }
 
 func Test_serveCmdRunE(t *testing.T) {
