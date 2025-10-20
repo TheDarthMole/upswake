@@ -130,18 +130,19 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+	defer wg.Done()
 	j.logger.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
-		j.logger.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
+		j.logger.Errorf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
 		return
 	}
 	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			j.logger.Infof("[%s] Gracefully stopping worker", target.Name)
-			wg.Done()
 			return
 		case <-ticker.C:
 			j.sendWakeRequest(ctx, target, endpoint, tlsConfig)
