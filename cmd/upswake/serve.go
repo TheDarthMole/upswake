@@ -113,6 +113,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		workerWG.Wait()
 		j.logger.Info("Shutting down server")
 		_ = server.Stop()
+		shutdownWG.Done()
 	}()
 	shutdownWG.Add(1)
 	err = server.Start(
@@ -139,8 +140,8 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 	for {
 		select {
 		case <-ctx.Done():
-			wg.Done()
 			j.logger.Infof("[%s] Gracefully stopping worker", target.Name)
+			wg.Done()
 			return
 		case <-ticker.C:
 			j.sendWakeRequest(ctx, target, endpoint, tlsConfig)
