@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var errorNoBroadcasts = fmt.Errorf("no broadcast addresses provided; supply with --broadcasts or configure defaults")
+var errorNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
 
 type wakeCMD struct {
 	logger *zap.SugaredLogger

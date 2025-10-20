@@ -73,7 +73,6 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	cliArgs, err := config.NewCLIArgs(fileSystem, cfgPath, useSSL, certFile, keyFile, host, port)
-
 	if err != nil {
 		return err
 	}
