@@ -16,6 +16,7 @@ func Test_NewJSONCommand(t *testing.T) {
 		assert.Equal(t, "json", jsonCmd.Use, "json command should be 'json'")
 		assert.NotEmpty(t, jsonCmd.Short)
 		assert.NotEmpty(t, jsonCmd.Long)
+		assert.NotEmpty(t, jsonCmd.Example)
 		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("username").DefValue, "default username should be 'anonymous'")
 		assert.Equal(t, "anonymous", jsonCmd.Flags().Lookup("password").DefValue, "default password should be 'anonymous'")
 		assert.Empty(t, jsonCmd.Flags().Lookup("host").DefValue, "default host should be empty")

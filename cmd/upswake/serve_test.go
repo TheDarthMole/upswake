@@ -30,7 +30,7 @@ func TestNewServeCommand(t *testing.T) {
 		wantFlagNames = append(wantFlagNames, flag.Name)
 	})
 
-	assert.NotEmpty(t, got.Use)
+	assert.Equal(t, "serve", got.Use)
 	assert.NotEmpty(t, got.Short)
 	assert.NotEmpty(t, got.Long)
 	assert.NotEmpty(t, got.Example)

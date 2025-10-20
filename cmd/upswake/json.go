@@ -22,6 +22,8 @@ func NewJSONCommand(logger *zap.SugaredLogger) *cobra.Command {
 
 This is useful for testing the connection to a NUT server
 and for creating rego rules for waking a target`,
+		Example: `  upswake json --host 192.168.1.66 --port 3493
+  upswake json -H ups.example.com -P 3493 -u myuser -p mypass`,
 		RunE: jc.JSONRunE,
 	}
 	setupJSONFlags(cmd)

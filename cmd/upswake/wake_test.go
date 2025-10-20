@@ -100,7 +100,7 @@ func TestNewWakeCmd(t *testing.T) {
 		broadcasts := []net.IP{{192, 168, 1, 255}}
 		wakeCmd := NewWakeCmd(testSugar, broadcasts)
 
-		assert.NotEmpty(t, wakeCmd.Use)
+		assert.Equal(t, "wake", wakeCmd.Use)
 		assert.NotEmpty(t, wakeCmd.Short)
 		assert.NotEmpty(t, wakeCmd.Long)
 		assert.NotEmpty(t, wakeCmd.Example)
