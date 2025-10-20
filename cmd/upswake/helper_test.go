@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -51,16 +52,20 @@ func executeCommandWithContext(t *testing.T, cmdFunc func(_ *zap.SugaredLogger) 
 	cmd.SetArgs(args)
 	os.Stderr = w
 
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
+
 	// setup timeout for commands that can run indefinitely
 	c := make(chan error, 1)
-	go func() { c <- cmd.ExecuteContext(t.Context()) }()
+	go func() { c <- cmd.ExecuteContext(ctx) }()
 	select {
 	case err = <-c:
 		// use err and reply
 	case <-time.After(timeout):
 		// set the error to be a timeout error
 		err = ErrTimeout
-		t.Context().Done()
+		cancel()
 	}
 
 	w.Close()
