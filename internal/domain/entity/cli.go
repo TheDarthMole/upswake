@@ -102,11 +102,16 @@ func (c *CLIArgs) URLPrefix() string {
 }
 
 func (c *CLIArgs) address(unspecifiedAddr string) string {
-	address := fmt.Sprintf("%s:%s", c.Host.String(), c.Port)
-	if c.Host.IsUnspecified() {
-		address = fmt.Sprintf("%s:%s", unspecifiedAddr, c.Port)
+	switch {
+	case c.Host.IsUnspecified():
+		return fmt.Sprintf("%s:%s", unspecifiedAddr, c.Port)
+	case c.Host.To4() != nil:
+		return fmt.Sprintf("%s:%s", c.Host.String(), c.Port)
+	case c.Host.To16() != nil:
+		return fmt.Sprintf("[%s]:%s", c.Host.String(), c.Port)
+	default:
+		return ""
 	}
-	return address
 }
 
 func (c *CLIArgs) Address() string {

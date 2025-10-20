@@ -243,6 +243,24 @@ func TestCLIArgs_ListenAddress(t *testing.T) {
 			},
 			want: "[::]:8080",
 		},
+		{
+			name: "HTTPS Port 8443 on 2001:db8::1",
+			fields: fields{
+				Host:   net.ParseIP("2001:db8::1"),
+				Port:   "8443",
+				UseSSL: true,
+			},
+			want: "[2001:db8::1]:8443",
+		},
+		{
+			name: "HTTP Port 8080 on 2001:db8::1",
+			fields: fields{
+				Host:   net.ParseIP("2001:db8::1"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "[2001:db8::1]:8080",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
