@@ -30,18 +30,18 @@ var (
 	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
 )
 
-type jsonCMD struct {
+type serveCMD struct {
 	logger *zap.SugaredLogger
 }
 
 func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Command {
-	serve := &jsonCMD{logger: logger}
+	sc := &serveCMD{logger: logger}
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		RunE:  serve.serveCmdRunE,
+		RunE:  sc.serveCmdRunE,
 	}
 	serveCmd.SetContext(ctx)
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
@@ -57,7 +57,7 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 	return serveCmd
 }
 
-func (serve *jsonCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
+func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	cliArgs, err := config.NewCLIArgs(
 		fileSystem,
 		cmd.Flag("config").Value.String(),
@@ -81,7 +81,7 @@ func (serve *jsonCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("error validating config: %w", err)
 	}
 
-	server := api.NewServer(cmd.Context(), serve.logger)
+	server := api.NewServer(cmd.Context(), j.logger)
 
 	rootHandler := handlers.NewRootHandler(cfg, regoFiles)
 	rootHandler.Register(server.Root())
@@ -97,14 +97,14 @@ func (serve *jsonCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	for _, mapping := range cfg.NutServers {
 		for _, target := range mapping.Targets {
 			workerWG.Add(1)
-			go serve.processTarget(cmd.Context(), &workerWG, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
+			go j.processTarget(cmd.Context(), &workerWG, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
 		}
 	}
 	var shutdownWG sync.WaitGroup
 	go func() {
 		<-cmd.Context().Done()
 		workerWG.Wait()
-		serve.logger.Info("Shutting down server")
+		j.logger.Info("Shutting down server")
 		_ = server.Stop()
 	}()
 	shutdownWG.Add(1)
@@ -121,11 +121,11 @@ func (serve *jsonCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func (serve *jsonCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
-	serve.logger.Infof("[%s] Starting worker", target.Name)
+func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+	j.logger.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
-		serve.logger.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
+		j.logger.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
 		return
 	}
 	ticker := time.NewTicker(interval)
@@ -133,25 +133,25 @@ func (serve *jsonCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, tar
 		select {
 		case <-ctx.Done():
 			wg.Done()
-			serve.logger.Infof("[%s] Gracefully stopping worker", target.Name)
+			j.logger.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			serve.sendWakeRequest(ctx, target, endpoint, tlsConfig)
+			j.sendWakeRequest(ctx, target, endpoint, tlsConfig)
 			ticker.Reset(interval)
 		}
 	}
 }
 
-func (serve *jsonCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
+func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
-		serve.logger.Errorf("Error creating post request: %s", err)
+		j.logger.Errorf("Error creating post request: %s", err)
 	}
 	r.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
-		serve.logger.Fatalf("Error creating TLS configuration: %v", err)
+		j.logger.Fatalf("Error creating TLS configuration: %v", err)
 	}
 	client := &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
@@ -159,19 +159,19 @@ func (serve *jsonCMD) sendWakeRequest(ctx context.Context, target config.TargetS
 	}
 	resp, err := client.Do(r)
 	if err != nil {
-		serve.logger.Errorf("Error sending post request: %s", err)
+		j.logger.Errorf("Error sending post request: %s", err)
 		return
 	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			serve.logger.Errorf("Error closing response body: %s", err)
+			j.logger.Errorf("Error closing response body: %s", err)
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		serve.logger.Errorf("Error sending post request: %s", resp.Status)
+		j.logger.Errorf("Error sending post request: %s", resp.Status)
 		return
 	}
 }

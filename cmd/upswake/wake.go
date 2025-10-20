@@ -15,12 +15,12 @@ type wakeCMD struct {
 }
 
 func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
-	wake := &wakeCMD{logger: logger}
+	wc := &wakeCMD{logger: logger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake -b [mac address]",
 		Short: "Manually wake a computer",
 		Long:  `Manually wake a computer without using a UPS's status`,
-		RunE:  wake.wakeCmdRunE,
+		RunE:  wc.wakeCmdRunE,
 	}
 
 	wakeCmd.Flags().IPSliceP("broadcasts", "b", broadcasts, "Broadcast addresses to send the WoL packets to")

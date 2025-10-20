@@ -9,12 +9,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type json struct {
+type jsonCMD struct {
 	logger *zap.SugaredLogger
 }
 
 func NewJSONCommand(logger *zap.SugaredLogger) *cobra.Command {
-	json := &json{logger: logger}
+	jc := &jsonCMD{logger: logger}
 	cmd := &cobra.Command{
 		Use:   "json",
 		Short: "Retrieve JSON from a NUT server",
@@ -22,13 +22,13 @@ func NewJSONCommand(logger *zap.SugaredLogger) *cobra.Command {
 
 This is useful for testing the connection to a NUT server
 and for creating rego rules for waking a target`,
-		RunE: json.JSONRunE,
+		RunE: jc.JSONRunE,
 	}
 	setupJSONFlags(cmd)
 	return cmd
 }
 
-func (json *json) JSONRunE(cmd *cobra.Command, _ []string) error {
+func (json *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
 		json.logger.Errorf("could not get port: %s", err)
