@@ -7,14 +7,20 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
-func NewWakeCmd(broadcasts []net.IP) *cobra.Command {
+type wake struct {
+	logger *zap.SugaredLogger
+}
+
+func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
+	wake := &wake{logger: logger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake -b [mac address]",
 		Short: "Manually wake a computer",
 		Long:  `Manually wake a computer without using a UPS's status`,
-		RunE:  wakeCmdRunE,
+		RunE:  wake.wakeCmdRunE,
 	}
 
 	wakeCmd.Flags().IPSliceP("broadcasts", "b", broadcasts, "Broadcast addresses to send the WoL packets to")
@@ -24,7 +30,7 @@ func NewWakeCmd(broadcasts []net.IP) *cobra.Command {
 	return wakeCmd
 }
 
-func wakeCmdRunE(cmd *cobra.Command, _ []string) error {
+func (wake *wake) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 	mac, err := cmd.Flags().GetString("mac")
 	if err != nil {
 		return err
@@ -52,7 +58,7 @@ func wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 		if err = wolClient.Wake(); err != nil {
 			return fmt.Errorf("failed to wake %s: %w", mac, err)
 		}
-		sugar.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
+		wake.logger.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
 	}
 	return nil
 }

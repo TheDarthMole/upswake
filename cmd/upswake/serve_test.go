@@ -10,21 +10,26 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 )
 
 func TestNewServeCommand(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+	testSugar := logger.Sugar()
+
 	tests := []struct {
 		name string
 		want *cobra.Command
 	}{
 		{
 			name: "NewServeCommand",
-			want: NewServeCommand(t.Context()),
+			want: NewServeCommand(t.Context(), testSugar),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewServeCommand(t.Context())
+			got := NewServeCommand(t.Context(), testSugar)
 
 			var gotFlagNames []string
 			got.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -46,10 +51,10 @@ func TestNewServeCommand(t *testing.T) {
 
 func Test_serveCmdRunE(t *testing.T) {
 	type args struct {
-		cmd    *cobra.Command
-		args   []string
-		fs     func(t2 *testing.T) afero.Fs
-		regoFS func(t2 *testing.T) afero.Fs
+		cmdFunc func(_ *zap.SugaredLogger) *cobra.Command
+		args    []string
+		fs      func(t2 *testing.T) afero.Fs
+		regoFS  func(t2 *testing.T) afero.Fs
 	}
 	tests := []struct {
 		name           string
@@ -62,7 +67,9 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "empty config",
 			args: args{
-				cmd:  NewServeCommand(t.Context()),
+				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+					return NewServeCommand(t.Context(), logger)
+				},
 				args: []string{"serve", "--config", "upswake.yml", "--port", "8081"},
 				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()
@@ -83,7 +90,9 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "valid config no rules",
 			args: args{
-				cmd:  NewServeCommand(t.Context()),
+				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+					return NewServeCommand(t.Context(), logger)
+				},
 				args: []string{"serve", "--config", "upswake.yml", "--port", "8082"},
 				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()
@@ -115,7 +124,9 @@ nut_servers:
 			err:     ErrTimeout.Error(), // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
 				"http server started on [::]:8082",
-				`"status":200,`,
+				`"status":200`,
+				`{"level":"info","ts":`,
+				`"msg":"REQUEST","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200}`,
 			},
 			notWantOutputs: []string{
 				`"level":"ERROR"`,
@@ -131,10 +142,10 @@ nut_servers:
 			fileSystem = tt.args.fs(t)
 			regoFiles = tt.args.regoFS(t)
 
-			gotOutput, err := executeCommandWithContext(t, tt.args.cmd, 1*time.Second, tt.args.args...)
+			gotOutput, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
 			fmt.Println(gotOutput)
 
-			tt.wantErr(t, err, fmt.Sprintf("serveCmdRunE(%v, %v)", tt.args.cmd, tt.args.args))
+			tt.wantErr(t, err, fmt.Sprintf("serveCmdRunE(%v)", tt.args.args))
 
 			if tt.err != "" {
 				assert.ErrorContains(t, err, tt.err)

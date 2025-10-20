@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Server struct {
@@ -39,7 +40,37 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app := echo.New()
 	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
-	app.Use(middleware.Logger())
+	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogStatus:   true,
+		LogURI:      true,
+		LogError:    true,
+		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			if v.Error == nil {
+				s.Logw(zapcore.InfoLevel,
+					"REQUEST",
+					"remote_ip", c.RealIP(),
+					"host", c.Request().Host,
+					"method", c.Request().Method,
+					"uri", v.URI,
+					"user_agent", c.Request().UserAgent(),
+					"status", v.Status,
+				)
+			} else {
+				s.Logw(zapcore.ErrorLevel,
+					"REQUEST_ERROR",
+					"remote_ip", c.RealIP(),
+					"host", c.Request().Host,
+					"method", c.Request().Method,
+					"uri", v.URI,
+					"user_agent", c.Request().UserAgent(),
+					"status", v.Status,
+					"error", v.Error.Error(),
+				)
+			}
+			return nil
+		},
+	}))
 
 	return &Server{
 		ctx:   ctx,

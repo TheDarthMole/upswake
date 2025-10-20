@@ -18,10 +18,7 @@ It uses the status of a UPS to determine which servers to wake
 using a set of Rego rules defined and the servers in the config file`
 )
 
-var (
-	Version string
-	sugar   *zap.SugaredLogger
-)
+var Version string
 
 func NewRootCommand() *cobra.Command {
 	// represents the base command when called without any subcommands
@@ -43,7 +40,7 @@ func Execute(ctx context.Context) int {
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
-	sugar = logger.Sugar()
+	sugar := logger.Sugar()
 
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
@@ -52,13 +49,13 @@ func Execute(ctx context.Context) int {
 	}
 	rootCmd := NewRootCommand()
 
-	wakeCmd := NewWakeCmd(bc)
+	wakeCmd := NewWakeCmd(sugar, bc)
 	rootCmd.AddCommand(wakeCmd)
 
-	jsonCmd := NewJSONCommand()
+	jsonCmd := NewJSONCommand(sugar)
 	rootCmd.AddCommand(jsonCmd)
 
-	serveCmd := NewServeCommand(ctx)
+	serveCmd := NewServeCommand(ctx, sugar)
 	rootCmd.AddCommand(serveCmd)
 
 	err = rootCmd.ExecuteContext(ctx)

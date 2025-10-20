@@ -17,6 +17,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 const (
@@ -29,12 +30,18 @@ var (
 	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
 )
 
-func NewServeCommand(ctx context.Context) *cobra.Command {
+type serve struct {
+	logger *zap.SugaredLogger
+}
+
+func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Command {
+	serve := &serve{logger: logger}
+
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the UPSWake server",
 		Long:  `Run the UPSWake server and API on the specified port`,
-		RunE:  serveCmdRunE,
+		RunE:  serve.serveCmdRunE,
 	}
 	serveCmd.SetContext(ctx)
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
@@ -50,7 +57,7 @@ func NewServeCommand(ctx context.Context) *cobra.Command {
 	return serveCmd
 }
 
-func serveCmdRunE(cmd *cobra.Command, _ []string) error {
+func (serve *serve) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	cliArgs, err := config.NewCLIArgs(
 		fileSystem,
 		cmd.Flag("config").Value.String(),
@@ -74,7 +81,7 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("error validating config: %w", err)
 	}
 
-	server := api.NewServer(cmd.Context(), sugar)
+	server := api.NewServer(cmd.Context(), serve.logger)
 
 	rootHandler := handlers.NewRootHandler(cfg, regoFiles)
 	rootHandler.Register(server.Root())
@@ -85,21 +92,22 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
-	var wg sync.WaitGroup
+	var workerWG sync.WaitGroup
 
 	for _, mapping := range cfg.NutServers {
 		for _, target := range mapping.Targets {
-			wg.Add(1)
-			go processTarget(cmd.Context(), &wg, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
+			workerWG.Add(1)
+			go serve.processTarget(cmd.Context(), &workerWG, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
 		}
 	}
-
+	var shutdownWG sync.WaitGroup
 	go func() {
 		<-cmd.Context().Done()
-		wg.Wait()
-		sugar.Info("Shutting down server")
+		workerWG.Wait()
+		serve.logger.Info("Shutting down server")
 		_ = server.Stop()
 	}()
+	shutdownWG.Add(1)
 	err = server.Start(
 		cliArgs.ListenAddress(),
 		cliArgs.UseSSL,
@@ -109,14 +117,15 @@ func serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
+	shutdownWG.Wait()
 	return err
 }
 
-func processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
-	sugar.Infof("[%s] Starting worker", target.Name)
+func (serve *serve) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+	serve.logger.Infof("[%s] Starting worker", target.Name)
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
-		sugar.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
+		serve.logger.Fatalf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
 		return
 	}
 	ticker := time.NewTicker(interval)
@@ -124,25 +133,25 @@ func processTarget(ctx context.Context, wg *sync.WaitGroup, target config.Target
 		select {
 		case <-ctx.Done():
 			wg.Done()
-			sugar.Infof("[%s] Gracefully stopping worker", target.Name)
+			serve.logger.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			sendWakeRequest(ctx, target, endpoint, tlsConfig)
+			serve.sendWakeRequest(ctx, target, endpoint, tlsConfig)
 			ticker.Reset(interval)
 		}
 	}
 }
 
-func sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
+func (serve *serve) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
 	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
-		sugar.Errorf("Error creating post request: %s", err)
+		serve.logger.Errorf("Error creating post request: %s", err)
 	}
 	r.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
-		sugar.Fatalf("Error creating TLS configuration: %v", err)
+		serve.logger.Fatalf("Error creating TLS configuration: %v", err)
 	}
 	client := &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
@@ -150,19 +159,19 @@ func sendWakeRequest(ctx context.Context, target config.TargetServer, address st
 	}
 	resp, err := client.Do(r)
 	if err != nil {
-		sugar.Errorf("Error sending post request: %s", err)
+		serve.logger.Errorf("Error sending post request: %s", err)
 		return
 	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			sugar.Errorf("Error closing response body: %s", err)
+			serve.logger.Errorf("Error closing response body: %s", err)
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		sugar.Errorf("Error sending post request: %s", resp.Status)
+		serve.logger.Errorf("Error sending post request: %s", resp.Status)
 		return
 	}
 }

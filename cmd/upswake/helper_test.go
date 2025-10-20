@@ -16,17 +16,20 @@ import (
 
 var ErrTimeout = errors.New("timeout")
 
-func executeCommandWithContext(t *testing.T, cmd *cobra.Command, timeout time.Duration, args ...string) (output string, err error) {
+func NewTestLogger(pipeTo io.Writer) *zap.Logger {
+	return zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zap.CombineWriteSyncers(zapcore.AddSync(pipeTo)),
+		zapcore.InfoLevel,
+	))
+}
+
+func executeCommandWithContext(t *testing.T, cmdFunc func(_ *zap.SugaredLogger) *cobra.Command, timeout time.Duration, args ...string) (output string, err error) {
 	var buf bytes.Buffer
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 	defer r.Close()
 	defer w.Close()
-
-	beforeSugar := sugar
-	defer func() {
-		sugar = beforeSugar
-	}()
 
 	beforeStderr := os.Stderr
 	beforeStdout := os.Stdout
@@ -38,7 +41,10 @@ func executeCommandWithContext(t *testing.T, cmd *cobra.Command, timeout time.Du
 	os.Stderr = w
 	os.Stdout = w
 
-	sugar = newMockLogger(w)
+	logger := NewTestLogger(w)
+	sugar := logger.Sugar()
+
+	cmd := cmdFunc(sugar)
 
 	cmd.SetOut(w)
 	cmd.SetErr(w)
@@ -63,19 +69,6 @@ func executeCommandWithContext(t *testing.T, cmd *cobra.Command, timeout time.Du
 	require.NoError(t, err1)
 
 	return buf.String(), err
-}
-
-func newMockLogger(buf zapcore.WriteSyncer, options ...zap.Option) *zap.SugaredLogger {
-	encoderCfg := zapcore.EncoderConfig{
-		MessageKey:     "msg",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.StringDurationEncoder,
-	}
-	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), buf, zap.DebugLevel)
-	return zap.New(core).WithOptions(options...).Sugar()
 }
 
 func getStdoutStderr(t *testing.T, a func()) string {

@@ -6,9 +6,15 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
-func NewJSONCommand() *cobra.Command {
+type json struct {
+	logger *zap.SugaredLogger
+}
+
+func NewJSONCommand(logger *zap.SugaredLogger) *cobra.Command {
+	json := &json{logger: logger}
 	cmd := &cobra.Command{
 		Use:   "json",
 		Short: "Retrieve JSON from a NUT server",
@@ -16,16 +22,16 @@ func NewJSONCommand() *cobra.Command {
 
 This is useful for testing the connection to a NUT server
 and for creating rego rules for waking a target`,
-		RunE: JSONRunE,
+		RunE: json.JSONRunE,
 	}
 	setupJSONFlags(cmd)
 	return cmd
 }
 
-func JSONRunE(cmd *cobra.Command, _ []string) error {
+func (json *json) JSONRunE(cmd *cobra.Command, _ []string) error {
 	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
-		sugar.Errorf("could not get port: %s", err)
+		json.logger.Errorf("could not get port: %s", err)
 		return err
 	}
 	nutServer := entity.NutServer{
@@ -38,7 +44,7 @@ func JSONRunE(cmd *cobra.Command, _ []string) error {
 
 	upsData, err := ups.GetJSON(&nutServer)
 	if err != nil {
-		sugar.Errorf("failed to get JSON: %s", err)
+		json.logger.Errorf("failed to get JSON: %s", err)
 		return err
 	}
 	fmt.Println(upsData)

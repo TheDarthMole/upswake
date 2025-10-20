@@ -1,25 +1,18 @@
 package main
 
 import (
-	"log"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 )
-
-func init() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("can't initialise zap logger: %v", err)
-	}
-	sugar = logger.Sugar()
-}
 
 func Test_NewJSONCommand(t *testing.T) {
 	t.Run("json command", func(t *testing.T) {
-		jsonCmd := NewJSONCommand()
+		logger := zaptest.NewLogger(t)
+		sugar := logger.Sugar()
+		jsonCmd := NewJSONCommand(sugar)
 		assert.Equal(t, "json", jsonCmd.Use, "json command should be 'json'")
 		assert.Equal(t, "Retrieve JSON from a NUT server", jsonCmd.Short, "json command short description mismatch")
 		assert.Contains(t, jsonCmd.Long, "Retrieve JSON from a NUT server and print it to stdout", "json command long description mismatch")
@@ -61,9 +54,7 @@ func Test_JSONRunE(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			cmd := NewJSONCommand()
-
-			output, err := executeCommandWithContext(t, cmd, 1*time.Second, testCase.in...)
+			output, err := executeCommandWithContext(t, NewJSONCommand, 1*time.Second, testCase.in...)
 
 			if testCase.err != "" {
 				assert.ErrorContains(t, err, testCase.err)
