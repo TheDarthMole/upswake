@@ -29,7 +29,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "empty broadcasts",
 			args: args{broadcasts: []net.IP{}},
 			want: func() *cobra.Command {
-				wake := wake{logger: testSugar}
+				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
 					Use:   "wake -b [mac address]",
 					Short: "Manually wake a computer",
@@ -47,7 +47,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "one broadcasts",
 			args: args{broadcasts: []net.IP{{127, 0, 0, 255}}},
 			want: func() *cobra.Command {
-				wake := wake{logger: testSugar}
+				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
 					Use:   "wake -b [mac address]",
 					Short: "Manually wake a computer",
@@ -65,7 +65,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "multiple broadcasts",
 			args: args{broadcasts: []net.IP{{127, 0, 0, 255}, {192, 168, 1, 255}, {10, 0, 0, 255}}},
 			want: func() *cobra.Command {
-				wake := wake{logger: testSugar}
+				wake := wakeCMD{logger: testSugar}
 				wakeCmd := &cobra.Command{
 					Use:   "wake -b [mac address]",
 					Short: "Manually wake a computer",

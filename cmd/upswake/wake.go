@@ -10,12 +10,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type wake struct {
+type wakeCMD struct {
 	logger *zap.SugaredLogger
 }
 
 func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
-	wake := &wake{logger: logger}
+	wake := &wakeCMD{logger: logger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake -b [mac address]",
 		Short: "Manually wake a computer",
@@ -30,7 +30,7 @@ func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
 	return wakeCmd
 }
 
-func (wake *wake) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
+func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 	mac, err := cmd.Flags().GetString("mac")
 	if err != nil {
 		return err
