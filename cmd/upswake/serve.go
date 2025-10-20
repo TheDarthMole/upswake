@@ -156,12 +156,10 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
 		j.logger.Errorf("Error creating post request: %s", err)
+		return
 	}
 	r.Header.Set("Content-Type", "application/json")
 
-	if err != nil {
-		j.logger.Fatalf("Error creating TLS configuration: %v", err)
-	}
 	client := &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
