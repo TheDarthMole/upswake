@@ -28,10 +28,10 @@ and for creating rego rules for waking a target`,
 	return cmd
 }
 
-func (json *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
+func (j *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
-		json.logger.Errorf("could not get port: %s", err)
+		j.logger.Errorf("could not get port: %s", err)
 		return err
 	}
 	nutServer := entity.NutServer{
@@ -44,7 +44,7 @@ func (json *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 
 	upsData, err := ups.GetJSON(&nutServer)
 	if err != nil {
-		json.logger.Errorf("failed to get JSON: %s", err)
+		j.logger.Errorf("failed to get JSON: %s", err)
 		return err
 	}
 	fmt.Println(upsData)
