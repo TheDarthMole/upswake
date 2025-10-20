@@ -55,12 +55,14 @@ func InitConfig(fs afero.Fs, cfgPath string) {
 	//  		return
 	// 	  }
 	//  })
-	viper.WatchConfig()
+	if ok, _ := afero.Exists(fs, configFilePath); ok {
+		viper.WatchConfig()
+	}
 }
 
 func Load() (*entity.Config, error) {
 	if err := viper.ReadInConfig(); err != nil {
-		// Config file was found but another error was produced
+		// Return on any read error (including file not found or decode errors)
 		return &entity.Config{}, err
 	}
 
@@ -77,6 +79,6 @@ func Load() (*entity.Config, error) {
 	return &config, nil
 }
 
-func CreateDefaultConfig() (*entity.Config, error) {
-	return fromFileConfig(&DefaultConfig), nil
+func CreateDefaultConfig() *entity.Config {
+	return fromFileConfig(&DefaultConfig)
 }

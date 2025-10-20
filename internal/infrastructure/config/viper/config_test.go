@@ -179,8 +179,7 @@ func Test_Load(t *testing.T) {
 }
 
 func TestCreateDefaultConfig(t *testing.T) {
-	got, err := CreateDefaultConfig()
-	assert.NoError(t, err)
+	got := CreateDefaultConfig()
 
 	want := &entity.Config{
 		NutServers: []entity.NutServer{
