@@ -164,6 +164,11 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
 	}
 	resp, err := client.Do(r)
+
+	if errors.Is(err, context.Canceled) {
+		j.logger.Infof("[%s] Stopping wake request, context cancelled", target.Name)
+		return
+	}
 	if err != nil {
 		j.logger.Errorf("Error sending post request: %s", err)
 		return
