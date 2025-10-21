@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -129,7 +130,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	cancel()
 	wg.Wait()
-	if err != nil && errors.Is(err, http.ErrServerClosed) {
+	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
 	return err
@@ -145,31 +146,32 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
+
+	client := &http.Client{
+		Timeout:   time.Duration(30) * time.Second,
+		Transport: &http.Transport{TLSClientConfig: tlsConfig},
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			j.logger.Infof("[%s] Gracefully stopping worker", target.Name)
 			return
 		case <-ticker.C:
-			j.sendWakeRequest(ctx, target, endpoint, tlsConfig)
-			ticker.Reset(interval)
+			j.sendWakeRequest(ctx, target, endpoint, client)
 		}
 	}
 }
 
-func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, tlsConfig *tls.Config) {
-	body := []byte(`{"mac":"` + target.MAC + `"}`) // target.Mac is validated in the config
+func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, client *http.Client) {
+	body, _ := json.Marshal(map[string]string{"mac": target.MAC})
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
-		j.logger.Errorf("Error creating post request: %s", err)
+		j.logger.Errorf("[%s] Error creating post request: %s", target.Name, err)
 		return
 	}
 	r.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{
-		Timeout:   time.Duration(30) * time.Second,
-		Transport: &http.Transport{TLSClientConfig: tlsConfig},
-	}
 	resp, err := client.Do(r)
 
 	if errors.Is(err, context.Canceled) {
@@ -177,19 +179,19 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 		return
 	}
 	if err != nil {
-		j.logger.Errorf("Error sending post request: %s", err)
+		j.logger.Errorf("[%s] Error sending post request: %s", target.Name, err)
 		return
 	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			j.logger.Errorf("Error closing response body: %s", err)
+			j.logger.Errorf("[%s] Error closing response body: %s", target.Name, err)
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		j.logger.Errorf("Error sending post request: %s", resp.Status)
+		j.logger.Errorf("[%s] Error sending post request: %s", target.Name, resp.Status)
 		return
 	}
 }
