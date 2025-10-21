@@ -164,7 +164,11 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 }
 
 func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, client *http.Client) {
-	body, _ := json.Marshal(map[string]string{"mac": target.MAC})
+	body, err := json.Marshal(map[string]string{"mac": target.MAC})
+	if err != nil {
+		j.logger.Errorf("[%s] Error marshalling JSON: %s", target.Name, err)
+		return
+	}
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
 		j.logger.Errorf("[%s] Error creating post request: %s", target.Name, err)
