@@ -115,8 +115,8 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		defer wg.Done()
 		<-ctx.Done()
 		j.logger.Info("Shutting down server")
-		if err := server.Stop(); err != nil {
-			j.logger.Warnf("Error stopping server: %v", err)
+		if err1 := server.Stop(); err1 != nil {
+			j.logger.Warnf("Error stopping server: %v", err1)
 		}
 	}(ctx, &wg)
 
