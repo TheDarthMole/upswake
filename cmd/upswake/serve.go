@@ -62,6 +62,10 @@ func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Comm
 }
 
 func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
+	cmd.SetContext(ctx)
+
 	cfgPath, _ := cmd.Flags().GetString("config")
 	certFile, _ := cmd.Flags().GetString("certFile")
 	keyFile, _ := cmd.Flags().GetString("keyFile")
@@ -98,23 +102,23 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
-	var workerWG sync.WaitGroup
+	var wg sync.WaitGroup
 
 	for _, mapping := range cfg.NutServers {
 		for _, target := range mapping.Targets {
-			workerWG.Add(1)
-			go j.processTarget(cmd.Context(), &workerWG, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
+			wg.Add(1)
+			go j.processTarget(cmd.Context(), &wg, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
 		}
 	}
-	var shutdownWG sync.WaitGroup
-	shutdownWG.Add(1)
-	go func() {
-		defer shutdownWG.Done()
-		<-cmd.Context().Done()
-		workerWG.Wait()
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
+		<-ctx.Done()
 		j.logger.Info("Shutting down server")
-		_ = server.Stop()
-	}()
+		if err := server.Stop(); err != nil {
+			j.logger.Warnf("Error stopping server: %v", err)
+		}
+	}(ctx, &wg)
 
 	err = server.Start(
 		cliArgs.ListenAddress(),
@@ -122,8 +126,10 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		cliArgs.CertFile,
 		cliArgs.KeyFile,
 	)
-	shutdownWG.Wait()
-	if errors.Is(err, http.ErrServerClosed) {
+
+	cancel()
+	wg.Wait()
+	if err != nil && errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
 	return err
