@@ -107,24 +107,25 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		}
 	}
 	var shutdownWG sync.WaitGroup
+	shutdownWG.Add(1)
 	go func() {
+		defer shutdownWG.Done()
 		<-cmd.Context().Done()
 		workerWG.Wait()
 		j.logger.Info("Shutting down server")
 		_ = server.Stop()
-		shutdownWG.Done()
 	}()
-	shutdownWG.Add(1)
+
 	err = server.Start(
 		cliArgs.ListenAddress(),
 		cliArgs.UseSSL,
 		cliArgs.CertFile,
 		cliArgs.KeyFile,
 	)
+	shutdownWG.Wait()
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
-	shutdownWG.Wait()
 	return err
 }
 
