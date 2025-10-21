@@ -210,7 +210,7 @@ nut_servers:
 				"http server started on",
 				"Gracefully stopping worker",
 			},
-			notWantOutput: []string{"ERROR", "Error"},
+			notWantOutput: []string{"ERROR", "error"},
 		},
 		{
 			name: "non-existent command help",
