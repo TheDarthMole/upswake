@@ -1,14 +1,14 @@
 nut_servers:
-  - name: nut_server_1
-    host: 192.168.1.133
+  - name: "nut_server_1"
+    host: "192.168.1.133"
     port: 3493
-    username: upsmon
+    username: "upsmon"
     password: ["secret"] # should be a string, not a list
     targets:
-      - name: nas_1
+      - name: "nas_1"
         mac: "00:11:22:33:44:55"
-        broadcast: 192.168.1.255
+        broadcast: "192.168.1.255"
         port: 9
-        interval: 5m
+        interval: "5m"
         rules:
-          - 80percentOn.rego
+          - "80percentOn.rego"

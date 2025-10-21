@@ -86,7 +86,7 @@ func genEcdsaCertAndKey(t *testing.T) ([]byte, []byte) {
 	return ecdsaKeyPEM, ecdsaCertPEM
 }
 
-func TestCLIArgs_Address(t *testing.T) {
+func TestCLIArgs_URL(t *testing.T) {
 	type fields struct {
 		ConfigFile string
 		UseSSL     bool
@@ -167,8 +167,114 @@ func TestCLIArgs_Address(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.Address(); got != tt.want {
-				t.Errorf("Address() = %v, want %v", got, tt.want)
+			if got := c.URL(); got != tt.want {
+				t.Errorf("URL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIArgs_ListenAddress(t *testing.T) {
+	type fields struct {
+		ConfigFile string
+		UseSSL     bool
+		CertFile   string
+		KeyFile    string
+		Host       net.IP
+		Port       string
+		TLSConfig  *tls.Config
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "Port 8080 on 127.0.0.1",
+			fields: fields{
+				Host:   net.ParseIP("127.0.0.1"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "127.0.0.1:8080",
+		},
+		{
+			name: "Port 8443 on 127.0.0.1",
+			fields: fields{
+				Host:   net.ParseIP("127.0.0.1"),
+				Port:   "8443",
+				UseSSL: true,
+			},
+			want: "127.0.0.1:8443",
+		},
+		{
+			name: "Port 8443 on 1.2.3.4",
+			fields: fields{
+				Host:   net.ParseIP("1.2.3.4"),
+				Port:   "8443",
+				UseSSL: true,
+			},
+			want: "1.2.3.4:8443",
+		},
+		{
+			name: "Port 8080 on 1.2.3.4",
+			fields: fields{
+				Host:   net.ParseIP("1.2.3.4"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "1.2.3.4:8080",
+		},
+		{
+			name: "Port 8080 on 0.0.0.0",
+			fields: fields{
+				Host:   net.ParseIP("0.0.0.0"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "[::]:8080",
+		},
+		{
+			name: "Port 8080 on ::",
+			fields: fields{
+				Host:   net.ParseIP("::"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "[::]:8080",
+		},
+		{
+			name: "HTTPS Port 8443 on 2001:db8::1",
+			fields: fields{
+				Host:   net.ParseIP("2001:db8::1"),
+				Port:   "8443",
+				UseSSL: true,
+			},
+			want: "[2001:db8::1]:8443",
+		},
+		{
+			name: "HTTP Port 8080 on 2001:db8::1",
+			fields: fields{
+				Host:   net.ParseIP("2001:db8::1"),
+				Port:   "8080",
+				UseSSL: false,
+			},
+			want: "[2001:db8::1]:8080",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &CLIArgs{
+				ConfigFile: tt.fields.ConfigFile,
+				UseSSL:     tt.fields.UseSSL,
+				CertFile:   tt.fields.CertFile,
+				KeyFile:    tt.fields.KeyFile,
+				Host:       tt.fields.Host,
+				Port:       tt.fields.Port,
+				TLSConfig:  tt.fields.TLSConfig,
+			}
+			if got := c.ListenAddress(); got != tt.want {
+				t.Errorf("ListenAddress() = %v, want %v", got, tt.want)
 			}
 		})
 	}

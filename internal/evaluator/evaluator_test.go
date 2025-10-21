@@ -15,10 +15,10 @@ const (
 )
 
 var (
-	defaultConfig, _ = viper.CreateDefaultConfig()
-	tempFS           = afero.NewMemMapFs()
-	alwaysTrueRego   = []byte("package upswake\n\ndefault wake := true")
-	alwaysFalseRego  = []byte("package upswake\n\ndefault wake := false")
+	defaultConfig   = viper.CreateDefaultConfig()
+	tempFS          = afero.NewMemMapFs()
+	alwaysTrueRego  = []byte("package upswake\n\ndefault wake := true")
+	alwaysFalseRego = []byte("package upswake\n\ndefault wake := false")
 )
 
 func TestNewRegoEvaluator(t *testing.T) {

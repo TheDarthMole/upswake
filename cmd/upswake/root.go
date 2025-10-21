@@ -1,35 +1,71 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
 
+	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
-var (
-	sugar *zap.SugaredLogger
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
-		Use:   "upswake",
-		Short: "UPSWake sends Wake on LAN packets based on a UPS's status",
-		Long: `UPSWake sends Wake on LAN packets to target servers
+const (
+	shortAppDesc = "UPSWake sends Wake on LAN packets based on a UPS's status"
+	longAppDesc  = `UPSWake sends Wake on LAN packets to target servers
 
 It uses the status of a UPS to determine which servers to wake
-using a set of Rego rules defined and the servers in the config file`,
-	}
+using a set of Rego rules defined and the servers in the config file`
 )
+
+var Version string
+
+func NewRootCommand() *cobra.Command {
+	// represents the base command when called without any subcommands
+	return &cobra.Command{
+		Use:     "upswake",
+		Short:   shortAppDesc,
+		Long:    longAppDesc,
+		Version: Version,
+	}
+}
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func main() {
-	logger, err := zap.NewProduction()
+func Execute(ctx context.Context) int {
+	logger, err := zap.NewProduction(zap.WithCaller(false))
 	if err != nil {
 		log.Fatalf("can't initialise zap logger: %v", err)
 	}
-	sugar = logger.Sugar()
-	err = rootCmd.Execute()
+	defer func(logger *zap.Logger) {
+		_ = logger.Sync()
+	}(logger)
+	sugar := logger.Sugar()
+
+	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
-		log.Fatalf("Error executing root command: %s", err)
+		sugar.Error(err)
+		return 1
 	}
+	rootCmd := NewRootCommand()
+
+	wakeCmd := NewWakeCmd(sugar, bc)
+	rootCmd.AddCommand(wakeCmd)
+
+	jsonCmd := NewJSONCommand(sugar)
+	rootCmd.AddCommand(jsonCmd)
+
+	serveCmd := NewServeCommand(ctx, sugar)
+	rootCmd.AddCommand(serveCmd)
+
+	err = rootCmd.ExecuteContext(ctx)
+	if err != nil {
+		logger.Error("Error executing root command: " + err.Error())
+		return 1
+	}
+	return 0
+}
+
+func main() {
+	os.Exit(Execute(context.Background()))
 }

@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"net"
 )
 
@@ -65,27 +64,4 @@ func calculateIPv4Broadcast(ipNet *net.IPNet) net.IP {
 		broadcast[i] = ip[i] | ^mask[i]
 	}
 	return broadcast
-}
-
-func IPsToStrings(input []net.IP) []string {
-	if len(input) == 0 {
-		return []string{}
-	}
-	ips := make([]string, len(input))
-	for i, ip := range input {
-		ips[i] = ip.String()
-	}
-	return ips
-}
-
-func StringsToIPs(ips []string) ([]net.IP, error) {
-	parsedIps := make([]net.IP, len(ips))
-	for i, ip := range ips {
-		parsedIP := net.ParseIP(ip)
-		if parsedIP == nil {
-			return nil, fmt.Errorf("invalid ip address: %s", ip)
-		}
-		parsedIps[i] = parsedIP
-	}
-	return parsedIps, nil
 }

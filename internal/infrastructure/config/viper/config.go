@@ -1,10 +1,7 @@
 package viper
 
 import (
-	"log"
-
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -14,9 +11,8 @@ const (
 )
 
 var (
-	fileSystem     = afero.NewOsFs()
 	config         = entity.Config{}
-	configFilePath string
+	configFilePath = DefaultConfigFile
 	DefaultConfig  = Config{
 		NutServers: []NutServer{
 			{
@@ -42,30 +38,31 @@ var (
 	}
 )
 
-func init() {
+func InitConfig(fs afero.Fs, cfgPath string) {
+	configFilePath = DefaultConfigFile
+	if cfgPath != "" {
+		configFilePath = cfgPath
+	}
+	viper.SetFs(fs)
+	viper.SetConfigFile(configFilePath)
+	viper.AddConfigPath(".")
 	viper.SetEnvPrefix("UPSWAKE")
 	viper.AutomaticEnv() // read in environment variables that match
-	configFilePath = DefaultConfigFile
-	if viper.GetString("CONFIG_FILE") != "" {
-		log.Printf("Loading config file from environment")
-		configFilePath = viper.GetString("CONFIG_FILE")
+	//  viper.OnConfigChange(func(in fsnotify.Event) { # TODO: investigate how to mock this in tests
+	//	  fmt.Println("Config file changed:", in.Name)
+	//	  err := viper.Unmarshal(&config)
+	//	  if err != nil {
+	//  		return
+	// 	  }
+	//  })
+	if ok, _ := afero.Exists(fs, configFilePath); ok {
+		viper.WatchConfig()
 	}
-	viper.OnConfigChange(func(_ fsnotify.Event) {
-		if _, err := load(fileSystem, configFilePath); err != nil {
-			log.Fatal(err)
-		}
-	})
 }
 
 func Load() (*entity.Config, error) {
-	return load(fileSystem, configFilePath)
-}
-
-func load(fs afero.Fs, configFile string) (*entity.Config, error) {
-	viper.SetFs(fs)
-	viper.SetConfigFile(configFile)
-
 	if err := viper.ReadInConfig(); err != nil {
+		// Return on any read error (including file not found or decode errors)
 		return &entity.Config{}, err
 	}
 
@@ -82,6 +79,6 @@ func load(fs afero.Fs, configFile string) (*entity.Config, error) {
 	return &config, nil
 }
 
-func CreateDefaultConfig() (*entity.Config, error) {
-	return fromFileConfig(&DefaultConfig), nil
+func CreateDefaultConfig() *entity.Config {
+	return fromFileConfig(&DefaultConfig)
 }

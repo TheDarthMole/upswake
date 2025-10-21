@@ -10,36 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateDefaultConfig(t *testing.T) {
-	expected := entity.Config{
-		NutServers: []entity.NutServer{
-			{
-				Name:     "NUT Server 1",
-				Host:     "192.168.1.13",
-				Port:     entity.DefaultNUTServerPort,
-				Username: "",
-				Password: "",
-				Targets: []entity.TargetServer{
-					{
-						Name:      "NAS 1",
-						MAC:       "00:00:00:00:00:00",
-						Broadcast: "192.168.1.255",
-						Port:      entity.DefaultWoLPort,
-						Interval:  "15m",
-						Rules: []string{
-							"80percentOn.rego",
-						},
-					},
-				},
-			},
-		},
-	}
-	got, err := CreateDefaultConfig()
-	assert.NoError(t, err)
-	reflect.DeepEqual(got, expected)
-}
-
-func Test_load(t *testing.T) {
+func Test_Load(t *testing.T) {
 	type args struct {
 		fs       afero.Fs
 		filePath string
@@ -146,12 +117,39 @@ func Test_load(t *testing.T) {
 			wantErrMsg: entity.ErrorInvalidMac,
 			want:       &entity.Config{},
 		},
+		{
+			name: "config file does not exist",
+			args: args{
+				fs:       testFS,
+				filePath: "does_not_exist.yaml",
+			},
+			wantErr:    true,
+			wantErrMsg: nil,
+			want:       &entity.Config{},
+		},
+		{
+			name: "config file username is array",
+			args: args{
+				fs:       testFS,
+				filePath: "invalid_type.yaml",
+			},
+			wantErr:    true,
+			wantErrMsg: nil, // TODO: tricky error to replicate, just checking that an error occurred
+			want:       &entity.Config{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := load(tt.args.fs, tt.args.filePath)
+			fileSystem := tt.args.fs
+			InitConfig(fileSystem, tt.args.filePath)
+			got, err := Load()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("load() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.wantErrMsg == nil {
+				// If the error is tool specific, we might not have a predefined error to compare to
+				// So we just check that an error occurred and skip the message comparison
 				return
 			}
 			if !errors.Is(err, tt.wantErrMsg) {
@@ -164,14 +162,47 @@ func Test_load(t *testing.T) {
 	}
 
 	t.Run("config doesn't exist", func(t *testing.T) {
-		_, err := load(afero.NewMemMapFs(), "non_existent_config.yaml")
+		fileSystem := afero.NewMemMapFs()
+		InitConfig(fileSystem, "non_existent_config.yaml")
+		_, err := Load()
 		assert.Error(t, err, "Expected error when config file does not exist")
 		assert.ErrorContains(t, err, "file does not exist")
 	})
 
 	t.Run("malformed yaml", func(t *testing.T) {
-		_, err := load(testFS, "malformed_file.yaml")
+		fileSystem := testFS
+		InitConfig(fileSystem, "malformed_file.yaml")
+		_, err := Load()
 		assert.Error(t, err, "Expected error when config file is malformed")
-		assert.ErrorContains(t, err, "decoding failed due to the following error(s):\n\n'nut_servers[0].password' expected type 'string', got unconvertible type '[]interface {}'")
+		assert.ErrorContains(t, err, "expected type 'string'")
 	})
+}
+
+func TestCreateDefaultConfig(t *testing.T) {
+	got := CreateDefaultConfig()
+
+	want := &entity.Config{
+		NutServers: []entity.NutServer{
+			{
+				Name:     "NUT Server 1",
+				Host:     "192.168.1.13",
+				Port:     entity.DefaultNUTServerPort,
+				Username: "",
+				Password: "",
+				Targets: []entity.TargetServer{
+					{
+						Name:      "NAS 1",
+						MAC:       "00:00:00:00:00:00",
+						Broadcast: "192.168.1.255",
+						Port:      entity.DefaultWoLPort,
+						Interval:  "15m",
+						Rules: []string{
+							"80percentOn.rego",
+						},
+					},
+				},
+			},
+		},
+	}
+	assert.Equal(t, want, got)
 }

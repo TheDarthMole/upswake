@@ -2,6 +2,9 @@
 set shell := ["bash", "-cu"]
 set unstable
 
+export GIT_DESCRIBE := `git describe --tags --always --long`
+BUILD_ARGS := '-tags "timetzdata" -trimpath -ldflags="-w -s -X main.Version=${GIT_DESCRIBE}"'
+
 # Display this help message
 help:
     just -l
@@ -36,37 +39,41 @@ container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL")
 } else if which("docker") != "" { "docker"
 } else {""}
 
+_check-container-tool:
+    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+
 # Install development dependencies
-install-deps:
+install-deps: && _check-container-tool
     go install github.com/swaggo/swag/cmd/swag@latest
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
 
 # Run upswake with arguments
 run *args:
-    go run ./cmd/upswake {{args}}
+    go run {{BUILD_ARGS}} ./cmd/upswake {{args}}
 
 # Build upswake
 build:
-    go build -o ./upswake ./cmd/upswake
+    go build {{BUILD_ARGS}} -o ./upswake ./cmd/upswake
 
 # Build the thedarthmole/upswake:local container
-build-container $GIT_DESCRIBE=`git describe --tags --always --long` $COMMIT_SHA=`git rev-parse HEAD`:
-    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
-    {{container-tool}} build -t thedarthmole/upswake:local -f ./Containerfile . --build-arg GIT_DESCRIBE=${GIT_DESCRIBE} --build-arg COMMIT_SHA=${COMMIT_SHA}
+build-container: _check-container-tool
+    echo ${GIT_DESCRIBE}
+    {{container-tool}} build -t thedarthmole/upswake:local -f ./Containerfile . --build-arg GIT_DESCRIBE=${GIT_DESCRIBE}
 
 # Builds and runs the upswake container
 run-container: build-container
     CONTAINER_TAG=local {{container-tool}} compose up --force-recreate
 
+# Stops the upswake container
+stop-container: _check-container-tool
+    CONTAINER_TAG=local {{container-tool}} compose down
+
 # Runs a NUT server in a container for testing
-start-nut-server:
-    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+start-nut-server: _check-container-tool
     {{container-tool}} compose -f hack/nut/compose.yaml up --force-recreate --remove-orphans --detach
 
 # Stops the NUT server container
-stop-nut-server:
-    {{if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable")} else { "" } }}
+stop-nut-server: _check-container-tool
     {{container-tool}} compose -f hack/nut/compose.yaml down
 
 generate-certs:
@@ -78,3 +85,9 @@ generate-certs:
     openssl req -new -x509 -key certs/ecc.key -out certs/ecc.cert \
         -subj "/CN=localhost" \
         -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+
+clean:
+    rm coverage.txt || true
+    rm upswake || true
+    rm -rf certs || true
+    go clean -testcache
