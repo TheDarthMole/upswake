@@ -235,6 +235,9 @@ nut_servers:
 				var wg sync.WaitGroup
 				wg.Add(1)
 
+				origArgs := os.Args
+				defer func() { os.Args = origArgs }()
+
 				go func() {
 					defer wg.Done()
 					os.Args = tt.args.args
