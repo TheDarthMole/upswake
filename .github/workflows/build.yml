@@ -126,11 +126,9 @@ jobs:
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: ✍️ Sign the Docker Hub images
-        if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}@${{ steps.build.outputs.digest }}"
+          cosign sign --upload=${{ github.event_name == 'release' }} --recursive --yes "${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}@${{ steps.build.outputs.digest }}"
 
       - name: ✍️ Sign the GitHub Container Registry images
-        if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${{ steps.build.outputs.digest }}"
+          cosign sign --upload=${{ github.event_name == 'release' }} --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${{ steps.build.outputs.digest }}"
