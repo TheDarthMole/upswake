@@ -40,7 +40,7 @@ func Test_JSONRunE(t *testing.T) {
 		{
 			name: "valid input but server not reachable",
 			in:   []string{"json", "--host", "127.0.0.1", "--username", "testuser", "--password", "testpass", "--port", "1234"},
-			err:  "could not connect to NUT server: dial tcp 127.0.0.1:1234",
+			err:  "dial tcp 127.0.0.1:1234: connect: connection refused",
 		},
 		{
 			name: "valid cli args",

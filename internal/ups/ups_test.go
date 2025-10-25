@@ -25,10 +25,10 @@ func TestConnect(t *testing.T) {
 		password string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    UPS
-		wantErr bool
+		name string
+		args args
+		want UPS
+		err  error
 	}{
 		{
 			name: "Invalid Server",
@@ -38,8 +38,8 @@ func TestConnect(t *testing.T) {
 				username: randomUsername,
 				password: randomPassword,
 			},
-			want:    UPS{},
-			wantErr: true,
+			want: UPS{},
+			err:  ErrConnectionFailed,
 		},
 		{
 			name: "Invalid IP",
@@ -49,8 +49,8 @@ func TestConnect(t *testing.T) {
 				username: randomUsername,
 				password: randomPassword,
 			},
-			want:    UPS{},
-			wantErr: true,
+			want: UPS{},
+			err:  ErrConnectionFailed,
 		},
 		{
 			name: "Valid Server",
@@ -65,7 +65,7 @@ func TestConnect(t *testing.T) {
 				ProtocolVersion: "1.3",
 				Hostname:        &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1).To4(), Port: entity.DefaultNUTServerPort},
 			}},
-			wantErr: false,
+			err: nil,
 		},
 		{
 			// This test is bad, as any username/password will work with the default NUT server, however
@@ -77,17 +77,15 @@ func TestConnect(t *testing.T) {
 				username: "",
 				password: "",
 			},
-			want:    UPS{},
-			wantErr: true,
+			want: UPS{},
+			err:  ErrFailureAuthenticating,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := connect(tt.args.host, tt.args.port, tt.args.username, tt.args.password)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("connect() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			assert.ErrorIs(t, err, tt.err)
+
 			assert.Equal(t, tt.want.Version, got.Version)
 			assert.Equal(t, tt.want.ProtocolVersion, got.ProtocolVersion)
 			assert.Equal(t, tt.want.Hostname, got.Hostname)
