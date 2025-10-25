@@ -14,19 +14,24 @@ type UPS struct {
 	nut.Client
 }
 
+var (
+	ErrAuthenticationFailed  = errors.New("authentication failed")
+	ErrFailureAuthenticating = errors.New("an error occurred during authentication")
+	ErrConnectionFailed      = errors.New("connection failed")
+)
+
 func connect(host string, port int, username, password string) (UPS, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
-		return UPS{}, err
+		return UPS{}, errors.Join(ErrConnectionFailed, err)
 	}
 
 	authenticate, err := client.Authenticate(username, password)
 	if err != nil {
-		return UPS{}, err
+		return UPS{}, errors.Join(ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
-		log.Printf("Authentication failed to host '%s' as user '%s'", host, username)
-		return UPS{}, errors.New("authentication failed")
+		return UPS{}, errors.Join(ErrAuthenticationFailed, fmt.Errorf("could not authenticate to NUT server at %s:%d", host, port))
 	}
 	return UPS{client}, nil
 }

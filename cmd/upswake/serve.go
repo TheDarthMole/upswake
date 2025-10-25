@@ -177,9 +177,12 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 	r.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(r)
-
 	if errors.Is(err, context.Canceled) {
-		j.logger.Infof("[%s] Stopping wake request, context cancelled", target.Name)
+		j.logger.Infof("[%s] Gracefully stopping", target.Name)
+		return
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		j.logger.Warnf("[%s] Timeout sending post request: %s", target.Name, err)
 		return
 	}
 	if err != nil {
