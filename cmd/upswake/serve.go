@@ -178,7 +178,7 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 
 	resp, err := client.Do(r)
 	if errors.Is(err, context.Canceled) {
-		j.logger.Warnf("[%s] Context cancelled: %s", target.Name, err)
+		j.logger.Infof("[%s] Gracefully stopping", target.Name)
 		return
 	}
 	if errors.Is(err, context.DeadlineExceeded) {
