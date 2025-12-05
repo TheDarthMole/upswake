@@ -16,7 +16,6 @@ formatters:
     gofumpt:
       # Choose whether to use the extra rules.
       extra-rules: true
-      
 
 issues:
   # Maximum issues count per one linter.
