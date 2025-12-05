@@ -16,8 +16,6 @@ formatters:
     gofumpt:
       # Choose whether to use the extra rules.
       extra-rules: true
-linters:
-    exclusions:
       
 
 issues:
