@@ -147,8 +147,7 @@ func NewTargetServer(name, mac, broadcast, interval string, port int, rules []st
 		Interval:  interval,
 		Rules:     rules,
 	}
-	err := ts.Validate()
-	if err != nil {
+	if err := ts.Validate(); err != nil {
 		return nil, err
 	}
 	return ts, nil

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -31,7 +30,6 @@ func TestServerHandler_Register(t *testing.T) {
 
 	expectedRoutes := []string{"/wake", "/broadcastwake"}
 	for _, route := range e.Routes() {
-		log.Println("Registered route:", route.Path)
 		for i, expected := range expectedRoutes {
 			if expected == route.Path {
 				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
@@ -231,9 +229,10 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-
-			GetAllBroadcastAddresses = network.GetAllBroadcastAddresses // Reset to original function after test
-			NewTargetServer = entity.NewTargetServer                    // Reset to original function after test
+			t.Cleanup(func() {
+				GetAllBroadcastAddresses = network.GetAllBroadcastAddresses // Reset to original function after test
+				NewTargetServer = entity.NewTargetServer                    // Reset to original function after test
+			})
 		})
 	}
 }
@@ -362,7 +361,9 @@ func TestServerHandler_WakeServer(t *testing.T) {
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
 
-			NewTargetServer = entity.NewTargetServer // Reset to original function after test
+			t.Cleanup(func() {
+				NewTargetServer = entity.NewTargetServer // Reset to original function after test
+			})
 		})
 	}
 }
