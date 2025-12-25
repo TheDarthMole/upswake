@@ -120,9 +120,6 @@ nut_servers:
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			//fileSystem = test.args.fs(t)
-			//regoFiles = test.args.regoFS(t)
-
 			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, 1*time.Second, test.args.args...)
 
 			assert.ErrorIs(t, err, test.err)
