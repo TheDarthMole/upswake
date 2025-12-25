@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -11,16 +10,15 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
-var mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
+const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
+
+func mockValidBroadcastAddressesFunc() ([]net.IP, error) {
 	return []net.IP{net.ParseIP("127.0.0.1")}, nil
 }
-
-const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
 
 func TestServerHandler_Register(t *testing.T) {
 	e := echo.New()
@@ -31,7 +29,6 @@ func TestServerHandler_Register(t *testing.T) {
 
 	expectedRoutes := []string{"/wake", "/broadcastwake"}
 	for _, route := range e.Routes() {
-		log.Println("Registered route:", route.Path)
 		for i, expected := range expectedRoutes {
 			if expected == route.Path {
 				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
@@ -219,21 +216,17 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/broadcastwake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-			// Mock the functions to return the desired values
-			GetAllBroadcastAddresses = tt.fields.mockBroadcastAddresses
-			NewTargetServer = tt.fields.mockNewTargetServer
-
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewServerHandler()
+			h := &ServerHandler{
+				newTargetServer:    tt.fields.mockNewTargetServer,
+				broadcastAddresses: tt.fields.mockBroadcastAddresses,
+			}
 
 			if assert.NoError(t, h.BroadcastWakeServer(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-
-			GetAllBroadcastAddresses = network.GetAllBroadcastAddresses // Reset to original function after test
-			NewTargetServer = entity.NewTargetServer                    // Reset to original function after test
 		})
 	}
 }
@@ -350,19 +343,16 @@ func TestServerHandler_WakeServer(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/wake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-			// Mock the functions to return the desired values
-			NewTargetServer = tt.fields.mockNewTargetServer
-
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewServerHandler()
+			h := &ServerHandler{
+				newTargetServer: tt.fields.mockNewTargetServer,
+			}
 
 			if assert.NoError(t, h.WakeServer(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-
-			NewTargetServer = entity.NewTargetServer // Reset to original function after test
 		})
 	}
 }

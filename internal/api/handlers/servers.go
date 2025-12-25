@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"strconv"
 
@@ -12,8 +13,6 @@ import (
 )
 
 var (
-	GetAllBroadcastAddresses  = network.GetAllBroadcastAddresses
-	NewTargetServer           = entity.NewTargetServer
 	ErrorBindingRequest       = errors.New("failed to parse request body")
 	ErrorValidatingRequest    = errors.New("failed to validate request body")
 	ErrorCreatingTargetServer = errors.New("failed to create target server")
@@ -26,7 +25,10 @@ const (
 	WoLSentMessage          = "Wake on LAN packet sent"
 )
 
-type ServerHandler struct{}
+type ServerHandler struct {
+	newTargetServer    func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+	broadcastAddresses func() ([]net.IP, error)
+}
 
 type WakeServerRequest struct {
 	Port      int    `json:"port" validate:"gte=1,lte=65535" example:"9"`
@@ -52,12 +54,15 @@ func NewBroadcastWakeRequest() *BroadcastWakeRequest {
 }
 
 func NewServerHandler() *ServerHandler {
-	return &ServerHandler{}
+	return &ServerHandler{
+		newTargetServer:    entity.NewTargetServer,
+		broadcastAddresses: network.GetAllBroadcastAddresses,
+	}
 }
 
-func (h *ServerHandler) Register(g *echo.Group) {
-	g.POST("/wake", h.WakeServer)
-	g.POST("/broadcastwake", h.BroadcastWakeServer)
+func (s *ServerHandler) Register(g *echo.Group) {
+	g.POST("/wake", s.WakeServer)
+	g.POST("/broadcastwake", s.BroadcastWakeServer)
 }
 
 // WakeServer godoc
@@ -72,7 +77,7 @@ func (h *ServerHandler) Register(g *echo.Group) {
 //	@Failure		400					{object}	Response			"Input validation failed"
 //	@Failure		500					{object}	Response			"Wake on LAN packet failed to send"
 //	@Router			/api/servers/wake [post]
-func (*ServerHandler) WakeServer(c echo.Context) error {
+func (s *ServerHandler) WakeServer(c echo.Context) error {
 	wsRequest := NewWakeServerRequest()
 	if err := c.Bind(wsRequest); err != nil {
 		c.Logger().Errorf("failed to bind wake server request %s", err)
@@ -84,7 +89,7 @@ func (*ServerHandler) WakeServer(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorValidatingRequest.Error()})
 	}
 
-	ts, err := NewTargetServer(
+	ts, err := s.newTargetServer(
 		"API Request",
 		wsRequest.Mac,
 		wsRequest.Broadcast,
@@ -120,7 +125,7 @@ func (*ServerHandler) WakeServer(c echo.Context) error {
 //	@Failure		400						{object}	Response				"Input validation failed"
 //	@Failure		500						{object}	Response				"Wake on LAN packet failed to send"
 //	@Router			/api/servers/broadcastwake [post]
-func (*ServerHandler) BroadcastWakeServer(c echo.Context) error {
+func (s *ServerHandler) BroadcastWakeServer(c echo.Context) error {
 	wsRequest := NewBroadcastWakeRequest()
 	if err := c.Bind(wsRequest); err != nil {
 		c.Logger().Errorf("failed to bind wake server request: %s", err)
@@ -131,7 +136,7 @@ func (*ServerHandler) BroadcastWakeServer(c echo.Context) error {
 		c.Logger().Errorf("failed to validate wake server request: %s", err)
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorValidatingRequest.Error()})
 	}
-	broadcasts, err := GetAllBroadcastAddresses()
+	broadcasts, err := s.broadcastAddresses()
 	if err != nil {
 		c.Logger().Errorf("failed to get broadcast addresses, %s", err)
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorBroadcastAddress.Error()})
@@ -148,7 +153,7 @@ func (*ServerHandler) BroadcastWakeServer(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorBroadcastAddress.Error()})
 		}
 
-		ts, err := NewTargetServer(
+		ts, err := s.newTargetServer(
 			"API Request",
 			wsRequest.Mac,
 			broadcast.String(),
