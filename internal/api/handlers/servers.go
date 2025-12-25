@@ -60,9 +60,9 @@ func NewServerHandler() *ServerHandler {
 	}
 }
 
-func (h *ServerHandler) Register(g *echo.Group) {
-	g.POST("/wake", h.WakeServer)
-	g.POST("/broadcastwake", h.BroadcastWakeServer)
+func (s *ServerHandler) Register(g *echo.Group) {
+	g.POST("/wake", s.WakeServer)
+	g.POST("/broadcastwake", s.BroadcastWakeServer)
 }
 
 // WakeServer godoc
