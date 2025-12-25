@@ -24,10 +24,14 @@ func TestNewServeCommand(t *testing.T) {
 		gotFlagNames = append(gotFlagNames, flag.Name)
 	})
 
-	var wantFlagNames []string
-	got.Flags().VisitAll(func(flag *pflag.Flag) {
-		wantFlagNames = append(wantFlagNames, flag.Name)
-	})
+	wantFlagNames := []string{
+		"host",
+		"port",
+		"ssl",
+		"certFile",
+		"keyFile",
+		"config",
+	}
 
 	assert.Equal(t, "serve", got.Use)
 	assert.NotEmpty(t, got.Short)
