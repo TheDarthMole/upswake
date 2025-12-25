@@ -14,11 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var mockValidBroadcastAddressesFunc = func() ([]net.IP, error) {
+const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
+
+func mockValidBroadcastAddressesFunc() ([]net.IP, error) {
 	return []net.IP{net.ParseIP("127.0.0.1")}, nil
 }
-
-const validMacBroadcast = `{"mac": "00:11:22:33:44:55", "broadcast": "127.0.0.255"}`
 
 func TestServerHandler_Register(t *testing.T) {
 	e := echo.New()
