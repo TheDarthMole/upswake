@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -48,8 +47,7 @@ func Test_serveCmdRunE(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           args
-		wantErr        assert.ErrorAssertionFunc
-		err            string
+		err            error
 		wantOutputs    []string
 		notWantOutputs []string
 	}{
@@ -71,8 +69,7 @@ func Test_serveCmdRunE(t *testing.T) {
 					return fs
 				},
 			},
-			wantErr:        assert.Error,
-			err:            ErrTimeout.Error(), // expect a timeout error, as the command will run indefinitely otherwise
+			err:            ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs:    []string{"http server started on [::]:8081"},
 			notWantOutputs: []string{`"level":"ERROR"`, `"level":"error"`, `"level":"Error"`},
 		},
@@ -105,12 +102,10 @@ nut_servers:
 					return fs
 				},
 				regoFS: func(_ *testing.T) afero.Fs {
-					fs := afero.NewMemMapFs()
-					return fs
+					return afero.NewMemMapFs()
 				},
 			},
-			wantErr: assert.Error,
-			err:     ErrTimeout.Error(), // expect a timeout error, as the command will run indefinitely otherwise
+			err: ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
 				"http server started on [::]:8082",
 				`"status":200`,
@@ -126,23 +121,19 @@ nut_servers:
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fileSystem = tt.args.fs(t)
-			regoFiles = tt.args.regoFS(t)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fileSystem = test.args.fs(t)
+			regoFiles = test.args.regoFS(t)
 
-			gotOutput, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
-			t.Log(gotOutput)
+			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, 1*time.Second, test.args.args...)
 
-			tt.wantErr(t, err, fmt.Sprintf("serveCmdRunE(%v)", tt.args.args))
+			assert.ErrorIs(t, err, test.err)
 
-			if tt.err != "" {
-				assert.ErrorContains(t, err, tt.err)
-			}
-			for _, wantOutput := range tt.wantOutputs {
+			for _, wantOutput := range test.wantOutputs {
 				assert.Contains(t, gotOutput, wantOutput)
 			}
-			for _, notWantOutput := range tt.notWantOutputs {
+			for _, notWantOutput := range test.notWantOutputs {
 				assert.NotContains(t, gotOutput, notWantOutput)
 			}
 		})
