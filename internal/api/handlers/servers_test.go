@@ -10,7 +10,6 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -217,22 +216,17 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/broadcastwake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-			// Mock the functions to return the desired values
-			GetAllBroadcastAddresses = tt.fields.mockBroadcastAddresses
-			NewTargetServer = tt.fields.mockNewTargetServer
-
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewServerHandler()
+			h := &ServerHandler{
+				newTargetServer:    tt.fields.mockNewTargetServer,
+				broadcastAddresses: tt.fields.mockBroadcastAddresses,
+			}
 
 			if assert.NoError(t, h.BroadcastWakeServer(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-			t.Cleanup(func() {
-				GetAllBroadcastAddresses = network.GetAllBroadcastAddresses // Reset to original function after test
-				NewTargetServer = entity.NewTargetServer                    // Reset to original function after test
-			})
 		})
 	}
 }
@@ -349,21 +343,16 @@ func TestServerHandler_WakeServer(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/wake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
-			// Mock the functions to return the desired values
-			NewTargetServer = tt.fields.mockNewTargetServer
-
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewServerHandler()
+			h := &ServerHandler{
+				newTargetServer: tt.fields.mockNewTargetServer,
+			}
 
 			if assert.NoError(t, h.WakeServer(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
-
-			t.Cleanup(func() {
-				NewTargetServer = entity.NewTargetServer // Reset to original function after test
-			})
 		})
 	}
 }
