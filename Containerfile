@@ -1,6 +1,6 @@
 ARG BUILDPLATFORM
 
-FROM --platform=${BUILDPLATFORM} golang:1.25.5-alpine@sha256:3587db7cc96576822c606d119729370dbf581931c5f43ac6d3fa03ab4ed85a10 AS build
+FROM --platform=${BUILDPLATFORM} golang:1.25.5-alpine@sha256:ac09a5f469f307e5da71e766b0bd59c9c49ea460a528cc3e6686513d64a6f1fb AS build
 
 WORKDIR "/build/"
 
