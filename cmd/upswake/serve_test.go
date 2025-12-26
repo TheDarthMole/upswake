@@ -17,7 +17,9 @@ func TestNewServeCommand(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testSugar := logger.Sugar()
 
-	got := NewServeCommand(t.Context(), testSugar)
+	emptyFs := afero.NewMemMapFs()
+
+	got := NewServeCommand(t.Context(), testSugar, emptyFs, emptyFs)
 
 	var gotFlagNames []string
 	got.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -45,8 +47,6 @@ func Test_serveCmdRunE(t *testing.T) {
 	type args struct {
 		cmdFunc func(_ *zap.SugaredLogger) *cobra.Command
 		args    []string
-		fs      func(t2 *testing.T) afero.Fs
-		regoFS  func(t2 *testing.T) afero.Fs
 	}
 	tests := []struct {
 		name           string
@@ -59,19 +59,15 @@ func Test_serveCmdRunE(t *testing.T) {
 			name: "empty config",
 			args: args{
 				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
-					return NewServeCommand(t.Context(), logger)
-				},
-				args: []string{"serve", "--config", "upswake.yml", "--port", "8081"},
-				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()
-					err := afero.WriteFile(fs, "upswake.yml", []byte(""), 0o644)
+					err := afero.WriteFile(fs, "upswake.yaml", []byte(""), 0o644)
 					require.NoError(t, err)
-					return fs
+
+					regoFs := afero.NewMemMapFs()
+
+					return NewServeCommand(t.Context(), logger, fs, regoFs)
 				},
-				regoFS: func(_ *testing.T) afero.Fs {
-					fs := afero.NewMemMapFs()
-					return fs
-				},
+				args: []string{"serve", "--config", "upswake.yaml", "--port", "8081"},
 			},
 			err:            ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs:    []string{"http server started on [::]:8081"},
@@ -81,10 +77,6 @@ func Test_serveCmdRunE(t *testing.T) {
 			name: "valid config no rules",
 			args: args{
 				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
-					return NewServeCommand(t.Context(), logger)
-				},
-				args: []string{"serve", "--config", "upswake.yml", "--port", "8082"},
-				fs: func(t *testing.T) afero.Fs {
 					fs := afero.NewMemMapFs()
 					cfgYaml := `
 nut_servers:
@@ -103,11 +95,12 @@ nut_servers:
 `
 					err := afero.WriteFile(fs, "upswake.yml", []byte(cfgYaml), 0o644)
 					require.NoError(t, err)
-					return fs
+
+					regoFs := afero.NewMemMapFs()
+
+					return NewServeCommand(t.Context(), logger, fs, regoFs)
 				},
-				regoFS: func(_ *testing.T) afero.Fs {
-					return afero.NewMemMapFs()
-				},
+				args: []string{"serve", "--config", "upswake.yml", "--port", "8082"},
 			},
 			err: ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
@@ -127,9 +120,6 @@ nut_servers:
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			fileSystem = test.args.fs(t)
-			regoFiles = test.args.regoFS(t)
-
 			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, 1*time.Second, test.args.args...)
 
 			assert.ErrorIs(t, err, test.err)

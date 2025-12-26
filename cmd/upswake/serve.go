@@ -26,17 +26,18 @@ const (
 	defaultListenPort = "8080"
 )
 
-var (
-	fileSystem = afero.NewOsFs()
-	regoFiles  = afero.NewBasePathFs(fileSystem, "rules")
-)
-
 type serveCMD struct {
 	logger *zap.SugaredLogger
+	fs     afero.Fs
+	regoFs afero.Fs
 }
 
-func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger) *cobra.Command {
-	sc := &serveCMD{logger: logger}
+func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger, fs, regoFs afero.Fs) *cobra.Command {
+	sc := &serveCMD{
+		logger: logger,
+		fs:     fs,
+		regoFs: regoFs,
+	}
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
@@ -77,12 +78,12 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cliArgs, err := config.NewCLIArgs(fileSystem, cfgPath, useSSL, certFile, keyFile, host, port)
+	cliArgs, err := config.NewCLIArgs(j.fs, cfgPath, useSSL, certFile, keyFile, host, port)
 	if err != nil {
 		return err
 	}
 
-	viper.InitConfig(fileSystem, cliArgs.ConfigFile)
+	viper.InitConfig(j.fs, cliArgs.ConfigFile)
 
 	cfg, err := viper.Load()
 	if err != nil {
@@ -94,13 +95,13 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	server := api.NewServer(cmd.Context(), j.logger)
 
-	rootHandler := handlers.NewRootHandler(cfg, regoFiles)
+	rootHandler := handlers.NewRootHandler(cfg, j.regoFs)
 	rootHandler.Register(server.Root())
 
 	serverHandler := handlers.NewServerHandler()
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, regoFiles)
+	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, j.regoFs)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
 	var wg sync.WaitGroup

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -242,10 +241,7 @@ nut_servers:
 					defer wg.Done()
 					os.Args = tt.args.args
 
-					fileSystem = tt.args.filesystem()
-					regoFiles = tt.args.regoFiles()
-
-					c <- Execute(ctx)
+					c <- Execute(ctx, tt.args.filesystem(), tt.args.regoFiles())
 				}()
 
 				select {
@@ -259,8 +255,6 @@ nut_servers:
 					// set the error to be a timeout error
 				}
 			})
-
-			fmt.Println(gotOutput)
 
 			for _, output := range tt.wantOutput {
 				assert.Contains(t, gotOutput, output)

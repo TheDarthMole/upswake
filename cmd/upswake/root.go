@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/TheDarthMole/UPSWake/internal/network"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -32,7 +33,7 @@ func NewRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(ctx context.Context) int {
+func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
 	logger, err := zap.NewProduction(zap.WithCaller(false))
 	if err != nil {
 		log.Fatalf("can't initialise zap logger: %v", err)
@@ -55,7 +56,7 @@ func Execute(ctx context.Context) int {
 	jsonCmd := NewJSONCommand(sugar)
 	rootCmd.AddCommand(jsonCmd)
 
-	serveCmd := NewServeCommand(ctx, sugar)
+	serveCmd := NewServeCommand(ctx, sugar, fs, regoFs)
 	rootCmd.AddCommand(serveCmd)
 
 	err = rootCmd.ExecuteContext(ctx)
@@ -67,5 +68,7 @@ func Execute(ctx context.Context) int {
 }
 
 func main() {
-	os.Exit(Execute(context.Background()))
+	fs := afero.NewOsFs()
+	regoFs := afero.NewBasePathFs(fs, "rules")
+	os.Exit(Execute(context.Background(), fs, regoFs))
 }
