@@ -70,11 +70,11 @@ stop-container: _check-container-tool
 
 # Runs a NUT server in a container for testing
 start-nut-server: _check-container-tool
-    {{container-tool}} compose -f hack/nut/compose.yaml up --force-recreate --remove-orphans --detach
+    {{container-tool}} compose -f fixtures/nut/compose.yaml up --force-recreate --remove-orphans --detach
 
 # Stops the NUT server container
 stop-nut-server: _check-container-tool
-    {{container-tool}} compose -f hack/nut/compose.yaml down
+    {{container-tool}} compose -f fixtures/nut/compose.yaml down
 
 generate-certs:
     mkdir -p certs
