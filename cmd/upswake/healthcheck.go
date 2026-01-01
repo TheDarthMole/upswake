@@ -30,8 +30,7 @@ func NewHealthCheckCommand(logger *zap.SugaredLogger) *cobra.Command {
 }
 
 func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
-	h.logger.Debugln("Checking health...")
-	h.logger.Infoln("Checking health...")
+	h.logger.Infoln("Checking health")
 	protocol := "http"
 
 	if cmd.Flag("ssl").Changed {
@@ -39,6 +38,7 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	healthURL := fmt.Sprintf("%s://%s:%s/health", protocol, cmd.Flag("host").Value.String(), cmd.Flag("port").Value.String())
+	h.logger.Debugf("Checking %s", healthURL)
 	resp, err := http.Get(healthURL) //nolint:gosec // G107: Potential HTTP request made with variable url
 	if err != nil {
 		h.logger.Errorw("health check failed", "url", healthURL, "err", err)
