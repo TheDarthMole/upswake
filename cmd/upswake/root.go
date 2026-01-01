@@ -59,9 +59,12 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
 	serveCmd := NewServeCommand(ctx, sugar, fs, regoFs)
 	rootCmd.AddCommand(serveCmd)
 
+	healthCheckCmd := NewHealthCheckCommand(sugar)
+	serveCmd.AddCommand(healthCheckCmd)
+
 	err = rootCmd.ExecuteContext(ctx)
 	if err != nil {
-		logger.Error("Error executing root command: " + err.Error())
+		sugar.Error("Error executing root command: " + err.Error())
 		return 1
 	}
 	return 0
