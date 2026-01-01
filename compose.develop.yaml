@@ -1,0 +1,22 @@
+include:
+  - fixtures/nut/compose.yaml
+
+services:
+  upswake:
+    container_name: upswake
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: minimal
+    depends_on:
+      nut-server:
+        condition: service_healthy
+    restart: always
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ all ]
+    security_opt: [ no-new-privileges:true ]
+    command: [ "serve" ]
+    volumes:
+      - "./fixtures/config/dev-config.yaml:/config.yaml:ro" # upswake will create a config if one doesn't exist, you may want to remove the ':ro' in that case
+      - "./rules/:/rules/:ro"
