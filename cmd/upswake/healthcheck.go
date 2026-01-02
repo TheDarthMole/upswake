@@ -64,7 +64,7 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	resp, err := client.Get(healthURL)
 	if err != nil {
 		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "err", err)
-		return fmt.Errorf("%w: %w: %w", ErrHealthCheckFailed, ErrMakingRequest, err)
+		return errors.Join(ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer resp.Body.Close()
 
