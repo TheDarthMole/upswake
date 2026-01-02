@@ -50,7 +50,7 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	resp, err := http.Get(healthURL) //nolint:gosec // G107: Potential HTTP request made with variable url
 	if err != nil {
 		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "err", err)
-		return fmt.Errorf("%w: %w: %s", ErrHealthCheckFailed, ErrMakingRequest, err)
+		return fmt.Errorf("%w: %w: %w", ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer resp.Body.Close()
 

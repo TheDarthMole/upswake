@@ -19,7 +19,7 @@ func TestNewHealthCheckCommand(t *testing.T) {
 	got := NewHealthCheckCommand(logger)
 
 	assert.NotNil(t, got)
-	assert.Equal(t, got.Use, "healthcheck")
+	assert.Equal(t, "healthcheck", got.Use)
 	assert.NotEmpty(t, got.Short)
 	assert.NotEmpty(t, got.Long)
 
@@ -35,7 +35,6 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 	}
 	type args struct {
 		cmd *cobra.Command
-		ssl bool
 	}
 	tests := []struct {
 		name        string
@@ -48,15 +47,15 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 			name: "successful healthcheck",
 			fields: fields{
 				logger: zap.NewNop().Sugar(),
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
+				handlerFunc: func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 					apiResponse := handlers.Response{
 						Message: "OK",
 					}
 					response, err := json.Marshal(apiResponse)
-					require.NoError(t, err)
+					assert.NoError(t, err)
 					_, err = w.Write(response)
-					require.NoError(t, err)
+					assert.NoError(t, err)
 				},
 			},
 			args: args{
@@ -68,15 +67,15 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 			name: "internal error healthcheck",
 			fields: fields{
 				logger: zap.NewNop().Sugar(),
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
+				handlerFunc: func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusInternalServerError)
 					apiResponse := handlers.Response{
 						Message: "Not OK",
 					}
 					response, err := json.Marshal(apiResponse)
-					require.NoError(t, err)
+					assert.NoError(t, err)
 					_, err = w.Write(response)
-					require.NoError(t, err)
+					assert.NoError(t, err)
 				},
 			},
 			args: args{
@@ -87,9 +86,8 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 		{
 			name: "no response healthcheck",
 			fields: fields{
-				logger: zap.NewNop().Sugar(),
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				},
+				logger:      zap.NewNop().Sugar(),
+				handlerFunc: func(_ http.ResponseWriter, _ *http.Request) {},
 			},
 			args: args{
 				cmd: NewHealthCheckCommand(zap.NewNop().Sugar()),
