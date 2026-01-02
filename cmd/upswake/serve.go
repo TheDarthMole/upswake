@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
 )
 
 const (
