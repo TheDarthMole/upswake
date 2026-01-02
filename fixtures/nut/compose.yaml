@@ -17,7 +17,8 @@ services:
       PORT: dummy
       SDORDER: -1
       NAME: cyberpower900
+      NUT_QUIET_INIT_UPSNOTIFY: true
     ports:
       - ${PORT_UPSD_1:-3493}:3493
     volumes:
-      - ./files/dummy:/etc/nut/dummy:rw
+      - ./dummy.conf:/etc/nut/dummy:rw

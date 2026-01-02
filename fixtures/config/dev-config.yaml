@@ -1,0 +1,14 @@
+nut_servers:
+  - name: CyberPower900
+    host: nut-server
+    port: 3493
+    username: upsmon
+    password: password
+    targets:
+      - name: test-client
+        mac: "00:11:22:33:44:55"
+        broadcast: 127.0.0.255
+        port: 9
+        interval: 5s
+        rules:
+          - 80percentOn.rego
