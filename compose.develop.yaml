@@ -18,5 +18,5 @@ services:
     security_opt: [ no-new-privileges:true ]
     command: [ "serve" ]
     volumes:
-      - "./fixtures/config/dev-config.yaml:/config.yaml:ro" # upswake will create a config if one doesn't exist, you may want to remove the ':ro' in that case
+      - "./fixtures/config/dev-config.yaml:/config.yaml:ro"
       - "./rules/:/rules/:ro"
