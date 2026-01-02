@@ -1,11 +1,17 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+)
+
+var (
+	ErrHealthCheckFailed = errors.New("healthcheck failed")
+	ErrMakingRequest     = errors.New("error making request")
 )
 
 type healthCheck struct {
@@ -33,22 +39,24 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	h.logger.Infoln("Checking health")
 	protocol := "http"
 
-	if cmd.Flag("ssl").Changed {
+	ssl, _ := cmd.Flags().GetBool("ssl")
+	if ssl {
 		protocol = "https"
 	}
 
 	healthURL := fmt.Sprintf("%s://%s:%s/health", protocol, cmd.Flag("host").Value.String(), cmd.Flag("port").Value.String())
 	h.logger.Debugf("Checking %s", healthURL)
+
 	resp, err := http.Get(healthURL) //nolint:gosec // G107: Potential HTTP request made with variable url
 	if err != nil {
-		h.logger.Errorw("health check failed", "url", healthURL, "err", err)
-		return err
+		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "err", err)
+		return fmt.Errorf("%w: %w: %s", ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		h.logger.Errorw("health check failed", "url", healthURL, "status", resp.Status)
-		return fmt.Errorf("health check failed: %s", resp.Status)
+		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "status", resp.Status)
+		return fmt.Errorf("%w: %s", ErrHealthCheckFailed, resp.Status)
 	}
 	h.logger.Infof("health check passed")
 	return nil
