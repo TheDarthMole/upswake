@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -50,7 +51,13 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // TODO: This could be changed to allow a trusted cert, but this is fine for now
+			Proxy:                 http.ProxyFromEnvironment,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // TODO: This could be changed to allow a trusted cert, but this is fine for now
 		},
 	}
 
