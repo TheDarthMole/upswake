@@ -127,7 +127,6 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 
 			mockServer := httptest.NewTLSServer(http.HandlerFunc(tt.fields.handlerFunc))
 			defer mockServer.Close()
-			mockServer.Config.TLSConfig.InsecureSkipVerify = true // TODO: could probably pass in some trusted certificates instead of this
 
 			if tt.closeServer {
 				mockServer.Close()

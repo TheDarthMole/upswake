@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -47,7 +48,13 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	healthURL := fmt.Sprintf("%s://%s:%s/health", protocol, cmd.Flag("host").Value.String(), cmd.Flag("port").Value.String())
 	h.logger.Debugf("Checking %s", healthURL)
 
-	resp, err := http.Get(healthURL) //nolint:gosec // G107: Potential HTTP request made with variable url
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // TODO: This could be changed to allow a trusted cert, but this is fine for now
+		},
+	}
+
+	resp, err := client.Get(healthURL)
 	if err != nil {
 		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "err", err)
 		return fmt.Errorf("%w: %w: %w", ErrHealthCheckFailed, ErrMakingRequest, err)
