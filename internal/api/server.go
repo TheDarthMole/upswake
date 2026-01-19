@@ -47,6 +47,7 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus: true,
 		LogURI:    true,
+		LogError:  true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
 				s.Logw(zapcore.InfoLevel,
