@@ -8,7 +8,7 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )

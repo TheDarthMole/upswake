@@ -9,6 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.15.0
 	github.com/open-policy-agent/opa v1.13.1
 	github.com/labstack/echo/v4 v4.9.0
+	github.com/labstack/echo/v5 v5.0.0
 	github.com/open-policy-agent/opa v1.12.3
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20250815165103-eaddd4c17972
@@ -44,7 +45,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect

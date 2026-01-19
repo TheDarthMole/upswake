@@ -124,6 +124,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	}(ctx, &wg)
 
 	err = server.Start(
+		j.fs,
 		cliArgs.ListenAddress(),
 		cliArgs.UseSSL,
 		cliArgs.CertFile,
