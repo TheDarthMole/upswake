@@ -8,6 +8,9 @@ require (
 	github.com/ka-weihe/fast-levenshtein v0.0.0-20201227151214-4c99ee36a1ba
 	github.com/labstack/echo/v4 v4.15.0
 	github.com/open-policy-agent/opa v1.13.1
+	github.com/labstack/echo/v4 v4.9.0
+	github.com/labstack/echo/v5 v5.0.0
+	github.com/open-policy-agent/opa v1.12.3
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20250815165103-eaddd4c17972
 	github.com/spf13/afero v1.15.0
@@ -42,6 +45,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
@@ -97,6 +101,8 @@ require (
 	golang.org/x/tools v0.40.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.1 // indirect
+	golang.org/x/tools v0.40.0 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
