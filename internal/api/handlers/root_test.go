@@ -7,7 +7,7 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -151,7 +151,7 @@ func TestRootHandler_Register(t *testing.T) {
 
 	expectedRoutes := []string{"/", "/health", "/swagger/*"}
 	lenExpectedRoutes := len(expectedRoutes)
-	for _, route := range e.Routes() {
+	for _, route := range e.Router().Routes() {
 		for i, expected := range expectedRoutes {
 			if expected == route.Path {
 				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
@@ -160,7 +160,7 @@ func TestRootHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Len(t, e.Routes(), lenExpectedRoutes, "Expected 2 routes to be registered")
+	assert.Len(t, e.Router().Routes(), lenExpectedRoutes, "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 

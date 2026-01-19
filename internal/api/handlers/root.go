@@ -8,9 +8,8 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type RootHandler struct {
@@ -41,7 +40,7 @@ func sanitizeString(input string) string {
 func (h *RootHandler) Register(g *echo.Group) {
 	g.GET("/", h.Root)
 	g.GET("/health", h.Health)
-	g.GET("/swagger/*", echoSwagger.WrapHandler)
+	//g.GET("/swagger/*", echoSwagger.WrapHandler)
 }
 
 // Root godoc
@@ -52,7 +51,7 @@ func (h *RootHandler) Register(g *echo.Group) {
 //	@Accept			plain
 //	@Produce		html
 //	@Router			/ [get]
-func (*RootHandler) Root(c echo.Context) error {
+func (*RootHandler) Root(c *echo.Context) error {
 	return c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 }
 
@@ -67,24 +66,24 @@ func (*RootHandler) Root(c echo.Context) error {
 //	@Success		200	{object}	Response	"OK"
 //	@Failure		500	{object}	Response
 //	@Router			/health [get]
-func (h *RootHandler) Health(c echo.Context) error {
+func (h *RootHandler) Health(c *echo.Context) error {
 	if err := h.cfg.Validate(); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if _, err := network.GetAllBroadcastAddresses(); err != nil {
-		c.Logger().Errorf("Error getting broadcast addresses: %s", err)
+		c.Logger().Error("Error getting broadcast addresses: " + err.Error())
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	// TODO: Speed this up by running in parallel
 	for _, server := range h.cfg.NutServers {
 		if _, err := ups.GetJSON(&server); err != nil {
-			c.Logger().Errorf("Error getting NUT server status: %s", err)
+			c.Logger().Error("Error getting NUT server status: " + err.Error())
 			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 		}
 	}
 
-	c.Logger().Debugf("Health check OK")
+	c.Logger().Debug("Health check OK")
 	return c.JSON(http.StatusOK, Response{Message: "OK"})
 }
