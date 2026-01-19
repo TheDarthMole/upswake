@@ -9,7 +9,6 @@ require (
 	github.com/labstack/echo/v4 v4.15.0
 	github.com/open-policy-agent/opa v1.13.1
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/labstack/echo/v5 v5.0.0
 	github.com/open-policy-agent/opa v1.12.3
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20250815165103-eaddd4c17972

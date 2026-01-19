@@ -41,10 +41,9 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogStatus:   true,
-		LogURI:      true,
-		LogError:    true,
-		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
+		LogStatus: true,
+		LogURI:    true,
+		LogError:  true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
 				s.Logw(zapcore.InfoLevel,
