@@ -10,7 +10,7 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,7 @@ func TestServerHandler_Register(t *testing.T) {
 	h.Register(g)
 
 	expectedRoutes := []string{"/wake", "/broadcastwake"}
-	for _, route := range e.Routes() {
+	for _, route := range e.Router().Routes() {
 		for i, expected := range expectedRoutes {
 			if expected == route.Path {
 				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
@@ -37,7 +37,7 @@ func TestServerHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Len(t, e.Routes(), 2, "Expected 2 routes to be registered")
+	assert.Len(t, e.Router().Routes(), 2, "Expected 2 routes to be registered")
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 

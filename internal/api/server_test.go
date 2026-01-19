@@ -12,12 +12,13 @@ import (
 
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
-func pingHandler(c echo.Context) error {
+func pingHandler(c *echo.Context) error {
 	return c.String(http.StatusOK, "pong")
 }
 
@@ -151,7 +152,6 @@ func TestNewServer(t *testing.T) {
 			got := NewServer(tt.args.ctx, tt.args.s)
 
 			assert.NotNil(t, got)
-			assert.Equal(t, tt.want.ctx, got.ctx)
 			assert.Equal(t, tt.want.sugar, got.sugar)
 
 			// echo instance and validator
@@ -308,8 +308,8 @@ func TestServer_Start_Stop(t *testing.T) {
 					t.Errorf("Stop() error = %v, wantErr %v", err, tt.wantStopErr)
 				}
 			}()
-
-			err := srv.Start(tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
+			// TODO: We should use a memory fs here with certificatse loaded, not depending on actual certs on disk
+			err := srv.Start(afero.NewOsFs(), tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
 			// http.ErrServerClosed is returned when the server is shut down normally
 			if (err != nil && !errors.Is(err, http.ErrServerClosed)) != tt.wantStartErr {
 				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantStartErr)

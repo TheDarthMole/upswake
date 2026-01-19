@@ -5,16 +5,18 @@ import (
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type Server struct {
-	ctx   context.Context
-	echo  *echo.Echo
-	sugar *zap.SugaredLogger
+	ctx    context.Context
+	cancel context.CancelFunc
+	echo   *echo.Echo
+	sugar  *zap.SugaredLogger
 }
 
 type CustomValidator struct {
@@ -37,14 +39,14 @@ func (cv *CustomValidator) Validate(i any) error {
 }
 
 func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
+	newCtx, cancel := context.WithCancel(ctx)
 	app := echo.New()
 	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus: true,
 		LogURI:    true,
-		LogError:  true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
 				s.Logw(zapcore.InfoLevel,
 					"REQUEST",
@@ -72,22 +74,33 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	}))
 
 	return &Server{
-		ctx:   ctx,
-		echo:  app,
-		sugar: s,
+		ctx:    newCtx,
+		cancel: cancel,
+		echo:   app,
+		sugar:  s,
 	}
 }
 
-func (s *Server) Start(address string, useSSL bool, certFile, keyFile string) error {
+func (s *Server) Start(fs afero.Fs, address string, useSSL bool, certFile, keyFile string) error {
+	fsFileSystem := afero.NewIOFS(fs)
+	start := echo.StartConfig{
+		Address:         address,
+		HideBanner:      true,
+		HidePort:        false,
+		CertFilesystem:  fsFileSystem,
+		GracefulTimeout: 5,
+	}
 	if useSSL {
 		s.echo.Pre(middleware.HTTPSRedirect())
-		return s.echo.StartTLS(address, certFile, keyFile)
+		return start.StartTLS(s.ctx, s.echo, certFile, keyFile)
 	}
-	return s.echo.Start(address)
+
+	return start.Start(s.ctx, s.echo)
 }
 
 func (s *Server) Stop() error {
-	return s.echo.Shutdown(s.ctx)
+	s.cancel()
+	return nil
 }
 
 func (s *Server) Root() *echo.Group {
