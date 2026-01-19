@@ -10,7 +10,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type RootHandler struct {
@@ -41,7 +40,7 @@ func sanitizeString(input string) string {
 func (h *RootHandler) Register(g *echo.Group) {
 	g.GET("/", h.Root)
 	g.GET("/health", h.Health)
-	g.GET("/swagger/*", echoSwagger.WrapHandler)
+	//g.GET("/swagger/*", echoSwagger.WrapHandler)
 }
 
 // Root godoc
