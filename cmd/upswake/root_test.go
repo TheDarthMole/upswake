@@ -183,7 +183,7 @@ func Test_Execute(t *testing.T) {
 				args: []string{"upswake", "serve"},
 				filesystem: func() afero.Fs {
 					fs := afero.NewMemMapFs()
-					configYaml := `
+					const configYaml = `
 nut_servers:
   - name: test-nut-server
     host: 127.0.0.1
