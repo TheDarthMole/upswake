@@ -206,7 +206,7 @@ nut_servers:
 			exitCode: 0,
 			timeout:  5 * time.Second,
 			wantOutput: []string{
-				"http server started on",
+				"http(s) server started",
 				"Gracefully stopping worker",
 			},
 			notWantOutput: []string{"ERROR", "error"},
