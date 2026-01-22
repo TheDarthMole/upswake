@@ -38,7 +38,11 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
 
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
-		logger.Error("error getting broadcast addresses", slog.Any("error", err))
+		logger.Error(
+			"error getting broadcast addresses",
+			slog.String("cmd", "root"),
+			slog.Any("error", err),
+		)
 		return 1
 	}
 	rootCmd := NewRootCommand()
@@ -57,7 +61,11 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
 
 	err = rootCmd.ExecuteContext(ctx)
 	if err != nil {
-		logger.Error("Error executing root command", slog.Any("error", err))
+		logger.Error(
+			"Error executing root command",
+			slog.String("cmd", "root"),
+			slog.Any("error", err),
+		)
 		return 1
 	}
 	return 0

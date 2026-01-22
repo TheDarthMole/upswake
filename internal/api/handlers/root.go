@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -72,14 +73,14 @@ func (h *RootHandler) Health(c *echo.Context) error {
 	}
 
 	if _, err := network.GetAllBroadcastAddresses(); err != nil {
-		c.Logger().Error("Error getting broadcast addresses: " + err.Error())
+		c.Logger().Error("Error getting broadcast addresses", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	// TODO: Speed this up by running in parallel
 	for _, server := range h.cfg.NutServers {
 		if _, err := ups.GetJSON(&server); err != nil {
-			c.Logger().Error("Error getting NUT server status: " + err.Error())
+			c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
 			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 		}
 	}

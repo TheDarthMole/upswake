@@ -34,8 +34,12 @@ type serveCMD struct {
 }
 
 func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
+	childLogger := logger.With(
+		slog.String("cmd", "serve"),
+	)
+
 	sc := &serveCMD{
-		logger: logger,
+		logger: childLogger,
 		fs:     fs,
 		regoFs: regoFs,
 	}
@@ -142,11 +146,11 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	defer wg.Done()
 	j.logger.Info("Starting worker",
-		slog.String("workerName", target.Name))
+		slog.String("worker_name", target.Name))
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
 		j.logger.Error("Stopping Worker. Could not parse interval",
-			slog.String("workerName", target.Name),
+			slog.String("worker_name", target.Name),
 			slog.Any("error", err))
 		return
 	}
@@ -162,7 +166,7 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 		select {
 		case <-ctx.Done():
 			j.logger.Info("Gracefully stopping worker",
-				slog.String("workerName", target.Name))
+				slog.String("worker_name", target.Name))
 			return
 		case <-ticker.C:
 			j.sendWakeRequest(ctx, target, endpoint, client)
@@ -174,14 +178,14 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 	body, err := json.Marshal(map[string]string{"mac": target.MAC})
 	if err != nil {
 		j.logger.Error("Error marshalling JSON",
-			slog.String("workerName", target.Name),
+			slog.String("worker_name", target.Name),
 			slog.Any("error", err))
 		return
 	}
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
 		j.logger.Error("Error creating post request",
-			slog.String("workerName", target.Name),
+			slog.String("worker_name", target.Name),
 			slog.Any("error", err))
 		return
 	}
@@ -190,18 +194,18 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 	resp, err := client.Do(r)
 	if errors.Is(err, context.Canceled) {
 		j.logger.Info("Gracefully stopping worker",
-			slog.String("workerName", target.Name))
+			slog.String("worker_name", target.Name))
 		return
 	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		j.logger.Warn("Timeout sending post request",
-			slog.String("workerName", target.Name),
+			slog.String("worker_name", target.Name),
 			slog.Any("error", err))
 		return
 	}
 	if err != nil {
 		j.logger.Error("Error sending post request",
-			slog.String("workerName", target.Name),
+			slog.String("worker_name", target.Name),
 			slog.Any("error", err))
 		return
 	}
@@ -210,15 +214,15 @@ func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServ
 		err := Body.Close()
 		if err != nil {
 			j.logger.Error("Error closing response body",
-				slog.String("workerName", target.Name),
+				slog.String("worker_name", target.Name),
 				slog.Any("error", err))
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		j.logger.Error("Error sending post request",
-			slog.String("workerName", target.Name),
-			slog.String("statusCode", resp.Status))
+			slog.String("worker_name", target.Name),
+			slog.String("status_code", resp.Status))
 		return
 	}
 }
