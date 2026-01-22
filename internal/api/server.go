@@ -41,8 +41,7 @@ func (cv *CustomValidator) Validate(i any) error {
 func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 	newCtx, cancel := context.WithCancel(ctx)
 	app := echo.New()
-	// TODO: Set logger to the app here
-	//app.Logger = logger
+	app.Logger = logger
 
 	app.Validator = NewCustomValidator(newCtx)
 	app.Pre(middleware.RemoveTrailingSlash())

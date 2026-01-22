@@ -128,7 +128,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
 			wantErr: assert.NoError,
-			output:  `Sent WoL packet to 127.0.0.255 to wake 00:00:00:00:00:00`,
+			output:  `"msg":"Sent WoL packet","broadcast":"127.0.0.255","mac":"00:00:00:00:00:00"`,
 		},
 		{
 			name: "no broadcasts",
