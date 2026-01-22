@@ -4,15 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
-	"io"
 	"log/slog"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 )
 
 var ErrTimeout = errors.New("timeout")
@@ -55,34 +51,5 @@ func executeCommandWithContext(t *testing.T, cmdFunc func(logger *slog.Logger) *
 		err = ErrTimeout
 		cancel()
 	}
-	fmt.Println("--------")
-	fmt.Println(logBuf.String())
-	fmt.Println("--------")
 	return logBuf.String(), err
-}
-
-func getStdoutStderr(t *testing.T, a func()) string {
-	r, w, err := os.Pipe()
-	require.NoError(t, err)
-
-	beforeStderr := os.Stderr
-	beforeStdout := os.Stdout
-	defer func() {
-		os.Stderr = beforeStderr
-		os.Stdout = beforeStdout
-		w.Close()
-		r.Close()
-	}()
-
-	os.Stderr = w
-	os.Stdout = w
-
-	a()
-
-	var buf bytes.Buffer
-	w.Close()
-	_, err1 := io.Copy(&buf, r)
-	require.NoError(t, err1)
-
-	return buf.String()
 }
