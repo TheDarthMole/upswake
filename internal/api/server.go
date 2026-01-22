@@ -2,21 +2,20 @@ package api
 
 import (
 	"context"
+	"log/slog"
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/spf13/afero"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type Server struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	echo   *echo.Echo
-	sugar  *zap.SugaredLogger
+	logger *slog.Logger
 }
 
 type CustomValidator struct {
@@ -38,9 +37,12 @@ func (cv *CustomValidator) Validate(i any) error {
 	return nil
 }
 
-func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
+func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 	newCtx, cancel := context.WithCancel(ctx)
 	app := echo.New()
+	// TODO: Set logger to the app here
+	//app.Logger = logger
+
 	app.Validator = NewCustomValidator(ctx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
@@ -48,25 +50,25 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 		LogURI:    true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
-				s.Logw(zapcore.InfoLevel,
+				logger.Info(
 					"REQUEST",
-					"remote_ip", c.RealIP(),
-					"host", c.Request().Host,
-					"method", c.Request().Method,
-					"uri", v.URI,
-					"user_agent", c.Request().UserAgent(),
-					"status", v.Status,
+					slog.String("remote_ip", c.RealIP()),
+					slog.String("host", c.Request().Host),
+					slog.String("method", c.Request().Method),
+					slog.String("uri", v.URI),
+					slog.String("user_agent", c.Request().UserAgent()),
+					slog.Int("status", v.Status),
 				)
 			} else {
-				s.Logw(zapcore.ErrorLevel,
+				logger.Error(
 					"REQUEST_ERROR",
-					"remote_ip", c.RealIP(),
-					"host", c.Request().Host,
-					"method", c.Request().Method,
-					"uri", v.URI,
-					"user_agent", c.Request().UserAgent(),
-					"status", v.Status,
-					"error", v.Error.Error(),
+					slog.String("remote_ip", c.RealIP()),
+					slog.String("host", c.Request().Host),
+					slog.String("method", c.Request().Method),
+					slog.String("uri", v.URI),
+					slog.String("user_agent", c.Request().UserAgent()),
+					slog.Int("status", v.Status),
+					slog.Any("error", v.Error),
 				)
 			}
 			return nil
@@ -77,7 +79,7 @@ func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 		ctx:    newCtx,
 		cancel: cancel,
 		echo:   app,
-		sugar:  s,
+		logger: logger,
 	}
 }
 

@@ -3,21 +3,21 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var errorNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
 
 type wakeCMD struct {
-	logger *zap.SugaredLogger
+	logger *slog.Logger
 }
 
-func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
+func NewWakeCmd(logger *slog.Logger, broadcasts []net.IP) *cobra.Command {
 	wc := &wakeCMD{logger: logger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake",
@@ -70,7 +70,9 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			joined = errors.Join(joined, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
 			continue
 		}
-		wake.logger.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
+		wake.logger.Info("Sent WoL packet",
+			slog.String("broadcast", broadcast.String()),
+			slog.String("mac", mac))
 	}
 	return joined
 }
