@@ -21,7 +21,11 @@ type healthCheck struct {
 }
 
 func NewHealthCheckCommand(logger *slog.Logger) *cobra.Command {
-	hc := healthCheck{logger: logger}
+	childLogger := logger.With(
+		slog.String("cmd", "healthcheck"),
+	)
+
+	hc := healthCheck{logger: childLogger}
 
 	healthcheckCmd := &cobra.Command{
 		Use:   "healthcheck",
@@ -63,13 +67,18 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 
 	resp, err := client.Get(healthURL)
 	if err != nil {
-		h.logger.Error(ErrHealthCheckFailed.Error(), slog.String("url", healthURL), slog.Any("error", err))
+		h.logger.Error(
+			"error making healthcheck request",
+			slog.String("url", healthURL),
+			slog.Any("error", err))
 		return errors.Join(ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		h.logger.Error(ErrHealthCheckFailed.Error(), slog.String("url", healthURL), slog.String("status", resp.Status))
+		h.logger.Error("healthcheck status not ok",
+			slog.String("url", healthURL),
+			slog.String("status", resp.Status))
 		return fmt.Errorf("%w: %s", ErrHealthCheckFailed, resp.Status)
 	}
 	h.logger.Info("health check passed")

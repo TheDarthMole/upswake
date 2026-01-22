@@ -14,7 +14,14 @@ type jsonCMD struct {
 }
 
 func NewJSONCommand(logger *slog.Logger) *cobra.Command {
-	jc := &jsonCMD{logger: logger}
+	childLogger := logger.With(
+		slog.String("cmd", "json"),
+	)
+
+	jc := &jsonCMD{
+		logger: childLogger,
+	}
+
 	cmd := &cobra.Command{
 		Use:   "json",
 		Short: "Retrieve JSON from a NUT server",
