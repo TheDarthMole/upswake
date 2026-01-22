@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
 )
 
@@ -28,12 +28,12 @@ const (
 )
 
 type serveCMD struct {
-	logger *zap.SugaredLogger
+	logger *slog.Logger
 	fs     afero.Fs
 	regoFs afero.Fs
 }
 
-func NewServeCommand(ctx context.Context, logger *zap.SugaredLogger, fs, regoFs afero.Fs) *cobra.Command {
+func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
 	sc := &serveCMD{
 		logger: logger,
 		fs:     fs,
@@ -119,7 +119,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		<-ctx.Done()
 		j.logger.Info("Shutting down server")
 		if err1 := server.Stop(); err1 != nil {
-			j.logger.Warnf("Error stopping server: %v", err1)
+			j.logger.Warn("Error stopping server", slog.Any("error", err1))
 		}
 	}(ctx, &wg)
 
@@ -141,10 +141,13 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	defer wg.Done()
-	j.logger.Infof("[%s] Starting worker", target.Name)
+	j.logger.Info("Starting worker",
+		slog.String("workerName", target.Name))
 	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
-		j.logger.Errorf("[%s] Stopping Worker. Could not parse interval: %s", target.Name, err)
+		j.logger.Error("Stopping Worker. Could not parse interval",
+			slog.String("workerName", target.Name),
+			slog.Any("error", err))
 		return
 	}
 	ticker := time.NewTicker(interval)
@@ -158,7 +161,8 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 	for {
 		select {
 		case <-ctx.Done():
-			j.logger.Infof("[%s] Gracefully stopping worker", target.Name)
+			j.logger.Info("Gracefully stopping worker",
+				slog.String("workerName", target.Name))
 			return
 		case <-ticker.C:
 			j.sendWakeRequest(ctx, target, endpoint, client)
@@ -169,39 +173,52 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, client *http.Client) {
 	body, err := json.Marshal(map[string]string{"mac": target.MAC})
 	if err != nil {
-		j.logger.Errorf("[%s] Error marshalling JSON: %s", target.Name, err)
+		j.logger.Error("Error marshalling JSON",
+			slog.String("workerName", target.Name),
+			slog.Any("error", err))
 		return
 	}
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
 	if err != nil {
-		j.logger.Errorf("[%s] Error creating post request: %s", target.Name, err)
+		j.logger.Error("Error creating post request",
+			slog.String("workerName", target.Name),
+			slog.Any("error", err))
 		return
 	}
 	r.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(r)
 	if errors.Is(err, context.Canceled) {
-		j.logger.Infof("[%s] Gracefully stopping", target.Name)
+		j.logger.Info("Gracefully stopping worker",
+			slog.String("workerName", target.Name))
 		return
 	}
 	if errors.Is(err, context.DeadlineExceeded) {
-		j.logger.Warnf("[%s] Timeout sending post request: %s", target.Name, err)
+		j.logger.Warn("Timeout sending post request",
+			slog.String("workerName", target.Name),
+			slog.Any("error", err))
 		return
 	}
 	if err != nil {
-		j.logger.Errorf("[%s] Error sending post request: %s", target.Name, err)
+		j.logger.Error("Error sending post request",
+			slog.String("workerName", target.Name),
+			slog.Any("error", err))
 		return
 	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			j.logger.Errorf("[%s] Error closing response body: %s", target.Name, err)
+			j.logger.Error("Error closing response body",
+				slog.String("workerName", target.Name),
+				slog.Any("error", err))
 		}
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		j.logger.Errorf("[%s] Error sending post request: %s", target.Name, resp.Status)
+		j.logger.Error("Error sending post request",
+			slog.String("workerName", target.Name),
+			slog.String("statusCode", resp.Status))
 		return
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"math/rand/v2"
 	"net/http"
@@ -26,8 +27,19 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
+
+func newTestLoggerWithBuffer() (*slog.Logger, *bytes.Buffer) {
+	logBuf := new(bytes.Buffer)
+	handler := slog.NewJSONHandler(logBuf, nil)
+	logger := slog.New(handler)
+	return logger, logBuf
+}
+
+func newTestLogger() *slog.Logger {
+	logger, _ := newTestLoggerWithBuffer()
+	return logger
+}
 
 func pingHandler(c *echo.Context) error {
 	return c.String(http.StatusOK, "pong")
@@ -135,35 +147,36 @@ func TestNewCustomValidator(t *testing.T) {
 
 func TestNewServer(t *testing.T) {
 	type args struct {
-		ctx context.Context
-		s   *zap.SugaredLogger
+		ctx    context.Context
+		logger *slog.Logger
 	}
 	ctx := context.Background()
-	sugar := zap.NewExample().Sugar()
+	logger := newTestLogger()
 	tests := []struct {
 		name string
 		args args
 		want *Server
 	}{
 		{
-			name: "New Server with background context and zap logger",
+			name: "New Server with background context and slog logger",
 			args: args{
-				ctx: ctx,
-				s:   sugar,
+				ctx:    ctx,
+				logger: logger,
 			},
 			want: &Server{
-				ctx:   ctx,
-				echo:  echo.New(),
-				sugar: sugar,
+				ctx:    ctx,
+				echo:   echo.New(),
+				logger: logger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewServer(tt.args.ctx, tt.args.s)
+			got := NewServer(tt.args.ctx, tt.args.logger)
 
 			assert.NotNil(t, got)
-			assert.Equal(t, tt.want.sugar, got.sugar)
+			assert.Equal(t, tt.want.ctx, got.ctx)
+			assert.Equal(t, tt.want.logger, got.logger)
 
 			// echo instance and validator
 			assert.NotNil(t, got.echo)
@@ -185,14 +198,18 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServer_API(t *testing.T) {
-	e := NewServer(context.Background(), zap.NewExample().Sugar())
+	logger := newTestLogger()
+
+	e := NewServer(t.Context(), logger)
 	expected := e.echo.Group("/api")
 
 	assert.Equal(t, expected, e.API())
 }
 
 func TestServer_Root(t *testing.T) {
-	e := NewServer(context.Background(), zap.NewExample().Sugar())
+	logger := newTestLogger()
+
+	e := NewServer(context.Background(), logger)
 	expected := e.echo.Group("")
 
 	assert.Equal(t, expected, e.Root())
@@ -268,8 +285,8 @@ func generateEncodedECCKeys(t *testing.T) ([]byte, []byte) {
 
 func TestServer_Start_Stop(t *testing.T) {
 	type fields struct {
-		ctx   context.Context
-		sugar *zap.SugaredLogger
+		ctx    context.Context
+		logger *slog.Logger
 	}
 
 	certFs := afero.NewMemMapFs()
@@ -300,8 +317,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server without SSL",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  "127.0.0.1:0",
@@ -315,8 +332,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server with SSL using RSA certs",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  "127.0.0.1:0",
@@ -330,8 +347,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server with SSL using ECC certs",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  "127.0.0.1:0",
@@ -345,8 +362,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server with SSL without certs",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  "127.0.0.1:0",
@@ -360,8 +377,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server with no port",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  "127.0.0.1",
@@ -375,8 +392,8 @@ func TestServer_Start_Stop(t *testing.T) {
 		{
 			name: "Start server with no address",
 			fields: fields{
-				ctx:   context.Background(),
-				sugar: zap.NewExample().Sugar(),
+				ctx:    context.Background(),
+				logger: newTestLogger(),
 			},
 			args: args{
 				address:  fmt.Sprintf(":%d", rand.IntN(65535-49152)+49152),
@@ -392,7 +409,7 @@ func TestServer_Start_Stop(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			srv := NewServer(tt.fields.ctx, tt.fields.sugar)
+			srv := NewServer(tt.fields.ctx, tt.fields.logger)
 
 			go func() {
 				time.Sleep(500 * time.Millisecond)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -9,17 +10,14 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestNewServeCommand(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-	testSugar := logger.Sugar()
+	logger := newTestLogger()
 
 	emptyFs := afero.NewMemMapFs()
 
-	got := NewServeCommand(t.Context(), testSugar, emptyFs, emptyFs)
+	got := NewServeCommand(t.Context(), logger, emptyFs, emptyFs)
 
 	var gotFlagNames []string
 	got.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -45,7 +43,7 @@ func TestNewServeCommand(t *testing.T) {
 
 func Test_serveCmdRunE(t *testing.T) {
 	type args struct {
-		cmdFunc func(_ *zap.SugaredLogger) *cobra.Command
+		cmdFunc func(_ *slog.Logger) *cobra.Command
 		args    []string
 	}
 	tests := []struct {
@@ -58,7 +56,7 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "empty config",
 			args: args{
-				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+				cmdFunc: func(logger *slog.Logger) *cobra.Command {
 					fs := afero.NewMemMapFs()
 					err := afero.WriteFile(fs, "upswake.yaml", []byte(""), 0o644)
 					require.NoError(t, err)
@@ -76,7 +74,7 @@ func Test_serveCmdRunE(t *testing.T) {
 		{
 			name: "valid config no rules",
 			args: args{
-				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+				cmdFunc: func(logger *slog.Logger) *cobra.Command {
 					fs := afero.NewMemMapFs()
 					cfgYaml := `
 nut_servers:

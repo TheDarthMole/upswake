@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 const (
@@ -34,37 +33,31 @@ func NewRootCommand() *cobra.Command {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
-	logger, err := zap.NewProduction(zap.WithCaller(false))
-	if err != nil {
-		log.Fatalf("can't initialise zap logger: %v", err)
-	}
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(logger)
-	sugar := logger.Sugar()
+	handler := slog.NewJSONHandler(os.Stdout, nil)
+	logger := slog.New(handler)
 
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
-		sugar.Error(err)
+		logger.Error("error getting broadcast addresses", slog.Any("error", err))
 		return 1
 	}
 	rootCmd := NewRootCommand()
 
-	wakeCmd := NewWakeCmd(sugar, bc)
+	wakeCmd := NewWakeCmd(logger, bc)
 	rootCmd.AddCommand(wakeCmd)
 
-	jsonCmd := NewJSONCommand(sugar)
+	jsonCmd := NewJSONCommand(logger)
 	rootCmd.AddCommand(jsonCmd)
 
-	serveCmd := NewServeCommand(ctx, sugar, fs, regoFs)
+	serveCmd := NewServeCommand(ctx, logger, fs, regoFs)
 	rootCmd.AddCommand(serveCmd)
 
-	healthCheckCmd := NewHealthCheckCommand(sugar)
+	healthCheckCmd := NewHealthCheckCommand(logger)
 	serveCmd.AddCommand(healthCheckCmd)
 
 	err = rootCmd.ExecuteContext(ctx)
 	if err != nil {
-		sugar.Error("Error executing root command: " + err.Error())
+		logger.Error("Error executing root command", slog.Any("error", err))
 		return 1
 	}
 	return 0
