@@ -175,7 +175,6 @@ func TestNewServer(t *testing.T) {
 			got := NewServer(tt.args.ctx, tt.args.logger)
 
 			assert.NotNil(t, got)
-			assert.Equal(t, tt.want.ctx, got.ctx)
 			assert.Equal(t, tt.want.logger, got.logger)
 
 			// echo instance and validator

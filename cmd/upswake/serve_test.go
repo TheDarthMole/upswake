@@ -104,7 +104,7 @@ nut_servers:
 			wantOutputs: []string{
 				`"msg":"http(s) server started","address":"[::]:8082"`,
 				`"status":200`,
-				`{"level":"info","ts":`,
+				`"level":"INFO"`,
 				`"msg":"REQUEST","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200}`,
 			},
 			notWantOutputs: []string{
