@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var (
@@ -17,11 +17,15 @@ var (
 )
 
 type healthCheck struct {
-	logger *zap.SugaredLogger
+	logger *slog.Logger
 }
 
-func NewHealthCheckCommand(logger *zap.SugaredLogger) *cobra.Command {
-	hc := healthCheck{logger: logger}
+func NewHealthCheckCommand(logger *slog.Logger) *cobra.Command {
+	childLogger := logger.With(
+		slog.String("cmd", "healthcheck"),
+	)
+
+	hc := healthCheck{logger: childLogger}
 
 	healthcheckCmd := &cobra.Command{
 		Use:   "healthcheck",
@@ -38,7 +42,7 @@ func NewHealthCheckCommand(logger *zap.SugaredLogger) *cobra.Command {
 }
 
 func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
-	h.logger.Infoln("Checking health")
+	h.logger.Info("Checking health")
 	protocol := "http"
 
 	ssl, _ := cmd.Flags().GetBool("ssl")
@@ -47,7 +51,7 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	healthURL := fmt.Sprintf("%s://%s:%s/health", protocol, cmd.Flag("host").Value.String(), cmd.Flag("port").Value.String())
-	h.logger.Debugf("Checking %s", healthURL)
+	h.logger.Debug("Checking url", slog.String("url", healthURL))
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -63,15 +67,20 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 
 	resp, err := client.Get(healthURL)
 	if err != nil {
-		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "err", err)
+		h.logger.Error(
+			"error making healthcheck request",
+			slog.String("url", healthURL),
+			slog.Any("error", err))
 		return errors.Join(ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		h.logger.Errorw(ErrHealthCheckFailed.Error(), "url", healthURL, "status", resp.Status)
+		h.logger.Error("healthcheck status not ok",
+			slog.String("url", healthURL),
+			slog.String("status", resp.Status))
 		return fmt.Errorf("%w: %s", ErrHealthCheckFailed, resp.Status)
 	}
-	h.logger.Infof("health check passed")
+	h.logger.Info("health check passed")
 	return nil
 }

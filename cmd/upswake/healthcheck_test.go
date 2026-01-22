@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -11,11 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 func TestNewHealthCheckCommand(t *testing.T) {
-	logger := zap.NewNop().Sugar()
+	logger := newTestLogger()
 	got := NewHealthCheckCommand(logger)
 
 	assert.NotNil(t, got)
@@ -30,7 +30,7 @@ func TestNewHealthCheckCommand(t *testing.T) {
 
 func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 	type fields struct {
-		logger      *zap.SugaredLogger
+		logger      *slog.Logger
 		handlerFunc func(http.ResponseWriter, *http.Request)
 	}
 	type args struct {
@@ -46,7 +46,7 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 		{
 			name: "successful healthcheck",
 			fields: fields{
-				logger: zap.NewNop().Sugar(),
+				logger: newTestLogger(),
 				handlerFunc: func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 					apiResponse := handlers.Response{
@@ -59,14 +59,14 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 				},
 			},
 			args: args{
-				cmd: NewHealthCheckCommand(zap.NewNop().Sugar()),
+				cmd: NewHealthCheckCommand(newTestLogger()),
 			},
 			err: nil,
 		},
 		{
 			name: "internal error healthcheck",
 			fields: fields{
-				logger: zap.NewNop().Sugar(),
+				logger: newTestLogger(),
 				handlerFunc: func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusInternalServerError)
 					apiResponse := handlers.Response{
@@ -79,18 +79,18 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 				},
 			},
 			args: args{
-				cmd: NewHealthCheckCommand(zap.NewNop().Sugar()),
+				cmd: NewHealthCheckCommand(newTestLogger()),
 			},
 			err: ErrHealthCheckFailed,
 		},
 		{
 			name: "no response healthcheck",
 			fields: fields{
-				logger:      zap.NewNop().Sugar(),
+				logger:      newTestLogger(),
 				handlerFunc: func(_ http.ResponseWriter, _ *http.Request) {},
 			},
 			args: args{
-				cmd: NewHealthCheckCommand(zap.NewNop().Sugar()),
+				cmd: NewHealthCheckCommand(newTestLogger()),
 			},
 			closeServer: true,
 			err:         ErrMakingRequest,

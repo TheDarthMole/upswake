@@ -3,22 +3,26 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
-var errorNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
+var ErrNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
 
 type wakeCMD struct {
-	logger *zap.SugaredLogger
+	logger *slog.Logger
 }
 
-func NewWakeCmd(logger *zap.SugaredLogger, broadcasts []net.IP) *cobra.Command {
-	wc := &wakeCMD{logger: logger}
+func NewWakeCmd(logger *slog.Logger, broadcasts []net.IP) *cobra.Command {
+	childLogger := logger.With(
+		slog.String("cmd", "wake"),
+	)
+
+	wc := &wakeCMD{logger: childLogger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake",
 		Short: "Manually wake a computer",
@@ -47,7 +51,7 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	if len(broadcasts) == 0 {
-		return errorNoBroadcasts
+		return ErrNoBroadcasts
 	}
 
 	var joined error
@@ -70,7 +74,9 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			joined = errors.Join(joined, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
 			continue
 		}
-		wake.logger.Infof("Sent WoL packet to %s to wake %s", broadcast, mac)
+		wake.logger.Info("Sent WoL packet",
+			slog.String("broadcast", broadcast.String()),
+			slog.String("mac", mac))
 	}
 	return joined
 }

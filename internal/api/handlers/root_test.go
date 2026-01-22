@@ -149,19 +149,25 @@ func TestRootHandler_Register(t *testing.T) {
 	g := e.Group("")
 	h.Register(g)
 
-	expectedRoutes := []string{"/", "/health", "/swagger/*"}
-	lenExpectedRoutes := len(expectedRoutes)
-	for _, route := range e.Router().Routes() {
-		for i, expected := range expectedRoutes {
-			if expected == route.Path {
-				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
-				break
-			}
-		}
+	expectedRoutes := echo.Routes{
+		{
+			Name:   "GET:/",
+			Path:   "/",
+			Method: "GET",
+		},
+		{
+			Name:   "GET:/health",
+			Path:   "/health",
+			Method: "GET",
+		},
+		{
+			Name:   "GET:/swagger/*",
+			Path:   "/swagger/*",
+			Method: "GET",
+		},
 	}
 
-	assert.Len(t, e.Router().Routes(), lenExpectedRoutes, "Expected 2 routes to be registered")
-	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
+	assert.Equal(t, expectedRoutes, e.Router().Routes())
 }
 
 func TestNewRootHandler(t *testing.T) {

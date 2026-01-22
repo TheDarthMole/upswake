@@ -1,18 +1,21 @@
 package main
 
 import (
+	"bytes"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 )
 
 func Test_NewJSONCommand(t *testing.T) {
 	t.Run("json command", func(t *testing.T) {
-		logger := zaptest.NewLogger(t)
-		sugar := logger.Sugar()
-		jsonCmd := NewJSONCommand(sugar)
+		logBuf := new(bytes.Buffer)
+		handler := slog.NewJSONHandler(logBuf, nil)
+		logger := slog.New(handler)
+
+		jsonCmd := NewJSONCommand(logger)
 		assert.Equal(t, "json", jsonCmd.Use, "json command should be 'json'")
 		assert.NotEmpty(t, jsonCmd.Short)
 		assert.NotEmpty(t, jsonCmd.Long)
