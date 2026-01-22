@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log/slog"
 	"net"
 	"testing"
@@ -114,10 +113,11 @@ func Test_wakeCmdRunE(t *testing.T) {
 		args    []string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr assert.ErrorAssertionFunc
-		output  string
+		name              string
+		args              args
+		error             error
+		outputContains    []string
+		outputNotContains []string
 	}{
 		{
 			name: "valid",
@@ -127,8 +127,10 @@ func Test_wakeCmdRunE(t *testing.T) {
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			wantErr: assert.NoError,
-			output:  `"msg":"Sent WoL packet","broadcast":"127.0.0.255","mac":"00:00:00:00:00:00"`,
+			error: nil,
+			outputContains: []string{
+				`"msg":"Sent WoL packet","cmd":"wake","broadcast":"127.0.0.255","mac":"00:00:00:00:00:00"`,
+			},
 		},
 		{
 			name: "no broadcasts",
@@ -138,16 +140,27 @@ func Test_wakeCmdRunE(t *testing.T) {
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			wantErr: assert.Error,
-			output:  errorNoBroadcasts.Error(),
+			error: ErrNoBroadcasts,
+			outputContains: []string{
+				ErrNoBroadcasts.Error(),
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
 
-			tt.wantErr(t, err, fmt.Sprintf("wakeCmdRunE(%v)", tt.args.args))
-			assert.Contains(t, output, tt.output)
+			t.Log(output)
+
+			assert.ErrorIs(t, err, tt.error)
+
+			for _, wantOutput := range tt.outputContains {
+				assert.Contains(t, output, wantOutput)
+			}
+
+			for _, notWantOutput := range tt.outputNotContains {
+				assert.NotContains(t, output, notWantOutput)
+			}
 		})
 	}
 }
