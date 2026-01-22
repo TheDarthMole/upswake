@@ -172,8 +172,25 @@ func TestRootHandler_Register(t *testing.T) {
 	g := e.Group("")
 	h.Register(g)
 
-	expectedRoutes := []string{"/", "/health", "/swagger/*"}
-	assertRoutes(t, e, expectedRoutes)
+	expectedRoutes := echo.Routes{
+		{
+			Name:   "GET:/",
+			Path:   "/",
+			Method: "GET",
+		},
+		{
+			Name:   "GET:/health",
+			Path:   "/health",
+			Method: "GET",
+		},
+		{
+			Name:   "GET:/swagger/*",
+			Path:   "/swagger/*",
+			Method: "GET",
+		},
+	}
+
+	assert.Equal(t, expectedRoutes, e.Router().Routes())
 }
 
 func TestNewRootHandler(t *testing.T) {
