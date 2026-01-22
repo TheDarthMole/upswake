@@ -207,7 +207,7 @@ func certificateTemplate(t *testing.T) *x509.Certificate {
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"My Organization"},
+			Organization: []string{"My Organization"}, //nolint: misspell
 		},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,
