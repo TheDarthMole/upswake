@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
 
@@ -32,8 +33,8 @@ func NewRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
-	handler := slog.NewJSONHandler(os.Stdout, nil)
+func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer) int {
+	handler := slog.NewJSONHandler(logDestination, nil)
 	logger := slog.New(handler)
 
 	bc, err := network.GetAllBroadcastAddresses()
@@ -74,5 +75,5 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs) int {
 func main() {
 	fs := afero.NewOsFs()
 	regoFs := afero.NewBasePathFs(fs, "rules")
-	os.Exit(Execute(context.Background(), fs, regoFs))
+	os.Exit(Execute(context.Background(), fs, regoFs, os.Stdout))
 }
