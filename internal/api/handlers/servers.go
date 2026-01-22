@@ -67,8 +67,8 @@ func (s *ServerHandler) Register(g *echo.Group) {
 
 // WakeServer godoc
 //
-//	@Summary		Wake a server using a mac and a broadcast address
-//	@Description	Wake a server using Wake on LAN using the mac and broadcast address provided
+//	@Summary		Wake a server using a MAC and a broadcast address
+//	@Description	Wake a server using Wake on LAN using the MAC and broadcast address provided
 //	@Tags			servers
 //	@Accept			json
 //	@Produce		json
@@ -115,8 +115,8 @@ func (s *ServerHandler) WakeServer(c *echo.Context) error {
 
 // BroadcastWakeServer godoc
 //
-//	@Summary		Wake a server using just a mac
-//	@Description	Wake a server using Wake on LAN by using the mac and enumerating all available broadcast addresses
+//	@Summary		Wake a server using just a MAC
+//	@Description	Wake a server using Wake on LAN by using the MAC and enumerating all available broadcast addresses
 //	@Tags			servers
 //	@Accept			json
 //	@Produce		json
