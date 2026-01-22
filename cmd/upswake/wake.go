@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var errorNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
+var ErrNoBroadcasts = errors.New("no broadcast addresses provided; supply with --broadcasts or configure defaults")
 
 type wakeCMD struct {
 	logger *slog.Logger
@@ -51,7 +51,7 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	if len(broadcasts) == 0 {
-		return errorNoBroadcasts
+		return ErrNoBroadcasts
 	}
 
 	var joined error
