@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"time"
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
 	"github.com/go-playground/validator/v10"
@@ -88,7 +89,7 @@ func (s *Server) Start(fs afero.Fs, address string, useSSL bool, certFile, keyFi
 		HideBanner:      true,
 		HidePort:        false,
 		CertFilesystem:  fsFileSystem,
-		GracefulTimeout: 5,
+		GracefulTimeout: 5 * time.Second,
 	}
 	if useSSL {
 		s.echo.Pre(middleware.HTTPSRedirect())
