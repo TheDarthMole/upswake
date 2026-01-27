@@ -283,8 +283,6 @@ func TestServer_Start_Stop(t *testing.T) {
 	require.NoError(t, afero.WriteFile(certFs, "ecc.key", privateECCKey, os.ModePerm))
 	require.NoError(t, afero.WriteFile(certFs, "ecc.cert", publicECCKey, os.ModePerm))
 
-	fmt.Println(string(publicRSAKey))
-
 	type args struct {
 		address  string
 		useSSL   bool
