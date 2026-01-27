@@ -400,7 +400,7 @@ func TestServer_Start_Stop(t *testing.T) {
 					t.Errorf("Stop() error = %v, wantErr %v", err, tt.wantStopErr)
 				}
 			}()
-			// TODO: We should use a memory fs here with certificatse loaded, not depending on actual certs on disk
+
 			err := srv.Start(certFs, tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
 			// http.ErrServerClosed is returned when the server is shut down normally
 			if (err != nil && !errors.Is(err, http.ErrServerClosed)) != tt.wantStartErr {
