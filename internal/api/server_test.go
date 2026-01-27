@@ -235,7 +235,7 @@ func generateEncodedRSAKeys(t *testing.T) ([]byte, []byte) {
 
 	b := x509.MarshalPKCS1PrivateKey(privateKey)
 
-	err = pem.Encode(&pemKey, &pem.Block{Type: "PRIVATE KEY", Bytes: b})
+	err = pem.Encode(&pemKey, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: b})
 	require.NoError(t, err)
 
 	return pemKey.Bytes(), pemCert.Bytes()
