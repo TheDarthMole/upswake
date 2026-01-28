@@ -70,7 +70,7 @@ func Test_serveCmdRunE(t *testing.T) {
 				args: []string{"serve", "--config", "upswake.yaml", "--port", "8081"},
 			},
 			err:            ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
-			wantOutputs:    []string{"http server started on [::]:8081"},
+			wantOutputs:    []string{`"msg":"http(s) server started","address":"[::]:8081`},
 			notWantOutputs: []string{`"level":"ERROR"`, `"level":"error"`, `"level":"Error"`},
 		},
 		{
@@ -104,7 +104,7 @@ nut_servers:
 			},
 			err: ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
-				"http server started on [::]:8082",
+				`"msg":"http(s) server started","address":"[::]:8082"`,
 				`"status":200`,
 				`{"level":"info","ts":`,
 				`"msg":"REQUEST","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200}`,
