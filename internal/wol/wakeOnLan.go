@@ -1,6 +1,7 @@
 package wol
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,12 @@ import (
 )
 
 const MagicPacketSize = 102
+
+var (
+	ErrFailedCreateMagicPacket = errors.New("failed to create magic packet")
+	ErrFailedSendWoLPacket     = errors.New("failed to send WoL packet")
+	ErrExpectedPacketSize      = errors.New(fmt.Sprintf("magic packet sent was expected to be of size %d", MagicPacketSize))
+)
 
 type WakeOnLan struct {
 	*entity.TargetServer
@@ -50,11 +57,11 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 	size, err := dst.Write(mp)
 
 	if err != nil {
-		return fmt.Errorf("failed to send WoL packet: %w", err)
+		return errors.Join(ErrFailedSendWoLPacket, err)
 	}
 
 	if size != MagicPacketSize {
-		err = fmt.Errorf("magic packet sent was %d bytes (expected %d bytes sent)", size, MagicPacketSize)
+		return errors.Join(ErrExpectedPacketSize, fmt.Errorf("magic packet sent was %d", size))
 	}
 
 	return nil
@@ -63,7 +70,7 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 func newMagicPacket(mac string) ([]byte, error) {
 	mp, err := wol.New(mac)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create magic packet: %w", err)
+		return nil, errors.Join(ErrFailedCreateMagicPacket, err)
 	}
 
 	return mp.Marshal()
