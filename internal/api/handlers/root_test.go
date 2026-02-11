@@ -105,7 +105,7 @@ func TestRootHandler_Health(t *testing.T) {
 				rulesFS: newMemFS(t, map[string][]byte{}),
 			},
 			wantedResponse: wantedResponse{
-				body:       `{"message": "could not connect to NUT server: connection failed\ndial tcp 127.0.0.1:1234: connect: connection refused"}`,
+				body:       `{"message": "could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"}`,
 				statusCode: http.StatusInternalServerError,
 			},
 		},
