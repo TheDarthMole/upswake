@@ -114,7 +114,11 @@ jobs:
       - name: Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@v3.3.1
         with:
-          cache-source: go-build-cache
+          cache-map: |
+            {
+              "cache-go-build": "/root/.cache/go-build"
+            }
+          cache-dir: go-build-cache
           dockerfile: Containerfile
 
       - name: 🚀 Build and deploy minimal Docker images
