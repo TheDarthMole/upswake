@@ -16,7 +16,7 @@ const MagicPacketSize = 102
 var (
 	ErrFailedCreateMagicPacket = errors.New("failed to create magic packet")
 	ErrFailedSendWoLPacket     = errors.New("failed to send WoL packet")
-	ErrExpectedPacketSize      = errors.New(fmt.Sprintf("magic packet sent was expected to be of size %d", MagicPacketSize))
+	ErrExpectedPacketSize      = fmt.Errorf("magic packet sent was expected to be of size %d", MagicPacketSize)
 )
 
 type WakeOnLan struct {
@@ -55,7 +55,6 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 	}
 
 	size, err := dst.Write(mp)
-
 	if err != nil {
 		return errors.Join(ErrFailedSendWoLPacket, err)
 	}
