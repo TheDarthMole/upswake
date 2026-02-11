@@ -135,30 +135,30 @@ func TestIsValidRego(t *testing.T) {
 		rego string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name  string
+		args  args
+		error error
 	}{
 		{
 			name: "Valid Rego Rule",
 			args: args{
 				rego: validRegoRule,
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "Invalid Rego Rule",
 			args: args{
 				rego: invalidRegoRule,
 			},
-			wantErr: true,
+			error: ErrInvalidRegoRule,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := IsValidRego(tt.args.rego); (err != nil) != tt.wantErr {
-				t.Errorf("IsValidRego() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := IsValidRego(tt.args.rego)
+
+			assert.ErrorIs(t, err, tt.error)
 		})
 	}
 }
