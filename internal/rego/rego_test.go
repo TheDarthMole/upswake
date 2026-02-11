@@ -1,6 +1,10 @@
 package rego
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 const (
 	validRegoRule = `package upswake
@@ -28,10 +32,10 @@ func TestEvaluateExpression(t *testing.T) {
 		regoRule string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
+		name  string
+		args  args
+		want  bool
+		error error
 	}{
 		{
 			name: "Valid Rego Rule and Valid JSON",
@@ -39,8 +43,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: validRegoRule,
 			},
-			want:    true,
-			wantErr: false,
+			want:  true,
+			error: nil,
 		},
 		{
 			name: "Valid Rego Rule and Invalid JSON",
@@ -48,8 +52,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  invalidJSON,
 				regoRule: validRegoRule,
 			},
-			want:    false,
-			wantErr: true,
+			want:  false,
+			error: ErrDecodeFailed,
 		},
 		{
 			name: "Invalid Rego Rule and Valid JSON",
@@ -57,8 +61,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: invalidRegoRule,
 			},
-			want:    false,
-			wantErr: true,
+			want:  false,
+			error: ErrInvalidRegoRule,
 		},
 		{
 			name: "Invalid Rego Rule and Invalid JSON",
@@ -66,8 +70,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  invalidJSON,
 				regoRule: invalidRegoRule,
 			},
-			want:    false,
-			wantErr: true,
+			want:  false,
+			error: ErrInvalidRegoRule,
 		},
 		{
 			name: "Invalid Package Name Rego Rule and Valid JSON",
@@ -75,8 +79,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: invalidPackageNameRule,
 			},
-			want:    false,
-			wantErr: true,
+			want:  false,
+			error: ErrPackageName,
 		},
 		{
 			name: "UPS server data positive",
@@ -90,8 +94,8 @@ wake if {
 	input[i].Variables[j].Value == 100
 }`,
 			},
-			wantErr: false,
-			want:    true,
+			error: nil,
+			want:  true,
 		},
 		{
 			name: "UPS server data negative",
@@ -105,20 +109,23 @@ wake if {
 	input[i].Variables[j].Value == 100
 }`,
 			},
-			wantErr: false,
-			want:    false,
+			error: nil,
+			want:  false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := EvaluateExpression(tt.args.rawJSON, tt.args.regoRule)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("EvaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("EvaluateExpression() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.error)
+			assert.Equal(t, tt.want, got)
+
+			//if (err != nil) != tt.wantErr {
+			//	t.Errorf("EvaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
+			//	return
+			//}
+			//if got != tt.want {
+			//	t.Errorf("EvaluateExpression() got = %v, want %v", got, tt.want)
+			//}
 		})
 	}
 }

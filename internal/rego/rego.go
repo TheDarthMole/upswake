@@ -12,13 +12,20 @@ import (
 	"github.com/open-policy-agent/opa/v1/rego"
 )
 
+var (
+	ErrDecodeFailed       = errors.New("failed to decode input")
+	ErrFailedEvaluateRule = errors.New("failed to evaluate rego rule")
+	ErrInvalidRegoRule    = errors.New("invalid rego rule")
+	ErrPackageName        = errors.New("rego rule must be in package 'upswake'")
+)
+
 func IsValidRego(rego string) error {
 	mod, err := ast.ParseModule("test", rego)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", ErrInvalidRegoRule, err)
 	}
 	if mod.Package.String() != "package upswake" {
-		return errors.New("rego rule must be in package 'upswake'")
+		return ErrPackageName
 	}
 	return nil
 }
@@ -38,7 +45,7 @@ func EvaluateExpression(rawJSON, regoRule string) (bool, error) {
 	d.DisallowUnknownFields()
 
 	if err := d.Decode(&input); err != nil {
-		return false, fmt.Errorf("failed to decode input: %w", err)
+		return false, fmt.Errorf("%w: %w", ErrDecodeFailed, err)
 	}
 	// Create query that returns a single boolean value.
 	regoEngine := rego.New(
@@ -53,7 +60,7 @@ func EvaluateExpression(rawJSON, regoRule string) (bool, error) {
 	// Run evaluation.
 	rs, err := regoEngine.Eval(ctx)
 	if err != nil {
-		return false, fmt.Errorf("failed to evaluate rego rule: %w", err)
+		return false, fmt.Errorf("%w: %w", ErrFailedEvaluateRule, err)
 	}
 
 	return rs.Allowed(), nil
