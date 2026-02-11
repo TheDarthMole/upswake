@@ -105,13 +105,13 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
       - name: Go Build Cache for Docker
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.3
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
 
       - name: Inject go-build-cache
-        uses: reproducible-containers/buildkit-cache-dance@4b2444fec0c0fb9dbf175a96c094720a692ef810 # v2.1.4
+        uses: reproducible-containers/buildkit-cache-dance@v3.3.1
         with:
           cache-source: go-build-cache
 
