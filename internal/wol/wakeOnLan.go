@@ -56,11 +56,11 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 
 	size, err := dst.Write(mp)
 	if err != nil {
-		return errors.Join(ErrFailedSendWoLPacket, err)
+		return fmt.Errorf("%w: %w", ErrFailedSendWoLPacket, err)
 	}
 
 	if size != MagicPacketSize {
-		return errors.Join(ErrExpectedPacketSize, fmt.Errorf("magic packet sent was %d", size))
+		return fmt.Errorf("%w: %w", ErrExpectedPacketSize, fmt.Errorf("magic packet sent was %d", size))
 	}
 
 	return nil
@@ -69,7 +69,7 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 func newMagicPacket(mac string) ([]byte, error) {
 	mp, err := wol.New(mac)
 	if err != nil {
-		return nil, errors.Join(ErrFailedCreateMagicPacket, err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedCreateMagicPacket, err)
 	}
 
 	return mp.Marshal()
