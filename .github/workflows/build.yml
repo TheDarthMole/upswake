@@ -104,6 +104,17 @@ jobs:
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
+      - name: Go Build Cache for Docker
+        uses: actions/cache@v4
+        with:
+          path: go-build-cache
+          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: Inject go-build-cache
+        uses: reproducible-containers/buildkit-cache-dance@4b2444fec0c0fb9dbf175a96c094720a692ef810 # v2.1.4
+        with:
+          cache-source: go-build-cache
+
       - name: 🚀 Build and deploy minimal Docker images
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         id: build
@@ -112,8 +123,8 @@ jobs:
           context: .
           file: ./Containerfile
           push: ${{ github.event_name != 'pull_request' }}
-#          cache-from: type=gha # caching actually increases build time from 5m to 8m
-#          cache-to: type=gha,mode=max
+          cache-from: type=gha # caching actually increases build time from 5m to 8m
+          cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
           platforms: ${{ env.platforms }}
