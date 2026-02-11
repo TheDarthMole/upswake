@@ -118,14 +118,6 @@ wake if {
 			got, err := EvaluateExpression(tt.args.rawJSON, tt.args.regoRule)
 			assert.ErrorIs(t, err, tt.error)
 			assert.Equal(t, tt.want, got)
-
-			//if (err != nil) != tt.wantErr {
-			//	t.Errorf("EvaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
-			//	return
-			//}
-			//if got != tt.want {
-			//	t.Errorf("EvaluateExpression() got = %v, want %v", got, tt.want)
-			//}
 		})
 	}
 }
