@@ -117,7 +117,6 @@ jobs:
           path: go-pkg-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
 
-
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@v3.3.1
         with:
