@@ -124,7 +124,7 @@ jobs:
           cache-map: |
             {
               "go-build-cache": "/root/.cache/go-build",
-              "go-pkg-cache": "/go/pkg/mod",
+              "go-pkg-cache": "/go/pkg/mod"
             }
           dockerfile: Containerfile
 
