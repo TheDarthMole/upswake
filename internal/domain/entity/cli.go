@@ -22,6 +22,11 @@ type CLIArgs struct {
 	TLSConfig  *tls.Config
 }
 
+var (
+	ErrCertFilesNotSet = errors.New("SSL is enabled but certFile or keyFile is not set")
+	ErrTLSConfigNotSet = errors.New("TLSConfig cannot be null")
+)
+
 func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, keyFile, host, port string) (*CLIArgs, error) {
 	cliArgs := &CLIArgs{
 		ConfigFile: configFile,
@@ -48,23 +53,23 @@ func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, k
 func (c *CLIArgs) Validate() error {
 	if c.UseSSL {
 		if c.CertFile == "" || c.KeyFile == "" {
-			return errors.New("SSL is enabled but certFile or keyFile is not set")
+			return ErrCertFilesNotSet
 		}
 		if c.TLSConfig == nil {
-			return errors.New("TLSConfig cannot be null")
+			return ErrTLSConfigNotSet
 		}
 	}
 
 	if c.Host == nil {
-		return errors.New("invalid listen host IP address")
+		return ErrHostRequired
 	}
 
 	portInt, err := strconv.Atoi(c.Port)
 	if err != nil {
-		return fmt.Errorf("invalid port number: %w", err)
+		return fmt.Errorf("%w: %w", ErrInvalidPort, err)
 	}
 	if portInt <= 0 || portInt > 65535 {
-		return fmt.Errorf("invalid listen port %d", portInt)
+		return fmt.Errorf("%w: %d", ErrInvalidPort, portInt)
 	}
 	return nil
 }

@@ -84,7 +84,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_hostname.yaml",
 			},
 			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidHost,
+			wantErrMsg: entity.ErrInvalidHost,
 			want:       &entity.Config{},
 		},
 		{
@@ -94,7 +94,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_port_too_large.yaml",
 			},
 			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidPort,
+			wantErrMsg: entity.ErrInvalidPort,
 			want:       &entity.Config{},
 		},
 		{
@@ -104,7 +104,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_port_too_small.yaml",
 			},
 			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidPort,
+			wantErrMsg: entity.ErrInvalidPort,
 			want:       &entity.Config{},
 		},
 		{
@@ -114,7 +114,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_target_mac.yaml",
 			},
 			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidMac,
+			wantErrMsg: entity.ErrInvalidMac,
 			want:       &entity.Config{},
 		},
 		{

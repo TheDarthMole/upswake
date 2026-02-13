@@ -66,7 +66,7 @@ func TestConfig_Validate(t *testing.T) {
 				},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidHost,
+			wantErrMessage: ErrInvalidHost,
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +76,7 @@ func TestConfig_Validate(t *testing.T) {
 			}
 			err := c.Validate()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Validate() error = %v, error %v", err, tt.wantErr)
 			}
 
 			if !errors.Is(err, tt.wantErrMessage) {
@@ -144,14 +144,14 @@ func TestNewTargetServer(t *testing.T) {
 			},
 			want:           nil,
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidBroadcast,
+			wantErrMessage: ErrInvalidBroadcast,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewTargetServer(tt.args.name, tt.args.mac, tt.args.broadcast, tt.args.interval, tt.args.port, tt.args.rules)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewTargetServer() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewTargetServer() error = %v, error %v", err, tt.wantErr)
 				return
 			}
 			if !errors.Is(err, tt.wantErrMessage) {
@@ -203,7 +203,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidHost,
+			wantErrMessage: ErrInvalidHost,
 		},
 		{
 			name: "invalid port too large",
@@ -216,7 +216,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidPort,
+			wantErrMessage: ErrInvalidPort,
 		},
 		{
 			name: "invalid port too small",
@@ -229,7 +229,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidPort,
+			wantErrMessage: ErrInvalidPort,
 		},
 		{
 			name: "valid nutserver with single valid target",
@@ -321,7 +321,7 @@ func TestNutServer_Validate(t *testing.T) {
 				},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidMac, // a targetserver has invalid characters in mac
+			wantErrMessage: ErrInvalidMac, // a targetserver has invalid characters in mac
 		},
 		{
 			name: "nutserver no name",
@@ -334,7 +334,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorNameRequired,
+			wantErrMessage: ErrNameRequired,
 		},
 		{
 			name: "nutserver no host",
@@ -347,7 +347,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorHostRequired,
+			wantErrMessage: ErrHostRequired,
 		},
 		{
 			name: "nutserver no username",
@@ -360,7 +360,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorUsernameRequired,
+			wantErrMessage: ErrUsernameRequired,
 		},
 		{
 			name: "nutserver no password",
@@ -373,7 +373,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  nil,
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorPasswordRequired,
+			wantErrMessage: ErrPasswordRequired,
 		},
 	}
 	for _, tt := range tests {
@@ -388,7 +388,7 @@ func TestNutServer_Validate(t *testing.T) {
 			}
 			err := ns.Validate()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Validate() error = %v, error %v", err, tt.wantErr)
 			}
 
 			if !errors.Is(err, tt.wantErrMessage) {
@@ -453,7 +453,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidMac,
+			wantErrMessage: ErrInvalidMac,
 		},
 		{
 			name: "invalid broadcast",
@@ -466,7 +466,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidBroadcast,
+			wantErrMessage: ErrInvalidBroadcast,
 		},
 		{
 			name: "invalid port too high",
@@ -479,7 +479,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidPort,
+			wantErrMessage: ErrInvalidPort,
 		},
 		{
 			name: "invalid port too low",
@@ -492,7 +492,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidPort,
+			wantErrMessage: ErrInvalidPort,
 		},
 		{
 			name: "invalid interval",
@@ -505,7 +505,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorInvalidInterval,
+			wantErrMessage: ErrInvalidInterval,
 		},
 		{
 			name: "targetserver no name",
@@ -518,7 +518,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorNameRequired,
+			wantErrMessage: ErrNameRequired,
 		},
 		{
 			name: "targetserver no mac",
@@ -531,7 +531,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorMACRequired,
+			wantErrMessage: ErrMACRequired,
 		},
 		{
 			name: "targetserver no broadcast",
@@ -544,7 +544,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorBroadcastRequired,
+			wantErrMessage: ErrBroadcastRequired,
 		},
 		{
 			name: "targetserver no interval",
@@ -557,7 +557,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     []string{},
 			},
 			wantErr:        true,
-			wantErrMessage: ErrorIntervalRequired,
+			wantErrMessage: ErrIntervalRequired,
 		},
 	}
 	for _, tt := range tests {
@@ -572,7 +572,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			}
 			err := ts.Validate()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Validate() error = %v, error %v", err, tt.wantErr)
 			}
 
 			if !errors.Is(err, tt.wantErrMessage) {
