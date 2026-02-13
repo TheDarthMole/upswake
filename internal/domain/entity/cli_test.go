@@ -576,10 +576,10 @@ func TestNewCLIArgs(t *testing.T) {
 		fileSystem afero.Fs
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    *CLIArgs
-		wantErr bool
+		name  string
+		args  args
+		want  *CLIArgs
+		error error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -601,7 +601,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "Valid HTTPS Config",
@@ -623,7 +623,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "Invalid HTTPS Config",
@@ -636,8 +636,8 @@ func TestNewCLIArgs(t *testing.T) {
 				port:       "8080",
 				fileSystem: fileSystem,
 			},
-			want:    nil,
-			wantErr: true,
+			want:  nil,
+			error: ErrHostRequired,
 		},
 		{
 			name: "HTTPS Certificate Not Found",
@@ -650,21 +650,19 @@ func TestNewCLIArgs(t *testing.T) {
 				port:       "8443",
 				fileSystem: fileSystem,
 			},
-			want:    nil,
-			wantErr: true,
+			want:  nil,
+			error: ErrFailedReadCertFile,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewCLIArgs(tt.args.fileSystem, tt.args.configFile, tt.args.useSSL, tt.args.certFile, tt.args.keyFile, tt.args.host, tt.args.port)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewCLIArgs() error = %v, error %v", err, tt.wantErr)
+			assert.ErrorIs(t, err, tt.error)
+
+			if tt.error != nil {
 				return
 			}
-			if tt.wantErr {
-				assert.Nil(t, got)
-				return
-			}
+			assert.NotNil(t, got)
 			assert.Equal(t, tt.want.ConfigFile, got.ConfigFile, "ConfigFile")
 			assert.Equal(t, tt.want.UseSSL, got.UseSSL, "UseSSL")
 			assert.Equal(t, tt.want.CertFile, got.CertFile, "CertFile")
