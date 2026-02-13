@@ -23,8 +23,10 @@ type CLIArgs struct {
 }
 
 var (
-	ErrCertFilesNotSet = errors.New("SSL is enabled but certFile or keyFile is not set")
-	ErrTLSConfigNotSet = errors.New("TLSConfig cannot be null")
+	ErrCertFilesNotSet    = errors.New("SSL is enabled but certFile or keyFile is not set")
+	ErrTLSConfigNotSet    = errors.New("TLSConfig cannot be null")
+	ErrFailedParsePEM     = errors.New("failed to parse PEM certificate")
+	ErrFailedReadCertFile = errors.New("failed to read certificate file")
 )
 
 func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, keyFile, host, port string) (*CLIArgs, error) {
@@ -77,23 +79,24 @@ func (c *CLIArgs) Validate() error {
 func (c *CLIArgs) x509Cert(fileSystem afero.Fs) (*tls.Config, error) {
 	certFile, err := afero.ReadFile(fileSystem, c.CertFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedReadCertFile, err)
 	}
 
 	// Decode the PEM certificate
 	data, _ := pem.Decode(certFile)
 	if data == nil {
-		return nil, errors.New("failed to parse PEM certificate")
+		return nil, ErrFailedParsePEM
 	}
 
 	// Parse the certificate
 	cert, err := x509.ParseCertificate(data.Bytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedParsePEM, err)
 	}
 
-	conf := &tls.Config{}
-	conf.RootCAs = x509.NewCertPool()
+	conf := &tls.Config{
+		RootCAs: x509.NewCertPool(),
+	}
 	conf.RootCAs.AddCert(cert)
 
 	return conf, nil

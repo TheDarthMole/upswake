@@ -504,44 +504,44 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 		TLSConfig  *tls.Config
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
+		name   string
+		fields fields
+		error  error
 	}{
 		{
 			name: "Valid RSA Cert",
 			fields: fields{
 				CertFile: "rsaServer.cert",
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "Valid ecdsa Cert",
 			fields: fields{
 				CertFile: "ecdsaServer.cert",
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "Invalid Cert format",
 			fields: fields{
 				CertFile: "invalidServer.cert",
 			},
-			wantErr: true,
+			error: ErrFailedParsePEM,
 		},
 		{
 			name: "Cert file does not exist",
 			fields: fields{
 				CertFile: "doesNotExist.cert",
 			},
-			wantErr: true,
+			error: ErrFailedReadCertFile,
 		},
 		{
 			name: "Cert file PEM encoded but invalid",
 			fields: fields{
 				CertFile: "invalidCert.cert",
 			},
-			wantErr: true,
+			error: ErrFailedParsePEM,
 		},
 	}
 	for _, tt := range tests {
@@ -556,10 +556,7 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 				TLSConfig:  tt.fields.TLSConfig,
 			}
 			_, err := c.x509Cert(fileSystem)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("x509Cert() error = %v, error %v", err, tt.wantErr)
-				return
-			}
+			assert.ErrorIs(t, err, tt.error)
 		})
 	}
 }
