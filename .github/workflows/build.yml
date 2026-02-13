@@ -122,11 +122,6 @@ jobs:
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@v3.3.1
         with:
-          cache-map: |
-            {
-              "go-build-cache": "/root/.cache/go-build",
-              "go-pkg-cache": "/go/pkg/mod"
-            }
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
 
