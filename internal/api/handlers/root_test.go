@@ -184,9 +184,10 @@ func TestRootHandler_Register(t *testing.T) {
 			Method: "GET",
 		},
 		{
-			Name:   "GET:/swagger/*",
-			Path:   "/swagger/*",
-			Method: "GET",
+			Name:       "GET:/swagger/*",
+			Path:       "/swagger/*",
+			Method:     "GET",
+			Parameters: []string{"*"},
 		},
 	}
 
