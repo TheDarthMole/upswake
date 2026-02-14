@@ -14,10 +14,11 @@ const (
 )
 
 var (
-	config               = entity.Config{}
-	configFilePath       = DefaultConfigFile
-	ErrReadingConfigFile = errors.New("error reading config file")
-	DefaultConfig        = Config{
+	config                 = &entity.Config{}
+	configFilePath         = DefaultConfigFile
+	ErrReadingConfigFile   = errors.New("error reading config file")
+	ErrUnmarshallingConfig = errors.New("error unmarshaling config")
+	DefaultConfig          = Config{
 		NutServers: []NutServer{
 			{
 				Name:     "NUT Server 1",
@@ -70,17 +71,17 @@ func Load() (*entity.Config, error) {
 		return &entity.Config{}, fmt.Errorf("%w: %w", ErrReadingConfigFile, err)
 	}
 
-	loadConfig := Config{}
-	if err := viper.Unmarshal(&loadConfig); err != nil {
-		return &entity.Config{}, err
+	loadConfig := &Config{}
+	if err := viper.Unmarshal(loadConfig); err != nil {
+		return &entity.Config{}, fmt.Errorf("%w: %w", ErrUnmarshallingConfig, err)
 	}
-	entityConfig := *fromFileConfig(&loadConfig)
+	entityConfig := fromFileConfig(loadConfig)
 
 	if err := entityConfig.Validate(); err != nil {
 		return &entity.Config{}, err
 	}
 	config = entityConfig
-	return &config, nil
+	return config, nil
 }
 
 func CreateDefaultConfig() *entity.Config {
