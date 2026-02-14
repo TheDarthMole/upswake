@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
-	"time"
 	"log/slog"
+	"time"
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
 	"github.com/go-playground/validator/v10"
