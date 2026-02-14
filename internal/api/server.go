@@ -42,7 +42,7 @@ func (cv *CustomValidator) Validate(i any) error {
 func NewServer(ctx context.Context, s *zap.SugaredLogger) *Server {
 	newCtx, cancel := context.WithCancel(ctx)
 	app := echo.New()
-	app.Validator = NewCustomValidator(ctx)
+	app.Validator = NewCustomValidator(newCtx)
 	app.Pre(middleware.RemoveTrailingSlash())
 	app.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus: true,
