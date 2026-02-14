@@ -65,11 +65,7 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 			}
 			allowed, err := r.evaluateExpression(&target, inputJSON)
 			if err != nil {
-				return EvaluationResult{
-					Allowed: false,
-					Found:   true,
-					Target:  &target,
-				}, err
+				return EvaluationResult{}, err
 			}
 
 			evaluationResult.Found = true

@@ -34,10 +34,10 @@ wake if {
 
 func TestNewRegoEvaluator(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue))
+	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
 
 	alwaysFalseRegoFS := afero.NewMemMapFs()
-	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysFalse))
+	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysFalse)
 
 	type args struct {
 		config  *entity.Config
@@ -90,9 +90,9 @@ func TestNewRegoEvaluator(t *testing.T) {
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	testFS := afero.NewMemMapFs()
 
-	require.NoError(t, writeMemFile(t, testFS, "alwaysTrue.rego", regoAlwaysTrue))
-	require.NoError(t, writeMemFile(t, testFS, "alwaysFalse.rego", regoAlwaysFalse))
-	require.NoError(t, writeMemFile(t, testFS, "check100Percent.rego", regoCheck100Percent))
+	writeMemFile(t, testFS, "alwaysTrue.rego", regoAlwaysTrue)
+	writeMemFile(t, testFS, "alwaysFalse.rego", regoAlwaysFalse)
+	writeMemFile(t, testFS, "check100Percent.rego", regoCheck100Percent)
 
 	type fields struct {
 		rulesFS afero.Fs
@@ -216,13 +216,13 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	}
 }
 
-func writeMemFile(_ *testing.T, fs afero.Fs, fileName string, contents []byte) error {
-	return afero.WriteFile(fs, fileName, contents, 0o644)
+func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
+	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue))
+	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
 
 	type fields struct {
 		config  *entity.Config
@@ -234,11 +234,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		getUPSJSON func(server *entity.NutServer) (string, error)
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    EvaluationResult
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		want   EvaluationResult
+		error  error
 	}{
 		{
 			name: "valid eval",
@@ -286,7 +286,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "missing mac in config",
@@ -325,7 +325,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				Found:   false,
 				Target:  nil,
 			},
-			wantErr: false,
+			error: nil,
 		},
 		{
 			name: "invalid nutserver output",
@@ -359,21 +359,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
 			},
-			want: EvaluationResult{
-				Allowed: false,
-				Found:   true,
-				Target: &entity.TargetServer{
-					Name:      "test server",
-					MAC:       "00:11:22:33:44:55",
-					Broadcast: "192.168.1.255",
-					Port:      entity.DefaultWoLPort,
-					Interval:  "15m",
-					Rules: []string{
-						"test.rego",
-					},
-				},
-			},
-			wantErr: true,
+			want:  EvaluationResult{},
+			error: ErrFailedEvaluateExpression,
 		},
 	}
 	for _, tt := range tests {
@@ -384,13 +371,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     tt.fields.mac,
 			}
 			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("evaluateExpressions() error = %v, error %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("evaluateExpressions() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.error)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
