@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"log/slog"
 	"net"
 	"testing"
@@ -13,9 +12,7 @@ import (
 )
 
 func TestNewWakeCmd(t *testing.T) {
-	logBuf := new(bytes.Buffer)
-	handler := slog.NewJSONHandler(logBuf, nil)
-	logger := slog.New(handler)
+	logger := newTestLogger()
 
 	type args struct {
 		broadcasts []net.IP

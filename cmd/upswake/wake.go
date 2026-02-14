@@ -65,12 +65,19 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			[]string{},
 		)
 		if err != nil {
+			wake.logger.Warn("Failed to create target server",
+				slog.String("broadcast", broadcast.String()),
+				slog.String("error", err.Error()))
 			joined = errors.Join(joined, fmt.Errorf("invalid target for %s: %w", broadcast, err))
 			continue
 		}
 		wolClient := wol.NewWoLClient(ts)
 
 		if err = wolClient.Wake(); err != nil {
+			wake.logger.Warn("failed to send WoL packet",
+				slog.String("broadcast", broadcast.String()),
+				slog.String("mac", mac),
+				slog.String("error", err.Error()))
 			joined = errors.Join(joined, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
 			continue
 		}

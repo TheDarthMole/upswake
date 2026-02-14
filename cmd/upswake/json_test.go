@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"log/slog"
 	"testing"
 	"time"
 
@@ -11,9 +9,7 @@ import (
 
 func Test_NewJSONCommand(t *testing.T) {
 	t.Run("json command", func(t *testing.T) {
-		logBuf := new(bytes.Buffer)
-		handler := slog.NewJSONHandler(logBuf, nil)
-		logger := slog.New(handler)
+		logger := newTestLogger()
 
 		jsonCmd := NewJSONCommand(logger)
 		assert.Equal(t, "json", jsonCmd.Use, "json command should be 'json'")

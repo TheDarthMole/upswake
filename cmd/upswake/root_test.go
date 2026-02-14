@@ -233,6 +233,7 @@ nut_servers:
 			var wg sync.WaitGroup
 			wg.Add(1)
 
+			// TODO: Unsafe for parallel execution, find better way
 			origArgs := os.Args
 			defer func() { os.Args = origArgs }()
 

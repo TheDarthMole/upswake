@@ -26,9 +26,7 @@ func newTestLogger() *slog.Logger {
 }
 
 func executeCommandWithContext(t *testing.T, cmdFunc func(logger *slog.Logger) *cobra.Command, timeout time.Duration, args ...string) (output string, err error) {
-	logBuf := new(bytes.Buffer)
-	handler := slog.NewJSONHandler(logBuf, nil)
-	logger := slog.New(handler)
+	logger, logBuf := newTestLoggerWithBuffer()
 
 	cmd := cmdFunc(logger)
 
