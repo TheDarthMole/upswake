@@ -1,23 +1,35 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	cryptRand "crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"math/big"
 	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
-func pingHandler(c echo.Context) error {
+func pingHandler(c *echo.Context) error {
 	return c.String(http.StatusOK, "pong")
 }
 
@@ -151,14 +163,14 @@ func TestNewServer(t *testing.T) {
 			got := NewServer(tt.args.ctx, tt.args.s)
 
 			assert.NotNil(t, got)
-			assert.Equal(t, tt.want.ctx, got.ctx)
 			assert.Equal(t, tt.want.sugar, got.sugar)
 
 			// echo instance and validator
 			assert.NotNil(t, got.echo)
 			cv, ok := got.echo.Validator.(*CustomValidator)
 			assert.True(t, ok, "echo.Validator should be *CustomValidator")
-			assert.Equal(t, tt.want.ctx, cv.ctx)
+			assert.NotNil(t, cv.ctx)
+			assert.NotNil(t, cv.validator)
 
 			req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 			rec := httptest.NewRecorder()
@@ -186,11 +198,92 @@ func TestServer_Root(t *testing.T) {
 	assert.Equal(t, expected, e.Root())
 }
 
+func certificateTemplate(t *testing.T) *x509.Certificate {
+	notBefore := time.Now()
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
+
+	serialNumber, err := cryptRand.Int(cryptRand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
+	require.NoError(t, err)
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"My Organization"}, //nolint: misspell
+		},
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	return &template
+}
+
+func generateEncodedRSAKeys(t *testing.T) ([]byte, []byte) {
+	privateKey, err := rsa.GenerateKey(cryptRand.Reader, 2048)
+	require.NoError(t, err)
+
+	template := certificateTemplate(t)
+
+	derBytes, err := x509.CreateCertificate(cryptRand.Reader, template, template, &privateKey.PublicKey, privateKey)
+	require.NoError(t, err)
+
+	var pemKey bytes.Buffer
+	var pemCert bytes.Buffer
+
+	err = pem.Encode(&pemCert, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	require.NoError(t, err)
+
+	b := x509.MarshalPKCS1PrivateKey(privateKey)
+
+	err = pem.Encode(&pemKey, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: b})
+	require.NoError(t, err)
+
+	return pemKey.Bytes(), pemCert.Bytes()
+}
+
+func generateEncodedECCKeys(t *testing.T) ([]byte, []byte) {
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), cryptRand.Reader)
+	require.NoError(t, err)
+
+	template := certificateTemplate(t)
+
+	derBytes, err := x509.CreateCertificate(cryptRand.Reader, template, template, &privateKey.PublicKey, privateKey)
+	require.NoError(t, err)
+
+	var pemKey bytes.Buffer
+	var pemCert bytes.Buffer
+
+	err = pem.Encode(&pemCert, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	require.NoError(t, err)
+
+	b, err := x509.MarshalECPrivateKey(privateKey)
+	require.NoError(t, err)
+
+	err = pem.Encode(&pemKey, &pem.Block{Type: "EC PRIVATE KEY", Bytes: b})
+	require.NoError(t, err)
+
+	return pemKey.Bytes(), pemCert.Bytes()
+}
+
 func TestServer_Start_Stop(t *testing.T) {
 	type fields struct {
 		ctx   context.Context
 		sugar *zap.SugaredLogger
 	}
+
+	certFs := afero.NewMemMapFs()
+
+	privateRSAKey, publicRSAKey := generateEncodedRSAKeys(t)
+
+	require.NoError(t, afero.WriteFile(certFs, "rsa.key", privateRSAKey, os.ModePerm))
+	require.NoError(t, afero.WriteFile(certFs, "rsa.cert", publicRSAKey, os.ModePerm))
+
+	privateECCKey, publicECCKey := generateEncodedECCKeys(t)
+
+	require.NoError(t, afero.WriteFile(certFs, "ecc.key", privateECCKey, os.ModePerm))
+	require.NoError(t, afero.WriteFile(certFs, "ecc.cert", publicECCKey, os.ModePerm))
+
 	type args struct {
 		address  string
 		useSSL   bool
@@ -211,7 +304,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   false,
 				certFile: "",
 				keyFile:  "",
@@ -226,10 +319,10 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
-				certFile: "../../certs/rsa.cert",
-				keyFile:  "../../certs/rsa.key",
+				certFile: "rsa.cert",
+				keyFile:  "rsa.key",
 			},
 			wantStartErr: false,
 			wantStopErr:  false,
@@ -241,10 +334,10 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
-				certFile: "../../certs/ecc.cert",
-				keyFile:  "../../certs/ecc.key",
+				certFile: "ecc.cert",
+				keyFile:  "ecc.key",
 			},
 			wantStartErr: false,
 			wantStopErr:  false,
@@ -256,7 +349,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
 				certFile: "",
 				keyFile:  "",
@@ -309,7 +402,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				}
 			}()
 
-			err := srv.Start(tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
+			err := srv.Start(certFs, tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
 			// http.ErrServerClosed is returned when the server is shut down normally
 			if (err != nil && !errors.Is(err, http.ErrServerClosed)) != tt.wantStartErr {
 				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantStartErr)

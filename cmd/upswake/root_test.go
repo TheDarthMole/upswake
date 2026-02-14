@@ -183,7 +183,7 @@ func Test_Execute(t *testing.T) {
 				args: []string{"upswake", "serve"},
 				filesystem: func() afero.Fs {
 					fs := afero.NewMemMapFs()
-					configYaml := `
+					const configYaml = `
 nut_servers:
   - name: test-nut-server
     host: 127.0.0.1
@@ -206,7 +206,7 @@ nut_servers:
 			exitCode: 0,
 			timeout:  5 * time.Second,
 			wantOutput: []string{
-				"http server started on",
+				"http(s) server started",
 				"Gracefully stopping worker",
 			},
 			notWantOutput: []string{"ERROR", "error"},
