@@ -376,36 +376,3 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		})
 	}
 }
-
-func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
-	type fields struct {
-		config  *entity.Config
-		rulesFS afero.Fs
-		mac     string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    EvaluationResult
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &RegoEvaluator{
-				config:  tt.fields.config,
-				rulesFS: tt.fields.rulesFS,
-				mac:     tt.fields.mac,
-			}
-			got, err := r.EvaluateExpressions()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("EvaluateExpressions() error = %v, error %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("EvaluateExpressions() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
