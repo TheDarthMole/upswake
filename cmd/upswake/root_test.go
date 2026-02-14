@@ -229,6 +229,7 @@ nut_servers:
 		t.Run(tt.name, func(t *testing.T) {
 			c := make(chan int, 1)
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
 			var wg sync.WaitGroup
 			wg.Add(1)
@@ -248,13 +249,12 @@ nut_servers:
 
 			select {
 			case exitCode := <-c:
-				// use err and reply
 				assert.Equal(t, tt.exitCode, exitCode)
-				cancel()
 			case <-time.After(tt.timeout):
 				cancel()
 				wg.Wait()
-				// set the error to be a timeout error
+				exitCode := <-c
+				assert.Equal(t, tt.exitCode, exitCode)
 			}
 
 			t.Log(logOutput.String())
