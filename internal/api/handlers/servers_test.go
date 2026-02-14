@@ -28,21 +28,7 @@ func TestServerHandler_Register(t *testing.T) {
 	h.Register(g)
 
 	expectedRoutes := []string{"/wake", "/broadcastwake"}
-	lenExpectedRoutes := len(expectedRoutes)
-
-	// Remove found routes from expected routes to find missing routes
-	missingRoutes := expectedRoutes
-	for _, route := range e.Router().Routes() {
-		for i, expected := range missingRoutes {
-			if expected == route.Path {
-				missingRoutes = append(missingRoutes[:i], missingRoutes[i+1:]...)
-				break
-			}
-		}
-	}
-
-	assert.Lenf(t, e.Router().Routes(), lenExpectedRoutes, "Expected %d routes to be registered", lenExpectedRoutes)
-	assert.Equalf(t, []string{}, missingRoutes, "The following expected routes are missing: %v", missingRoutes)
+	assertRoutes(t, e, expectedRoutes)
 }
 
 func TestNewWakeServerRequest(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var cfg = &entity.Config{
@@ -32,6 +33,28 @@ var cfg = &entity.Config{
 			},
 		},
 	},
+}
+
+func assertRoutes(t *testing.T, e *echo.Echo, expectedRoutes []string) {
+	require.NotNil(t, e)
+	require.NotNil(t, e.Router())
+	require.NotNil(t, e.Router().Routes())
+
+	lenExpectedRoutes := len(expectedRoutes)
+
+	// Remove found routes from expected routes to find missing routes
+	missingRoutes := expectedRoutes
+	for _, route := range e.Router().Routes() {
+		for i, expected := range missingRoutes {
+			if expected == route.Path {
+				missingRoutes = append(missingRoutes[:i], missingRoutes[i+1:]...)
+				break
+			}
+		}
+	}
+
+	assert.Lenf(t, e.Router().Routes(), lenExpectedRoutes, "Expected %d routes to be registered", lenExpectedRoutes)
+	assert.Equalf(t, []string{}, missingRoutes, "The following expected routes are missing: %v", missingRoutes)
 }
 
 func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
@@ -150,18 +173,7 @@ func TestRootHandler_Register(t *testing.T) {
 	h.Register(g)
 
 	expectedRoutes := []string{"/", "/health", "/swagger/*"}
-	lenExpectedRoutes := len(expectedRoutes)
-	for _, route := range e.Router().Routes() {
-		for i, expected := range expectedRoutes {
-			if expected == route.Path {
-				expectedRoutes = append(expectedRoutes[:i], expectedRoutes[i+1:]...)
-				break
-			}
-		}
-	}
-
-	assert.Lenf(t, e.Router().Routes(), lenExpectedRoutes, "Expected %d routes to be registered", lenExpectedRoutes)
-	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
+	assertRoutes(t, e, expectedRoutes)
 }
 
 func TestNewRootHandler(t *testing.T) {
