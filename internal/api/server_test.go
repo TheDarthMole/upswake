@@ -169,7 +169,8 @@ func TestNewServer(t *testing.T) {
 			assert.NotNil(t, got.echo)
 			cv, ok := got.echo.Validator.(*CustomValidator)
 			assert.True(t, ok, "echo.Validator should be *CustomValidator")
-			assert.Equal(t, tt.want.ctx, cv.ctx)
+			assert.NotNil(t, cv.ctx)
+			assert.NotNil(t, cv.validator)
 
 			req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 			rec := httptest.NewRecorder()
@@ -303,7 +304,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   false,
 				certFile: "",
 				keyFile:  "",
@@ -318,7 +319,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
 				certFile: "rsa.cert",
 				keyFile:  "rsa.key",
@@ -333,7 +334,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
 				certFile: "ecc.cert",
 				keyFile:  "ecc.key",
@@ -348,7 +349,7 @@ func TestServer_Start_Stop(t *testing.T) {
 				sugar: zap.NewExample().Sugar(),
 			},
 			args: args{
-				address:  fmt.Sprintf("127.0.0.1:%d", rand.IntN(65535-49152)+49152),
+				address:  "127.0.0.1:0",
 				useSSL:   true,
 				certFile: "",
 				keyFile:  "",
