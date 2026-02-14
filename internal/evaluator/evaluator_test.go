@@ -7,6 +7,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -15,23 +16,27 @@ const (
 )
 
 var (
-	defaultConfig   = viper.CreateDefaultConfig()
-	tempFS          = afero.NewMemMapFs()
-	alwaysTrueRego  = []byte("package upswake\n\ndefault wake := true")
-	alwaysFalseRego = []byte("package upswake\n\ndefault wake := false")
+	defaultConfig  = viper.CreateDefaultConfig()
+	tempFS         = afero.NewMemMapFs()
+	regoAlwaysTrue = []byte(`package upswake
+default wake := true`)
+	regoAlwaysFalse = []byte(`package upswake
+default wake := false`)
+	regoCheck100Percent = []byte(`package upswake
+default wake := false
+wake if {
+	input[i].Name == "cyberpower900"
+	input[i].Variables[j].Name == "battery.charge"
+	input[i].Variables[j].Value == 100
+}`)
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue))
 
 	alwaysFalseRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysFalseRego); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysFalse))
 
 	type args struct {
 		config  *entity.Config
@@ -83,31 +88,16 @@ func TestNewRegoEvaluator(t *testing.T) {
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	testFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, testFS, "alwaysTrue.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
 
-	if err := writeMemFile(t, testFS, "alwaysFalse.rego", alwaysFalseRego); err != nil {
-		t.Fatal(err)
-	}
-
-	check100Percent := `package upswake
-default wake := false
-wake if {
-	input[i].Name == "cyberpower900"
-	input[i].Variables[j].Name == "battery.charge"
-	input[i].Variables[j].Value == 100
-}`
-	if err := writeMemFile(t, testFS, "check100Percent.rego", []byte(check100Percent)); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, writeMemFile(t, testFS, "alwaysTrue.rego", regoAlwaysTrue))
+	require.NoError(t, writeMemFile(t, testFS, "alwaysFalse.rego", regoAlwaysFalse))
+	require.NoError(t, writeMemFile(t, testFS, "check100Percent.rego", regoCheck100Percent))
 
 	type fields struct {
 		rulesFS afero.Fs
 	}
 	type args struct {
-		target *entity.TargetServer
-		// nutServer *entity.NutServer
+		target    *entity.TargetServer
 		inputJSON string
 	}
 	tests := []struct {
@@ -235,9 +225,7 @@ func writeMemFile(_ *testing.T, fs afero.Fs, fileName string, contents []byte) e
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue))
 
 	type fields struct {
 		config  *entity.Config
