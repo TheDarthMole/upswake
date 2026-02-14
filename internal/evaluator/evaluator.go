@@ -1,12 +1,18 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/rego"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/afero"
+)
+
+var (
+	ErrFailedReadRegoFile       = errors.New("failed to read rego file")
+	ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
 )
 
 type RegoEvaluator struct {
@@ -83,11 +89,11 @@ func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSO
 	for _, ruleName := range target.Rules {
 		regoRule, err := afero.ReadFile(r.rulesFS, ruleName)
 		if err != nil {
-			return false, fmt.Errorf("could not get file: %w", err)
+			return false, fmt.Errorf("%w: %w", ErrFailedReadRegoFile, err)
 		}
 		allowed, err := rego.EvaluateExpression(inputJSON, string(regoRule))
 		if err != nil {
-			return false, fmt.Errorf("could not evaluate expression: %w", err)
+			return false, fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
 		}
 		if allowed {
 			return true, nil

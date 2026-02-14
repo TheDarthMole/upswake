@@ -7,6 +7,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -101,11 +102,11 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		inputJSON string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    bool
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		want   bool
+		error  error
 	}{
 		{
 			name: "nothing to evaluate",
@@ -116,8 +117,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				target:    nil,
 				inputJSON: "",
 			},
-			want:    false,
-			wantErr: false,
+			want:  false,
+			error: nil,
 		},
 		{
 			name: "evaluate with always true rule",
@@ -132,8 +133,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:    true,
-			wantErr: false,
+			want:  true,
+			error: nil,
 		},
 		{
 			name: "evaluate with always false rule",
@@ -148,8 +149,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:    false,
-			wantErr: false,
+			want:  false,
+			error: nil,
 		},
 		{
 			name: "file not found",
@@ -164,8 +165,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:    false,
-			wantErr: true,
+			want:  false,
+			error: ErrFailedReadRegoFile,
 		},
 		{
 			name: "ups 100% check positive",
@@ -180,8 +181,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
-			want:    true,
-			wantErr: false,
+			want:  true,
+			error: nil,
 		},
 		{
 			name: "ups 100% check negative",
@@ -197,10 +198,10 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":10,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
-			want:    false,
-			wantErr: false,
+			want:  false,
+			error: nil,
 		},
-		// TODO: Add more rules that tests inputJSON
+		// TODO: Add more rules that tests inputJSON, e.g. faulty fs
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -208,13 +209,9 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				rulesFS: tt.fields.rulesFS,
 			}
 			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("evaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("evaluateExpression() got = %v, want %v", got, tt.want)
-			}
+
+			assert.ErrorIs(t, err, tt.error)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -388,7 +385,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			}
 			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("evaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("evaluateExpressions() error = %v, error %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
@@ -421,7 +418,7 @@ func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
 			}
 			got, err := r.EvaluateExpressions()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("EvaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("EvaluateExpressions() error = %v, error %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
