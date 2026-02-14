@@ -160,7 +160,7 @@ func TestRootHandler_Register(t *testing.T) {
 		}
 	}
 
-	assert.Len(t, e.Router().Routes(), lenExpectedRoutes, "Expected 2 routes to be registered")
+	assert.Lenf(t, e.Router().Routes(), lenExpectedRoutes, "Expected %d routes to be registered", lenExpectedRoutes)
 	assert.Equalf(t, []string{}, expectedRoutes, "The following expected routes are missing: %v", expectedRoutes)
 }
 
