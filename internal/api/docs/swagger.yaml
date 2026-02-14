@@ -94,7 +94,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Wake a server using Wake on LAN by using the mac and enumerating
+      description: Wake a server using Wake on LAN by using the MAC and enumerating
         all available broadcast addresses
       parameters:
       - description: Broadcast wake request
@@ -119,14 +119,14 @@ paths:
           description: Wake on LAN packet failed to send
           schema:
             $ref: '#/definitions/handlers.Response'
-      summary: Wake a server using just a mac
+      summary: Wake a server using just a MAC
       tags:
       - servers
   /api/servers/wake:
     post:
       consumes:
       - application/json
-      description: Wake a server using Wake on LAN using the mac and broadcast address
+      description: Wake a server using Wake on LAN using the MAC and broadcast address
         provided
       parameters:
       - description: Wake server request
@@ -150,7 +150,7 @@ paths:
           description: Wake on LAN packet failed to send
           schema:
             $ref: '#/definitions/handlers.Response'
-      summary: Wake a server using a mac and a broadcast address
+      summary: Wake a server using a MAC and a broadcast address
       tags:
       - servers
   /api/upswake:

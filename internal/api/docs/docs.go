@@ -33,7 +33,7 @@ const docTemplate = `{
         },
         "/api/servers/broadcastwake": {
             "post": {
-                "description": "Wake a server using Wake on LAN by using the mac and enumerating all available broadcast addresses",
+                "description": "Wake a server using Wake on LAN by using the MAC and enumerating all available broadcast addresses",
                 "consumes": [
                     "application/json"
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                 "tags": [
                     "servers"
                 ],
-                "summary": "Wake a server using just a mac",
+                "summary": "Wake a server using just a MAC",
                 "parameters": [
                     {
                         "description": "Broadcast wake request",
@@ -79,7 +79,7 @@ const docTemplate = `{
         },
         "/api/servers/wake": {
             "post": {
-                "description": "Wake a server using Wake on LAN using the mac and broadcast address provided",
+                "description": "Wake a server using Wake on LAN using the MAC and broadcast address provided",
                 "consumes": [
                     "application/json"
                 ],
@@ -89,7 +89,7 @@ const docTemplate = `{
                 "tags": [
                     "servers"
                 ],
-                "summary": "Wake a server using a mac and a broadcast address",
+                "summary": "Wake a server using a MAC and a broadcast address",
                 "parameters": [
                     {
                         "description": "Wake server request",
