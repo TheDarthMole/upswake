@@ -53,16 +53,16 @@ func TestCustomValidator_Validate(t *testing.T) {
 		i any
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		error  bool
 	}{
 		{
-			name:    "Test with nil input",
-			fields:  fields{validator: validator.New()},
-			args:    args{i: nil},
-			wantErr: true,
+			name:   "Test with nil input",
+			fields: fields{validator: validator.New()},
+			args:   args{i: nil},
+			error:  true,
 		},
 		{
 			name:   "Test with valid TargetServer struct",
@@ -75,9 +75,10 @@ func TestCustomValidator_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{"test"},
 			}},
-			wantErr: false,
+			error: false,
 		},
 		// TODO: This test case makes me think that the validate function isn't working as expected.
+		// It uses the `validate` struct tag for validation, but we are using .Validate() methods
 		// {
 		//	name:   "Test with invalid TargetServer struct",
 		//	fields: fields{validator: validator.New()},
@@ -97,9 +98,8 @@ func TestCustomValidator_Validate(t *testing.T) {
 			cv := &CustomValidator{
 				validator: tt.fields.validator,
 			}
-			if err := cv.Validate(tt.args.i); (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := cv.Validate(tt.args.i)
+			assert.Equal(t, tt.error, err != nil)
 		})
 	}
 }
@@ -179,10 +179,8 @@ func TestNewServer(t *testing.T) {
 
 			// echo instance and validator
 			assert.NotNil(t, got.echo)
-			cv, ok := got.echo.Validator.(*CustomValidator)
-			assert.True(t, ok, "echo.Validator should be *CustomValidator")
-			assert.NotNil(t, cv.ctx)
-			assert.NotNil(t, cv.validator)
+			assert.IsType(t, &CustomValidator{}, got.echo.Validator)
+			assert.Equal(t, tt.want.ctx, got.echo.Validator.(*CustomValidator).ctx)
 
 			req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 			rec := httptest.NewRecorder()
@@ -414,14 +412,14 @@ func TestServer_Start_Stop(t *testing.T) {
 				time.Sleep(500 * time.Millisecond)
 				err := srv.Stop()
 				if (err != nil) != tt.wantStopErr {
-					t.Errorf("Stop() error = %v, wantErr %v", err, tt.wantStopErr)
+					t.Errorf("Stop() error = %v, error %v", err, tt.wantStopErr)
 				}
 			}()
 
 			err := srv.Start(certFs, tt.args.address, tt.args.useSSL, tt.args.certFile, tt.args.keyFile)
 			// http.ErrServerClosed is returned when the server is shut down normally
 			if (err != nil && !errors.Is(err, http.ErrServerClosed)) != tt.wantStartErr {
-				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantStartErr)
+				t.Errorf("Start() error = %v, error %v", err, tt.wantStartErr)
 			}
 		})
 	}
