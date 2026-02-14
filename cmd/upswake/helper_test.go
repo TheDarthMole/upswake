@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 	"time"
@@ -43,11 +44,10 @@ func executeCommandWithContext(t *testing.T, cmdFunc func(logger *slog.Logger) *
 	go func() { c <- cmd.ExecuteContext(ctx) }()
 	select {
 	case err = <-c:
-		// use err and reply
 	case <-time.After(timeout):
-		// set the error to be a timeout error
-		err = ErrTimeout
 		cancel()
+		exitErr := <-c
+		err = fmt.Errorf("%w: %w", ErrTimeout, exitErr)
 	}
 	return logBuf.String(), err
 }
