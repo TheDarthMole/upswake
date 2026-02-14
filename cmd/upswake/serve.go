@@ -143,7 +143,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target config.TargetServer, endpoint string, tlsConfig *tls.Config) {
+func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target *config.TargetServer, endpoint string, tlsConfig *tls.Config) {
 	defer wg.Done()
 	j.logger.Info("Starting worker",
 		slog.String("worker_name", target.Name))
@@ -174,7 +174,7 @@ func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target
 	}
 }
 
-func (j *serveCMD) sendWakeRequest(ctx context.Context, target config.TargetServer, address string, client *http.Client) {
+func (j *serveCMD) sendWakeRequest(ctx context.Context, target *config.TargetServer, address string, client *http.Client) {
 	body, err := json.Marshal(map[string]string{"mac": target.MAC})
 	if err != nil {
 		j.logger.Error("Error marshalling JSON",

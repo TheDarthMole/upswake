@@ -3,9 +3,9 @@ package viper
 import "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 
 func fromFileConfig(config *Config) *entity.Config {
-	nutServers := make([]entity.NutServer, len(config.NutServers))
+	nutServers := make([]*entity.NutServer, len(config.NutServers))
 	for i, nutServer := range config.NutServers {
-		nutServers[i] = *fromFileNutServer(&nutServer)
+		nutServers[i] = fromFileNutServer(&nutServer)
 	}
 
 	return &entity.Config{
@@ -14,9 +14,9 @@ func fromFileConfig(config *Config) *entity.Config {
 }
 
 func fromFileNutServer(nutServer *NutServer) *entity.NutServer {
-	targets := make([]entity.TargetServer, len(nutServer.Targets))
+	targets := make([]*entity.TargetServer, len(nutServer.Targets))
 	for i, target := range nutServer.Targets {
-		targets[i] = *fromFileTargetServer(&target)
+		targets[i] = fromFileTargetServer(target)
 	}
 
 	return &entity.NutServer{

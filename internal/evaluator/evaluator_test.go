@@ -244,14 +244,14 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			name: "valid eval",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:11:22:33:44:55",
@@ -292,14 +292,14 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			name: "missing mac in config",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:00:00:00:00:00",
@@ -331,14 +331,14 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			name: "invalid nutserver output",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:11:22:33:44:55",

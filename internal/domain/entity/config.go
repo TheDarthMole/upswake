@@ -52,7 +52,7 @@ func duration(fl validator.FieldLevel) bool {
 }
 
 type Config struct {
-	NutServers []NutServer
+	NutServers []*NutServer
 }
 
 func (c *Config) Validate() error {
@@ -65,12 +65,12 @@ func (c *Config) Validate() error {
 }
 
 type NutServer struct {
-	Name     string         `json:"name"`
-	Host     string         `json:"host"`
-	Port     int            `json:"port"`
-	Username string         `json:"username"`
-	Password string         `json:"password"`
-	Targets  []TargetServer `json:"targets"`
+	Name     string          `json:"name"`
+	Host     string          `json:"host"`
+	Port     int             `json:"port"`
+	Username string          `json:"username"`
+	Password string          `json:"password"`
+	Targets  []*TargetServer `json:"targets"`
 }
 
 func (ns *NutServer) Validate() error {

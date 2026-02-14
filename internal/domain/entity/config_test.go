@@ -10,7 +10,7 @@ import (
 
 func TestConfig_Validate(t *testing.T) {
 	type fields struct {
-		NutServers []NutServer
+		NutServers []*NutServer
 	}
 	tests := []struct {
 		name           string
@@ -29,7 +29,7 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "one valid nutserver",
 			fields: fields{
-				NutServers: []NutServer{
+				NutServers: []*NutServer{
 					{
 						Name:     "test",
 						Host:     "192.168.1.133",
@@ -46,7 +46,7 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "one valid one invalid nutserver",
 			fields: fields{
-				NutServers: []NutServer{
+				NutServers: []*NutServer{
 					{
 						Name:     "test1",
 						Host:     "192.168.1.133",
@@ -171,7 +171,7 @@ func TestNutServer_Validate(t *testing.T) {
 		Port     int
 		Username string
 		Password string
-		Targets  []TargetServer
+		Targets  []*TargetServer
 	}
 	tests := []struct {
 		name           string
@@ -239,7 +239,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Port:     DefaultNUTServerPort,
 				Username: "test",
 				Password: "test",
-				Targets: []TargetServer{
+				Targets: []*TargetServer{
 					{
 						Name:      "test1",
 						MAC:       "00:11:22:33:44:55",
@@ -263,7 +263,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Port:     DefaultNUTServerPort,
 				Username: "test",
 				Password: "test",
-				Targets: []TargetServer{
+				Targets: []*TargetServer{
 					{
 						Name:      "test1",
 						MAC:       "00:11:22:33:44:55",
@@ -297,7 +297,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Port:     DefaultNUTServerPort,
 				Username: "test",
 				Password: "test",
-				Targets: []TargetServer{
+				Targets: []*TargetServer{
 					{
 						Name:      "test1",
 						MAC:       "00:11:22:33:44:55",
