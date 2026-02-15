@@ -22,7 +22,7 @@ var (
 func IsValidRego(rego string) error {
 	mod, err := ast.ParseModule("test", rego)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrInvalidRegoRule, err)
+		return fmt.Errorf("%w: %w", ErrInvalidRegoRule, err)
 	}
 	if mod.Package.String() != "package upswake" {
 		return ErrPackageName
