@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -37,7 +36,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
 
 	alwaysFalseRegoFS := afero.NewMemMapFs()
-	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysFalse)
+	writeMemFile(t, alwaysFalseRegoFS, "test.rego", regoAlwaysFalse)
 
 	type args struct {
 		config  *entity.Config
@@ -80,9 +79,8 @@ func TestNewRegoEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewRegoEvaluator() = %v, want %v", got, tt.want)
-			}
+			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -167,9 +167,7 @@ func TestCLIArgs_URL(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.URL(); got != tt.want {
-				t.Errorf("URL() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, c.URL())
 		})
 	}
 }
@@ -273,9 +271,8 @@ func TestCLIArgs_ListenAddress(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.ListenAddress(); got != tt.want {
-				t.Errorf("ListenAddress() = %v, want %v", got, tt.want)
-			}
+			got := c.ListenAddress()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -321,9 +318,8 @@ func TestCLIArgs_URLPrefix(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.URLPrefix(); got != tt.want {
-				t.Errorf("URLPrefix() = %v, want %v", got, tt.want)
-			}
+			got := c.URLPrefix()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
