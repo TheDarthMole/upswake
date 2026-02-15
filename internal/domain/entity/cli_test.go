@@ -339,9 +339,9 @@ func TestCLIArgs_Validate(t *testing.T) {
 		TLSConfig  *tls.Config
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -354,7 +354,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Valid HTTPS Config",
@@ -367,7 +367,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "HTTPS Config without Certfile",
@@ -380,7 +380,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			error: ErrCertFilesNotSet,
+			wantErr: ErrCertFilesNotSet,
 		},
 		{
 			name: "HTTPS Config without Keyfile",
@@ -393,7 +393,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			error: ErrCertFilesNotSet,
+			wantErr: ErrCertFilesNotSet,
 		},
 		{
 			name: "HTTPS Config without TLSConfig",
@@ -406,7 +406,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  nil,
 			},
-			error: ErrTLSConfigNotSet,
+			wantErr: ErrTLSConfigNotSet,
 		},
 		{
 			name: "HTTP Config without valid host",
@@ -419,7 +419,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			error: ErrHostRequired,
+			wantErr: ErrHostRequired,
 		},
 		{
 			name: "HTTP Config with non-integer port",
@@ -432,7 +432,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "invalidPort",
 				TLSConfig:  nil,
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "HTTP Config with port too large",
@@ -445,7 +445,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "999999999",
 				TLSConfig:  nil,
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "HTTP Config with port too small",
@@ -458,7 +458,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "-1",
 				TLSConfig:  nil,
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 	}
 	for _, tt := range tests {
@@ -474,7 +474,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 			}
 			err := c.Validate()
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -504,44 +504,44 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 		TLSConfig  *tls.Config
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
 			name: "Valid RSA Cert",
 			fields: fields{
 				CertFile: "rsaServer.cert",
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Valid ecdsa Cert",
 			fields: fields{
 				CertFile: "ecdsaServer.cert",
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Invalid Cert format",
 			fields: fields{
 				CertFile: "invalidServer.cert",
 			},
-			error: ErrFailedParsePEM,
+			wantErr: ErrFailedParsePEM,
 		},
 		{
 			name: "Cert file does not exist",
 			fields: fields{
 				CertFile: "doesNotExist.cert",
 			},
-			error: ErrFailedReadCertFile,
+			wantErr: ErrFailedReadCertFile,
 		},
 		{
 			name: "Cert file PEM encoded but invalid",
 			fields: fields{
 				CertFile: "invalidCert.cert",
 			},
-			error: ErrFailedParsePEM,
+			wantErr: ErrFailedParsePEM,
 		},
 	}
 	for _, tt := range tests {
@@ -556,7 +556,7 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 				TLSConfig:  tt.fields.TLSConfig,
 			}
 			_, err := c.x509Cert(fileSystem)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -576,10 +576,10 @@ func TestNewCLIArgs(t *testing.T) {
 		fileSystem afero.Fs
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  *CLIArgs
-		error error
+		name    string
+		args    args
+		want    *CLIArgs
+		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -601,7 +601,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Valid HTTPS Config",
@@ -623,7 +623,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Invalid HTTPS Config",
@@ -636,8 +636,8 @@ func TestNewCLIArgs(t *testing.T) {
 				port:       "8080",
 				fileSystem: fileSystem,
 			},
-			want:  nil,
-			error: ErrHostRequired,
+			want:    nil,
+			wantErr: ErrHostRequired,
 		},
 		{
 			name: "HTTPS Certificate Not Found",
@@ -650,16 +650,16 @@ func TestNewCLIArgs(t *testing.T) {
 				port:       "8443",
 				fileSystem: fileSystem,
 			},
-			want:  nil,
-			error: ErrFailedReadCertFile,
+			want:    nil,
+			wantErr: ErrFailedReadCertFile,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewCLIArgs(tt.args.fileSystem, tt.args.configFile, tt.args.useSSL, tt.args.certFile, tt.args.keyFile, tt.args.host, tt.args.port)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 
-			if tt.error != nil {
+			if tt.wantErr != nil {
 				return
 			}
 			assert.NotNil(t, got)

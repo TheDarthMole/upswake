@@ -260,18 +260,18 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 		interfaces []net.Interface
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  []net.Addr
-		error error
+		name    string
+		args    args
+		want    []net.Addr
+		wantErr error
 	}{
 		{
 			name: "No Interfaces",
 			args: args{
 				interfaces: []net.Interface{},
 			},
-			want:  []net.Addr(nil),
-			error: nil,
+			want:    []net.Addr(nil),
+			wantErr: nil,
 		},
 		{
 			name: "Loopback Interface",
@@ -286,8 +286,8 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 					},
 				},
 			},
-			want:  []net.Addr(nil),
-			error: nil,
+			want:    []net.Addr(nil),
+			wantErr: nil,
 		},
 		// Unfortunately, we cannot easily mock net.Interfaces() to return custom interfaces.
 		// Therefore, we will just test with the actual interfaces on the system running the tests.
@@ -295,7 +295,7 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := filterAddressesFromInterfaces(tt.args.interfaces)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equalf(t, tt.want, got, "filterAddressesFromInterfaces(%v)", tt.args.interfaces)
 		})
 	}

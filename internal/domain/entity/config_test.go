@@ -13,19 +13,19 @@ func TestConfig_Validate(t *testing.T) {
 		NutServers []*NutServer
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
-			name: "empty nutservers",
+			name: "empty NutServers",
 			fields: fields{
 				NutServers: nil,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "one valid nutserver",
+			name: "one valid NutServer",
 			fields: fields{
 				NutServers: []*NutServer{
 					{
@@ -38,10 +38,10 @@ func TestConfig_Validate(t *testing.T) {
 					},
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "one valid one invalid nutserver",
+			name: "one valid one invalid NutServer",
 			fields: fields{
 				NutServers: []*NutServer{
 					{
@@ -62,7 +62,7 @@ func TestConfig_Validate(t *testing.T) {
 					},
 				},
 			},
-			error: ErrInvalidHost,
+			wantErr: ErrInvalidHost,
 		},
 	}
 	for _, tt := range tests {
@@ -72,7 +72,7 @@ func TestConfig_Validate(t *testing.T) {
 			}
 			err := c.Validate()
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -87,13 +87,13 @@ func TestNewTargetServer(t *testing.T) {
 		rules     []string
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  *TargetServer
-		error error
+		name    string
+		args    args
+		want    *TargetServer
+		wantErr error
 	}{
 		{
-			name: "valid newtargetserver",
+			name: "valid NewTargetServer",
 			args: args{
 				name:      "test",
 				mac:       "11:22:33:44:55:66",
@@ -116,10 +116,10 @@ func TestNewTargetServer(t *testing.T) {
 					"test2.rego",
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "invalid newtargetserver",
+			name: "invalid NewTargetServer",
 			args: args{
 				name:      "test",
 				mac:       "11:22:33:44:55:66",
@@ -131,15 +131,15 @@ func TestNewTargetServer(t *testing.T) {
 					"test2.rego",
 				},
 			},
-			want:  nil,
-			error: ErrInvalidBroadcast,
+			want:    nil,
+			wantErr: ErrInvalidBroadcast,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewTargetServer(tt.args.name, tt.args.mac, tt.args.broadcast, tt.args.interval, tt.args.port, tt.args.rules)
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -155,12 +155,12 @@ func TestNutServer_Validate(t *testing.T) {
 		Targets  []*TargetServer
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
-			name: "valid nutserver",
+			name: "valid NutServer",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -169,7 +169,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "invalid host",
@@ -181,7 +181,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrInvalidHost,
+			wantErr: ErrInvalidHost,
 		},
 		{
 			name: "invalid port too large",
@@ -193,7 +193,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "invalid port too small",
@@ -205,10 +205,10 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
-			name: "valid nutserver with single valid target",
+			name: "valid NutServer with single valid target",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -228,10 +228,10 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "valid nutserver with multiple valid targets",
+			name: "valid NutServer with multiple valid targets",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -261,10 +261,10 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "valid nutserver with one valid and one invalid targetserver",
+			name: "valid NutServer with one valid and one invalid TargetServer",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -284,7 +284,7 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 					{
 						Name:      "test2",
-						MAC:       "xx:22:33:44:55:yy", // invalid mac address for targetserver
+						MAC:       "xx:22:33:44:55:yy", // invalid mac address for target server
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  "15m",
@@ -294,10 +294,10 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 				},
 			},
-			error: ErrInvalidMac, // a targetserver has invalid characters in mac
+			wantErr: ErrInvalidMac, // a target server has invalid characters in MAC
 		},
 		{
-			name: "nutserver no name",
+			name: "NutServer no name",
 			fields: fields{
 				Name:     "",
 				Host:     "192.168.1.133",
@@ -306,10 +306,10 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrNameRequired,
+			wantErr: ErrNameRequired,
 		},
 		{
-			name: "nutserver no host",
+			name: "NutServer no host",
 			fields: fields{
 				Name:     "test",
 				Host:     "",
@@ -318,10 +318,10 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrHostRequired,
+			wantErr: ErrHostRequired,
 		},
 		{
-			name: "nutserver no username",
+			name: "NutServer no username",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -330,10 +330,10 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "test",
 				Targets:  nil,
 			},
-			error: ErrUsernameRequired,
+			wantErr: ErrUsernameRequired,
 		},
 		{
-			name: "nutserver no password",
+			name: "NutServer no password",
 			fields: fields{
 				Name:     "test",
 				Host:     "192.168.1.133",
@@ -342,7 +342,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Password: "",
 				Targets:  nil,
 			},
-			error: ErrPasswordRequired,
+			wantErr: ErrPasswordRequired,
 		},
 	}
 	for _, tt := range tests {
@@ -356,7 +356,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets:  tt.fields.Targets,
 			}
 			err := ns.Validate()
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -371,12 +371,12 @@ func TestTargetServer_Validate(t *testing.T) {
 		Rules     []string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
-			name: "valid targetserver",
+			name: "valid TargetServer",
 			fields: fields{
 				Name:      "test",
 				MAC:       "00:11:22:33:44:55",
@@ -385,10 +385,10 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
-			name: "valid targetserver multiple rules",
+			name: "valid TargetServer multiple rules",
 			fields: fields{
 				Name:      "test",
 				MAC:       "00:11:22:33:44:55",
@@ -400,7 +400,7 @@ func TestTargetServer_Validate(t *testing.T) {
 					"test2.rego",
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "invalid mac",
@@ -412,7 +412,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrInvalidMac,
+			wantErr: ErrInvalidMac,
 		},
 		{
 			name: "invalid broadcast",
@@ -424,7 +424,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrInvalidBroadcast,
+			wantErr: ErrInvalidBroadcast,
 		},
 		{
 			name: "invalid port too high",
@@ -436,7 +436,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "invalid port too low",
@@ -448,7 +448,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrInvalidPort,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "invalid interval",
@@ -460,10 +460,10 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15beans",
 				Rules:     []string{},
 			},
-			error: ErrInvalidInterval,
+			wantErr: ErrInvalidInterval,
 		},
 		{
-			name: "targetserver no name",
+			name: "TargetServer no name",
 			fields: fields{
 				Name:      "",
 				MAC:       "00:11:22:33:44:55",
@@ -472,10 +472,10 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrNameRequired,
+			wantErr: ErrNameRequired,
 		},
 		{
-			name: "targetserver no mac",
+			name: "TargetServer no mac",
 			fields: fields{
 				Name:      "test",
 				MAC:       "",
@@ -484,10 +484,10 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrMACRequired,
+			wantErr: ErrMACRequired,
 		},
 		{
-			name: "targetserver no broadcast",
+			name: "TargetServer no broadcast",
 			fields: fields{
 				Name:      "test",
 				MAC:       "00:11:22:33:44:55",
@@ -496,10 +496,10 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "15m",
 				Rules:     []string{},
 			},
-			error: ErrBroadcastRequired,
+			wantErr: ErrBroadcastRequired,
 		},
 		{
-			name: "targetserver no interval",
+			name: "TargetServer no interval",
 			fields: fields{
 				Name:      "test",
 				MAC:       "00:11:22:33:44:55",
@@ -508,7 +508,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Interval:  "",
 				Rules:     []string{},
 			},
-			error: ErrIntervalRequired,
+			wantErr: ErrIntervalRequired,
 		},
 	}
 	for _, tt := range tests {
@@ -522,7 +522,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				Rules:     tt.fields.Rules,
 			}
 			err := ts.Validate()
-			assert.Equal(t, tt.error, err)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }

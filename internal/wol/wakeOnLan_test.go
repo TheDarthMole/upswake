@@ -87,57 +87,57 @@ func Test_newMagicPacket(t *testing.T) {
 		mac string
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  []byte
-		error error
+		name    string
+		args    args
+		want    []byte
+		wantErr error
 	}{
 		{
 			name: "invalid MAC",
 			args: args{
 				mac: "invalid",
 			},
-			want:  nil,
-			error: ErrFailedCreateMagicPacket,
+			want:    nil,
+			wantErr: ErrFailedCreateMagicPacket,
 		},
 		{
 			name: "invalid MAC too long",
 			args: args{
 				mac: "01:02:03:04:05:06:07",
 			},
-			want:  nil,
-			error: ErrFailedCreateMagicPacket,
+			want:    nil,
+			wantErr: ErrFailedCreateMagicPacket,
 		},
 		{
 			name: "invalid MAC too short",
 			args: args{
 				mac: "01:02:03:04:05",
 			},
-			want:  nil,
-			error: ErrFailedCreateMagicPacket,
+			want:    nil,
+			wantErr: ErrFailedCreateMagicPacket,
 		},
 		{
 			name: "invalid MAC wrong format",
 			args: args{
 				mac: "01:02:03:04:gg",
 			},
-			want:  nil,
-			error: ErrFailedCreateMagicPacket,
+			want:    nil,
+			wantErr: ErrFailedCreateMagicPacket,
 		},
 		{
 			name: "valid MAC",
 			args: args{
 				mac: validMagicPacketMAC,
 			},
-			want:  validMagicPacket,
-			error: nil,
+			want:    validMagicPacket,
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := newMagicPacket(tt.args.mac)
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -151,7 +151,7 @@ func Test_wakeInternal(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		error    error
+		wantErr  error
 		wantSent []byte
 	}{
 		{
@@ -160,7 +160,7 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloser(),
 				mac: "invalid",
 			},
-			error:    ErrFailedCreateMagicPacket,
+			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
 		},
 		{
@@ -169,7 +169,7 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloser(),
 				mac: "01:02:03:04:05:06:07",
 			},
-			error:    ErrFailedCreateMagicPacket,
+			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
 		},
 		{
@@ -178,7 +178,7 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloser(),
 				mac: "01:02:03:04:05",
 			},
-			error:    ErrFailedCreateMagicPacket,
+			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
 		},
 		{
@@ -187,7 +187,7 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloser(),
 				mac: "01:02:03:04:gg",
 			},
-			error:    ErrFailedCreateMagicPacket,
+			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
 		},
 		{
@@ -196,7 +196,7 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloser(),
 				mac: validMagicPacketMAC,
 			},
-			error:    nil,
+			wantErr:  nil,
 			wantSent: validMagicPacket,
 		},
 		{
@@ -205,16 +205,16 @@ func Test_wakeInternal(t *testing.T) {
 				dst: newReadWriteCloserError(),
 				mac: validMagicPacketMAC,
 			},
-			error:    ErrExpectedPacketSize,
+			wantErr:  ErrExpectedPacketSize,
 			wantSent: validMagicPacket,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := wakeInternal(tt.args.dst, tt.args.mac)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 
-			if tt.error != nil {
+			if tt.wantErr != nil {
 				return
 			}
 
@@ -258,16 +258,16 @@ func TestWakeOnLan_Wake(t *testing.T) {
 		WoLTarget *entity.TargetServer
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		error  error
+		name    string
+		fields  fields
+		wantErr error
 	}{
 		{
 			name: "valid",
 			fields: fields{
 				newValidTestWoLTarget(),
 			},
-			error: nil,
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -276,7 +276,7 @@ func TestWakeOnLan_Wake(t *testing.T) {
 				tt.fields.WoLTarget,
 			}
 			err := tgt.Wake()
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }

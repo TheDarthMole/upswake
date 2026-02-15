@@ -112,7 +112,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 	tests := []struct {
 		name              string
 		args              args
-		error             error
+		wantErr           error
 		outputContains    []string
 		outputNotContains []string
 	}{
@@ -124,7 +124,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			error: nil,
+			wantErr: nil,
 			outputContains: []string{
 				`"msg":"Sent WoL packet","cmd":"wake","broadcast":"127.0.0.255","mac":"00:00:00:00:00:00"`,
 			},
@@ -137,7 +137,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			error: ErrNoBroadcasts,
+			wantErr: ErrNoBroadcasts,
 			outputContains: []string{
 				ErrNoBroadcasts.Error(),
 			},
@@ -149,7 +149,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 
 			t.Log(output)
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 
 			for _, wantOutput := range tt.outputContains {
 				assert.Contains(t, output, wantOutput)

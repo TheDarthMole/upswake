@@ -102,11 +102,11 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		inputJSON string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
-		error  error
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		wantErr error
 	}{
 		{
 			name: "nothing to evaluate",
@@ -117,8 +117,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				target:    nil,
 				inputJSON: "",
 			},
-			want:  false,
-			error: nil,
+			want:    false,
+			wantErr: nil,
 		},
 		{
 			name: "evaluate with always true rule",
@@ -133,8 +133,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:  true,
-			error: nil,
+			want:    true,
+			wantErr: nil,
 		},
 		{
 			name: "evaluate with always false rule",
@@ -149,8 +149,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:  false,
-			error: nil,
+			want:    false,
+			wantErr: nil,
 		},
 		{
 			name: "file not found",
@@ -165,8 +165,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
 			},
-			want:  false,
-			error: ErrFailedReadRegoFile,
+			want:    false,
+			wantErr: ErrFailedReadRegoFile,
 		},
 		{
 			name: "ups 100% check positive",
@@ -181,8 +181,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
-			want:  true,
-			error: nil,
+			want:    true,
+			wantErr: nil,
 		},
 		{
 			name: "ups 100% check negative",
@@ -198,8 +198,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":10,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
-			want:  false,
-			error: nil,
+			want:    false,
+			wantErr: nil,
 		},
 		// TODO: Add more rules that tests inputJSON, e.g. faulty fs
 	}
@@ -210,7 +210,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			}
 			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -234,11 +234,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		getUPSJSON func(server *entity.NutServer) (string, error)
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   EvaluationResult
-		error  error
+		name    string
+		fields  fields
+		args    args
+		want    EvaluationResult
+		wantErr error
 	}{
 		{
 			name: "valid eval",
@@ -286,7 +286,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "missing mac in config",
@@ -325,7 +325,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				Found:   false,
 				Target:  nil,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "invalid nutserver output",
@@ -359,8 +359,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
 			},
-			want:  EvaluationResult{},
-			error: ErrFailedEvaluateExpression,
+			want:    EvaluationResult{},
+			wantErr: ErrFailedEvaluateExpression,
 		},
 	}
 	for _, tt := range tests {
@@ -371,7 +371,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     tt.fields.mac,
 			}
 			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}

@@ -32,10 +32,10 @@ func TestEvaluateExpression(t *testing.T) {
 		regoRule string
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  bool
-		error error
+		name    string
+		args    args
+		want    bool
+		wantErr error
 	}{
 		{
 			name: "Valid Rego Rule and Valid JSON",
@@ -43,8 +43,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: validRegoRule,
 			},
-			want:  true,
-			error: nil,
+			want:    true,
+			wantErr: nil,
 		},
 		{
 			name: "Valid Rego Rule and Invalid JSON",
@@ -52,8 +52,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  invalidJSON,
 				regoRule: validRegoRule,
 			},
-			want:  false,
-			error: ErrDecodeFailed,
+			want:    false,
+			wantErr: ErrDecodeFailed,
 		},
 		{
 			name: "Invalid Rego Rule and Valid JSON",
@@ -61,8 +61,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: invalidRegoRule,
 			},
-			want:  false,
-			error: ErrInvalidRegoRule,
+			want:    false,
+			wantErr: ErrInvalidRegoRule,
 		},
 		{
 			name: "Invalid Rego Rule and Invalid JSON",
@@ -70,8 +70,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  invalidJSON,
 				regoRule: invalidRegoRule,
 			},
-			want:  false,
-			error: ErrInvalidRegoRule,
+			want:    false,
+			wantErr: ErrInvalidRegoRule,
 		},
 		{
 			name: "Invalid Package Name Rego Rule and Valid JSON",
@@ -79,8 +79,8 @@ func TestEvaluateExpression(t *testing.T) {
 				rawJSON:  validJSON,
 				regoRule: invalidPackageNameRule,
 			},
-			want:  false,
-			error: ErrPackageName,
+			want:    false,
+			wantErr: ErrPackageName,
 		},
 		{
 			name: "UPS server data positive",
@@ -94,8 +94,8 @@ wake if {
 	input[i].Variables[j].Value == 100
 }`,
 			},
-			error: nil,
-			want:  true,
+			wantErr: nil,
+			want:    true,
 		},
 		{
 			name: "UPS server data negative",
@@ -109,14 +109,14 @@ wake if {
 	input[i].Variables[j].Value == 100
 }`,
 			},
-			error: nil,
-			want:  false,
+			wantErr: nil,
+			want:    false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := EvaluateExpression(tt.args.rawJSON, tt.args.regoRule)
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -127,30 +127,30 @@ func TestIsValidRego(t *testing.T) {
 		rego string
 	}
 	tests := []struct {
-		name  string
-		args  args
-		error error
+		name    string
+		args    args
+		wantErr error
 	}{
 		{
 			name: "Valid Rego Rule",
 			args: args{
 				rego: validRegoRule,
 			},
-			error: nil,
+			wantErr: nil,
 		},
 		{
 			name: "Invalid Rego Rule",
 			args: args{
 				rego: invalidRegoRule,
 			},
-			error: ErrInvalidRegoRule,
+			wantErr: ErrInvalidRegoRule,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := IsValidRego(tt.args.rego)
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }

@@ -16,10 +16,10 @@ func Test_Load(t *testing.T) {
 	testFS := afero.NewBasePathFs(afero.NewOsFs(), "./testing/")
 
 	tests := []struct {
-		name  string
-		args  args
-		want  *entity.Config
-		error error
+		name    string
+		args    args
+		want    *entity.Config
+		wantErr error
 	}{
 		{
 			name: "valid config",
@@ -27,7 +27,7 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "valid_config.yaml",
 			},
-			error: nil,
+			wantErr: nil,
 			want: &entity.Config{
 				NutServers: []*entity.NutServer{
 					{
@@ -58,7 +58,7 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "no_targets_config.yaml",
 			},
-			error: nil,
+			wantErr: nil,
 			want: &entity.Config{
 				NutServers: []*entity.NutServer{
 					{
@@ -78,8 +78,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_hostname.yaml",
 			},
-			error: entity.ErrInvalidHost,
-			want:  &entity.Config{},
+			wantErr: entity.ErrInvalidHost,
+			want:    &entity.Config{},
 		},
 		{
 			name: "port number greater than 65535",
@@ -87,8 +87,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_port_too_large.yaml",
 			},
-			error: entity.ErrInvalidPort,
-			want:  &entity.Config{},
+			wantErr: entity.ErrInvalidPort,
+			want:    &entity.Config{},
 		},
 		{
 			name: "port number less than 1",
@@ -96,8 +96,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_port_too_small.yaml",
 			},
-			error: entity.ErrInvalidPort,
-			want:  &entity.Config{},
+			wantErr: entity.ErrInvalidPort,
+			want:    &entity.Config{},
 		},
 		{
 			name: "invalid target mac",
@@ -105,8 +105,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_target_mac.yaml",
 			},
-			error: entity.ErrInvalidMac,
-			want:  &entity.Config{},
+			wantErr: entity.ErrInvalidMac,
+			want:    &entity.Config{},
 		},
 		{
 			name: "config file does not exist",
@@ -114,8 +114,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "does_not_exist.yaml",
 			},
-			error: ErrReadingConfigFile,
-			want:  &entity.Config{},
+			wantErr: ErrReadingConfigFile,
+			want:    &entity.Config{},
 		},
 		{
 			name: "config file username is array",
@@ -123,8 +123,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_type.yaml",
 			},
-			error: ErrUnmarshallingConfig,
-			want:  &entity.Config{},
+			wantErr: ErrUnmarshallingConfig,
+			want:    &entity.Config{},
 		},
 	}
 	for _, tt := range tests {
@@ -132,7 +132,7 @@ func Test_Load(t *testing.T) {
 			InitConfig(tt.args.fs, tt.args.filePath)
 			got, err := Load()
 
-			assert.ErrorIs(t, err, tt.error)
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
 	}
