@@ -131,7 +131,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 						"alwaysTrue.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    true,
 			wantErr: nil,
@@ -147,7 +147,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 						"alwaysFalse.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    false,
 			wantErr: nil,
@@ -163,7 +163,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 						"doesnotexist.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    false,
 			wantErr: ErrFailedReadRegoFile,
