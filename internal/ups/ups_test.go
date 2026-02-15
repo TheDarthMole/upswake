@@ -120,7 +120,7 @@ func TestGetJSON(t *testing.T) {
 			args: args{
 				ns: &entity.NutServer{
 					Host:     "127.0.0.1",
-					Port:     entity.DefaultNUTServerPort, // Invalid port
+					Port:     entity.DefaultNUTServerPort,
 					Username: "upsmon",
 					Password: "upsmon",
 				},
