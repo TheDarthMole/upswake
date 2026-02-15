@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var cfg = &entity.Config{
@@ -40,9 +41,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 
 	for x := range data {
 		err := afero.WriteFile(memfs, x, data[x], 0o644)
-		if err != nil {
-			t.Fatalf("could not write file to memfs: %s", err)
-		}
+		require.NoErrorf(t, err, "error writing to in-memory filesystem: %s", err)
 	}
 	return memfs
 }
