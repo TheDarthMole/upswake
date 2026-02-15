@@ -31,7 +31,7 @@ func connect(host string, port int, username, password string) (UPS, error) {
 		return UPS{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
-		return UPS{}, fmt.Errorf("%w: %w", ErrAuthenticationFailed, fmt.Errorf("could not authenticate to NUT server at %s:%d", host, port))
+		return UPS{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
 	}
 	return UPS{client}, nil
 }

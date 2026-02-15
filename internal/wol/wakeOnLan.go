@@ -60,7 +60,7 @@ func wakeInternal(dst io.ReadWriteCloser, mac string) error {
 	}
 
 	if size != MagicPacketSize {
-		return fmt.Errorf("%w: %w", ErrExpectedPacketSize, fmt.Errorf("magic packet sent was %d", size))
+		return fmt.Errorf("%w: magic packet sent was %d bytes long", ErrExpectedPacketSize, size)
 	}
 
 	return nil

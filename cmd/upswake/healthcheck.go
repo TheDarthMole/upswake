@@ -72,7 +72,7 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 			"error making healthcheck request",
 			slog.String("url", healthURL),
 			slog.Any("error", err))
-		return fmt.Errorf("%w: %w", ErrHealthCheckFailed, fmt.Errorf("%w: %w", ErrMakingRequest, err))
+		return fmt.Errorf("%w: %w: %w", ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
 	defer func(Body io.ReadCloser) {
 		if err := Body.Close(); err != nil {
