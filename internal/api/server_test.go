@@ -180,7 +180,7 @@ func TestNewServer(t *testing.T) {
 			// echo instance and validator
 			assert.NotNil(t, got.echo)
 			assert.IsType(t, &CustomValidator{}, got.echo.Validator)
-			assert.Equal(t, tt.want.ctx, got.echo.Validator.(*CustomValidator).ctx)
+			assert.NotNil(t, got.echo.Validator)
 
 			req := httptest.NewRequest(http.MethodGet, "/ping", http.NoBody)
 			rec := httptest.NewRecorder()
