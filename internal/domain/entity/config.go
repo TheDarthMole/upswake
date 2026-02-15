@@ -2,8 +2,8 @@ package entity
 
 import (
 	"errors"
-	"fmt"
-	"log"
+	"log/slog"
+	"os"
 	"reflect"
 	"time"
 
@@ -34,7 +34,8 @@ const (
 func init() {
 	validate = validator.New()
 	if err := validate.RegisterValidation("duration", duration, true); err != nil {
-		log.Fatalf("could not register Duration validator: %s", err)
+		slog.Error("could not register Duration validator", slog.Any("error", err))
+		os.Exit(1)
 	}
 }
 
@@ -47,7 +48,11 @@ func duration(fl validator.FieldLevel) bool {
 		// true if there is no error and the time is greater than 1ms, else false
 		return err == nil && dur >= 1*time.Millisecond
 	default:
-		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
+		slog.Warn("could not parse duration",
+			slog.String("field_name", fl.FieldName()),
+			slog.Any("value", fl.Field()),
+			slog.String("kind", field.Kind().String()))
+		return false
 	}
 }
 
