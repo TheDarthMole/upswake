@@ -13,14 +13,14 @@ import (
 )
 
 var cfg = &entity.Config{
-	NutServers: []entity.NutServer{
+	NutServers: []*entity.NutServer{
 		{
 			Name:     "testNUTServer",
 			Host:     "127.0.0.1",
 			Port:     1234,
 			Username: "test-user",
 			Password: "test-password",
-			Targets: []entity.TargetServer{
+			Targets: []*entity.TargetServer{
 				{
 					Name:      "testTarget",
 					MAC:       "00:00:00:00:00:00",
@@ -80,7 +80,7 @@ func TestRootHandler_Health(t *testing.T) {
 		{
 			name: "test-invalid-config",
 			fields: fields{
-				cfg: &entity.Config{NutServers: []entity.NutServer{
+				cfg: &entity.Config{NutServers: []*entity.NutServer{
 					{},
 				}},
 				rulesFS: newMemFS(t, map[string][]byte{}),
@@ -93,7 +93,7 @@ func TestRootHandler_Health(t *testing.T) {
 		{
 			name: "cannot-connect-to-server",
 			fields: fields{
-				cfg: &entity.Config{NutServers: []entity.NutServer{
+				cfg: &entity.Config{NutServers: []*entity.NutServer{
 					{
 						Name:     "testNUTServer",
 						Host:     "127.0.0.1",
@@ -105,7 +105,7 @@ func TestRootHandler_Health(t *testing.T) {
 				rulesFS: newMemFS(t, map[string][]byte{}),
 			},
 			wantedResponse: wantedResponse{
-				body:       `{"message": "could not connect to NUT server: connection failed\ndial tcp 127.0.0.1:1234: connect: connection refused"}`,
+				body:       `{"message": "could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"}`,
 				statusCode: http.StatusInternalServerError,
 			},
 		},

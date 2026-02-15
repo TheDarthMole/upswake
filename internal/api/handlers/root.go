@@ -80,7 +80,7 @@ func (h *RootHandler) Health(c *echo.Context) error {
 
 	// TODO: Speed this up by running in parallel
 	for _, server := range h.cfg.NutServers {
-		if _, err := ups.GetJSON(&server); err != nil {
+		if _, err := ups.GetJSON(server); err != nil {
 			c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
 			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 		}

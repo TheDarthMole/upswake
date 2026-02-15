@@ -27,14 +27,14 @@ default wake := true`),
 default wake := false`),
 	})
 	validConfig := &entity.Config{
-		NutServers: []entity.NutServer{
+		NutServers: []*entity.NutServer{
 			{
 				Name:     "test-nut-server",
 				Host:     "127.0.0.1",
 				Port:     3493,
 				Username: "upsmon",
 				Password: "upsmon",
-				Targets: []entity.TargetServer{
+				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
 						MAC:       "00:11:22:33:44:55",
@@ -48,14 +48,14 @@ default wake := false`),
 		},
 	}
 	invalidConfig := &entity.Config{
-		NutServers: []entity.NutServer{
+		NutServers: []*entity.NutServer{
 			{
 				Name:     "test-nut-server",
 				Host:     "127.0.0.1",
 				Port:     3493,
 				Username: "upsmon",
 				Password: "upsmon",
-				Targets: []entity.TargetServer{
+				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
 						MAC:       "00:11:22:33:44:55",

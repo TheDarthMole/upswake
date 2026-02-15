@@ -2,8 +2,8 @@ package entity
 
 import (
 	"errors"
-	"fmt"
-	"log"
+	"log/slog"
+	"os"
 	"reflect"
 	"time"
 
@@ -11,19 +11,19 @@ import (
 )
 
 var (
-	ErrorUsernameRequired  = errors.New("username is required")
-	ErrorPasswordRequired  = errors.New("password is required")
-	ErrorInvalidPort       = errors.New("port must be between 1 and 65535")
-	ErrorNameRequired      = errors.New("name is required")
-	ErrorHostRequired      = errors.New("host is required")
-	ErrorMACRequired       = errors.New("MAC is required")
-	ErrorInvalidMac        = errors.New("MAC address is invalid")
-	ErrorInvalidHost       = errors.New("host is invalid, must be an IP address or hostname")
-	ErrorBroadcastRequired = errors.New("broadcast is required")
-	ErrorInvalidBroadcast  = errors.New("broadcast is invalid, must be an IP address")
-	ErrorIntervalRequired  = errors.New("interval is required")
-	ErrorInvalidInterval   = errors.New("interval is invalid, must be a duration")
-	validate               *validator.Validate
+	ErrUsernameRequired  = errors.New("username is required")
+	ErrPasswordRequired  = errors.New("password is required")
+	ErrInvalidPort       = errors.New("port must be a number between 1 and 65535")
+	ErrNameRequired      = errors.New("name is required")
+	ErrHostRequired      = errors.New("host is required")
+	ErrMACRequired       = errors.New("MAC is required")
+	ErrInvalidMac        = errors.New("MAC address is invalid")
+	ErrInvalidHost       = errors.New("host is invalid, must be an IP address or hostname")
+	ErrBroadcastRequired = errors.New("broadcast is required")
+	ErrInvalidBroadcast  = errors.New("broadcast is invalid, must be an IP address")
+	ErrIntervalRequired  = errors.New("interval is required")
+	ErrInvalidInterval   = errors.New("interval is invalid, must be a duration")
+	validate             *validator.Validate
 )
 
 const (
@@ -34,7 +34,8 @@ const (
 func init() {
 	validate = validator.New()
 	if err := validate.RegisterValidation("duration", duration, true); err != nil {
-		log.Fatalf("could not register Duration validator: %s", err)
+		slog.Error("could not register Duration validator", slog.Any("error", err))
+		os.Exit(1)
 	}
 }
 
@@ -47,12 +48,16 @@ func duration(fl validator.FieldLevel) bool {
 		// true if there is no error and the time is greater than 1ms, else false
 		return err == nil && dur >= 1*time.Millisecond
 	default:
-		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
+		slog.Warn("could not parse duration",
+			slog.String("field_name", fl.FieldName()),
+			slog.Any("value", fl.Field()),
+			slog.String("kind", field.Kind().String()))
+		return false
 	}
 }
 
 type Config struct {
-	NutServers []NutServer
+	NutServers []*NutServer
 }
 
 func (c *Config) Validate() error {
@@ -65,32 +70,32 @@ func (c *Config) Validate() error {
 }
 
 type NutServer struct {
-	Name     string         `json:"name"`
-	Host     string         `json:"host"`
-	Port     int            `json:"port"`
-	Username string         `json:"username"`
-	Password string         `json:"password"`
-	Targets  []TargetServer `json:"targets"`
+	Name     string          `json:"name"`
+	Host     string          `json:"host"`
+	Port     int             `json:"port"`
+	Username string          `json:"username"`
+	Password string          `json:"password"`
+	Targets  []*TargetServer `json:"targets"`
 }
 
 func (ns *NutServer) Validate() error {
 	if ns.Name == "" {
-		return ErrorNameRequired
+		return ErrNameRequired
 	}
 	if ns.Host == "" {
-		return ErrorHostRequired
+		return ErrHostRequired
 	}
 	if validate.Var(ns.Host, "ip|hostname") != nil {
-		return ErrorInvalidHost
+		return ErrInvalidHost
 	}
 	if ns.Port < 1 || ns.Port > 65535 {
-		return ErrorInvalidPort
+		return ErrInvalidPort
 	}
 	if ns.Username == "" {
-		return ErrorUsernameRequired
+		return ErrUsernameRequired
 	}
 	if ns.Password == "" {
-		return ErrorPasswordRequired
+		return ErrPasswordRequired
 	}
 	for _, target := range ns.Targets {
 		if err := target.Validate(); err != nil {
@@ -111,28 +116,28 @@ type TargetServer struct {
 
 func (ts *TargetServer) Validate() error {
 	if ts.Name == "" {
-		return ErrorNameRequired
+		return ErrNameRequired
 	}
 	if ts.MAC == "" {
-		return ErrorMACRequired
+		return ErrMACRequired
 	}
 	if validate.Var(ts.MAC, "mac") != nil {
-		return ErrorInvalidMac
+		return ErrInvalidMac
 	}
 	if ts.Broadcast == "" {
-		return ErrorBroadcastRequired
+		return ErrBroadcastRequired
 	}
 	if validate.Var(ts.Broadcast, "ip") != nil {
-		return ErrorInvalidBroadcast
+		return ErrInvalidBroadcast
 	}
 	if ts.Port < 1 || ts.Port > 65535 {
-		return ErrorInvalidPort
+		return ErrInvalidPort
 	}
 	if ts.Interval == "" {
-		return ErrorIntervalRequired
+		return ErrIntervalRequired
 	}
 	if validate.Var(ts.Interval, "duration") != nil {
-		return ErrorInvalidInterval
+		return ErrInvalidInterval
 	}
 
 	return nil

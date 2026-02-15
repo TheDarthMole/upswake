@@ -5,12 +5,12 @@ type Config struct {
 }
 
 type NutServer struct {
-	Name     string         `mapstructure:"name"`
-	Host     string         `mapstructure:"host"`
-	Port     int            `mapstructure:"port"`
-	Username string         `mapstructure:"username"`
-	Password string         `mapstructure:"password"`
-	Targets  []TargetServer `mapstructure:"targets"`
+	Name     string          `mapstructure:"name"`
+	Host     string          `mapstructure:"host"`
+	Port     int             `mapstructure:"port"`
+	Username string          `mapstructure:"username"`
+	Password string          `mapstructure:"password"`
+	Targets  []*TargetServer `mapstructure:"targets"`
 }
 
 type TargetServer struct {

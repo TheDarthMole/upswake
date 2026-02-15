@@ -32,10 +32,7 @@ func NewCustomValidator(ctx context.Context) *CustomValidator {
 }
 
 func (cv *CustomValidator) Validate(i any) error {
-	if err := cv.validator.StructCtx(cv.ctx, i); err != nil {
-		return err
-	}
-	return nil
+	return cv.validator.StructCtx(cv.ctx, i)
 }
 
 func NewServer(ctx context.Context, logger *slog.Logger) *Server {
