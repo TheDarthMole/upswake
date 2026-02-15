@@ -90,7 +90,7 @@ func TestCustomValidator_Validate(t *testing.T) {
 		//		Interval:  "15m",
 		//		Rules:     []string{"test"},
 		//	}},
-		//	wantErr: true,
+		//	error: true,
 		// },
 	}
 	for _, tt := range tests {
