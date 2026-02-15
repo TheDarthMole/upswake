@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"sync"
@@ -173,7 +174,7 @@ func Test_Execute(t *testing.T) {
 			exitCode: 1,
 			timeout:  5 * time.Second,
 			wantOutput: []string{
-				"Error: error loading config: open config.yaml: file does not exist",
+				"error loading config: open config.yaml: file does not exist",
 			},
 			notWantOutput: []string{},
 		},
@@ -220,47 +221,49 @@ nut_servers:
 			},
 			exitCode:   1,
 			timeout:    5 * time.Second,
-			wantOutput: []string{`Error: unknown command "non-existent" for "upswake"`},
+			wantOutput: []string{`"error":"unknown command \"non-existent\" for \"upswake\""`},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotOutput := getStdoutStderr(t, func() {
-				c := make(chan int, 1)
+			c := make(chan int, 1)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-				ctx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
+			wg.Add(1)
 
-				var wg sync.WaitGroup
-				wg.Add(1)
+			// TODO: Unsafe for parallel execution, find better way
+			origArgs := os.Args
+			defer func() { os.Args = origArgs }()
 
-				origArgs := os.Args
-				defer func() { os.Args = origArgs }()
+			logOutput := bytes.NewBuffer(nil)
 
-				go func() {
-					defer wg.Done()
-					os.Args = tt.args.args
+			go func() {
+				defer wg.Done()
+				os.Args = tt.args.args
 
-					c <- Execute(ctx, tt.args.filesystem(), tt.args.regoFiles())
-				}()
+				c <- Execute(ctx, tt.args.filesystem(), tt.args.regoFiles(), logOutput)
+			}()
 
-				select {
-				case exitCode := <-c:
-					// use err and reply
-					assert.Equal(t, tt.exitCode, exitCode)
-					cancel()
-				case <-time.After(tt.timeout):
-					cancel()
-					wg.Wait()
-					// set the error to be a timeout error
-				}
-			})
+			select {
+			case exitCode := <-c:
+				assert.Equal(t, tt.exitCode, exitCode)
+			case <-time.After(tt.timeout):
+				cancel()
+				wg.Wait()
+				exitCode := <-c
+				assert.Equal(t, tt.exitCode, exitCode)
+			}
+
+			t.Log(logOutput.String())
 
 			for _, output := range tt.wantOutput {
-				assert.Contains(t, gotOutput, output)
+				assert.Contains(t, logOutput.String(), output)
 			}
 			for _, output := range tt.notWantOutput {
-				assert.NotContains(t, gotOutput, output)
+				assert.NotContains(t, logOutput.String(), output)
 			}
 		})
 	}

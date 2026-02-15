@@ -27,8 +27,20 @@ func TestServerHandler_Register(t *testing.T) {
 	g := e.Group("")
 	h.Register(g)
 
-	expectedRoutes := []string{"/wake", "/broadcastwake"}
-	assertRoutes(t, e, expectedRoutes)
+	expectedRoutes := echo.Routes{
+		{
+			Name:   "POST:/wake",
+			Path:   "/wake",
+			Method: "POST",
+		},
+		{
+			Name:   "POST:/broadcastwake",
+			Path:   "/broadcastwake",
+			Method: "POST",
+		},
+	}
+
+	assert.Equal(t, expectedRoutes, e.Router().Routes())
 }
 
 func TestNewWakeServerRequest(t *testing.T) {

@@ -2,19 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 type jsonCMD struct {
-	logger *zap.SugaredLogger
+	logger *slog.Logger
 }
 
-func NewJSONCommand(logger *zap.SugaredLogger) *cobra.Command {
-	jc := &jsonCMD{logger: logger}
+func NewJSONCommand(logger *slog.Logger) *cobra.Command {
+	childLogger := logger.With(
+		slog.String("cmd", "json"),
+	)
+
+	jc := &jsonCMD{
+		logger: childLogger,
+	}
+
 	cmd := &cobra.Command{
 		Use:   "json",
 		Short: "Retrieve JSON from a NUT server",
@@ -33,7 +40,7 @@ and for creating rego rules for waking a target`,
 func (j *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
-		j.logger.Errorf("could not get port: %s", err)
+		j.logger.Error("could not get port", slog.Any("error", err))
 		return err
 	}
 	nutServer := entity.NutServer{
@@ -46,7 +53,7 @@ func (j *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 
 	upsData, err := ups.GetJSON(&nutServer)
 	if err != nil {
-		j.logger.Errorf("failed to get JSON: %s", err)
+		j.logger.Error("failed to get JSON", slog.Any("error", err))
 		return err
 	}
 	fmt.Println(upsData)

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"net"
 	"testing"
 	"time"
@@ -9,13 +9,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestNewWakeCmd(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-	testSugar := logger.Sugar()
+	logger := newTestLogger()
 
 	type args struct {
 		broadcasts []net.IP
@@ -29,7 +26,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "empty broadcasts",
 			args: args{broadcasts: []net.IP{}},
 			want: func() *cobra.Command {
-				wake := wakeCMD{logger: testSugar}
+				wake := wakeCMD{logger: logger}
 				wakeCmd := &cobra.Command{
 					RunE: wake.wakeCmdRunE,
 				}
@@ -44,7 +41,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "one broadcasts",
 			args: args{broadcasts: []net.IP{{127, 0, 0, 255}}},
 			want: func() *cobra.Command {
-				wake := wakeCMD{logger: testSugar}
+				wake := wakeCMD{logger: logger}
 				wakeCmd := &cobra.Command{
 					RunE: wake.wakeCmdRunE,
 				}
@@ -59,7 +56,7 @@ func TestNewWakeCmd(t *testing.T) {
 			name: "multiple broadcasts",
 			args: args{broadcasts: []net.IP{{127, 0, 0, 255}, {192, 168, 1, 255}, {10, 0, 0, 255}}},
 			want: func() *cobra.Command {
-				wake := wakeCMD{logger: testSugar}
+				wake := wakeCMD{logger: logger}
 				wakeCmd := &cobra.Command{
 					RunE: wake.wakeCmdRunE,
 				}
@@ -74,7 +71,7 @@ func TestNewWakeCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			want := tt.want()
-			got := NewWakeCmd(testSugar, tt.args.broadcasts)
+			got := NewWakeCmd(logger, tt.args.broadcasts)
 
 			var gotFlagNames []string
 			got.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -98,7 +95,7 @@ func TestNewWakeCmd(t *testing.T) {
 
 	t.Run("viper config", func(t *testing.T) {
 		broadcasts := []net.IP{{192, 168, 1, 255}}
-		wakeCmd := NewWakeCmd(testSugar, broadcasts)
+		wakeCmd := NewWakeCmd(logger, broadcasts)
 
 		assert.Equal(t, "wake", wakeCmd.Use)
 		assert.NotEmpty(t, wakeCmd.Short)
@@ -109,44 +106,58 @@ func TestNewWakeCmd(t *testing.T) {
 
 func Test_wakeCmdRunE(t *testing.T) {
 	type args struct {
-		cmdFunc func(_ *zap.SugaredLogger) *cobra.Command
+		cmdFunc func(_ *slog.Logger) *cobra.Command
 		args    []string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr assert.ErrorAssertionFunc
-		output  string
+		name              string
+		args              args
+		error             error
+		outputContains    []string
+		outputNotContains []string
 	}{
 		{
 			name: "valid",
 			args: args{
-				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+				cmdFunc: func(logger *slog.Logger) *cobra.Command {
 					return NewWakeCmd(logger, []net.IP{{127, 0, 0, 255}})
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			wantErr: assert.NoError,
-			output:  `Sent WoL packet to 127.0.0.255 to wake 00:00:00:00:00:00`,
+			error: nil,
+			outputContains: []string{
+				`"msg":"Sent WoL packet","cmd":"wake","broadcast":"127.0.0.255","mac":"00:00:00:00:00:00"`,
+			},
 		},
 		{
 			name: "no broadcasts",
 			args: args{
-				cmdFunc: func(logger *zap.SugaredLogger) *cobra.Command {
+				cmdFunc: func(logger *slog.Logger) *cobra.Command {
 					return NewWakeCmd(logger, []net.IP{})
 				},
 				args: []string{"wake", "--mac", "00:00:00:00:00:00"},
 			},
-			wantErr: assert.Error,
-			output:  errorNoBroadcasts.Error(),
+			error: ErrNoBroadcasts,
+			outputContains: []string{
+				ErrNoBroadcasts.Error(),
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
 
-			tt.wantErr(t, err, fmt.Sprintf("wakeCmdRunE(%v)", tt.args.args))
-			assert.Contains(t, output, tt.output)
+			t.Log(output)
+
+			assert.ErrorIs(t, err, tt.error)
+
+			for _, wantOutput := range tt.outputContains {
+				assert.Contains(t, output, wantOutput)
+			}
+
+			for _, notWantOutput := range tt.outputNotContains {
+				assert.NotContains(t, output, notWantOutput)
+			}
 		})
 	}
 }
