@@ -108,22 +108,21 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
       - name: 💾 Go Build Cache for Docker
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
 
-      - name: 💾 Go Pkg Cache for Docker
-        uses: actions/cache@v5.0.3
-        with:
-          path: go-pkg-cache
-          key: ${{ runner.os }}-go-pkg-cache-${{ hashFiles('**/go.sum') }}
-
       - name: 💉 Inject go-build-cache
-        uses: reproducible-containers/buildkit-cache-dance@v3.3.1
+        uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
+          cache-map: |
+            {
+              "go-build-cache/pkg": "/go/pkg/mod",
+              "go-build-cache/build": "/root/.cache/go-build"
+            }
 
       - name: 🚀 Build and deploy minimal Docker images
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
