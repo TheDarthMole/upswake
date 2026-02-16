@@ -174,7 +174,7 @@ func Test_Execute(t *testing.T) {
 			exitCode: 1,
 			timeout:  5 * time.Second,
 			wantOutput: []string{
-				"error loading config: open config.yaml: file does not exist",
+				"error loading config: error reading config file: open config.yaml: file does not exist",
 			},
 			notWantOutput: []string{},
 		},

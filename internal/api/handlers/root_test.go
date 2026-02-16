@@ -10,17 +10,18 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var cfg = &entity.Config{
-	NutServers: []entity.NutServer{
+	NutServers: []*entity.NutServer{
 		{
 			Name:     "testNUTServer",
 			Host:     "127.0.0.1",
 			Port:     1234,
 			Username: "test-user",
 			Password: "test-password",
-			Targets: []entity.TargetServer{
+			Targets: []*entity.TargetServer{
 				{
 					Name:      "testTarget",
 					MAC:       "00:00:00:00:00:00",
@@ -40,9 +41,7 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 
 	for x := range data {
 		err := afero.WriteFile(memfs, x, data[x], 0o644)
-		if err != nil {
-			t.Fatalf("could not write file to memfs: %s", err)
-		}
+		require.NoErrorf(t, err, "error writing to in-memory filesystem: %s", err)
 	}
 	return memfs
 }
@@ -80,7 +79,7 @@ func TestRootHandler_Health(t *testing.T) {
 		{
 			name: "test-invalid-config",
 			fields: fields{
-				cfg: &entity.Config{NutServers: []entity.NutServer{
+				cfg: &entity.Config{NutServers: []*entity.NutServer{
 					{},
 				}},
 				rulesFS: newMemFS(t, map[string][]byte{}),
@@ -93,7 +92,7 @@ func TestRootHandler_Health(t *testing.T) {
 		{
 			name: "cannot-connect-to-server",
 			fields: fields{
-				cfg: &entity.Config{NutServers: []entity.NutServer{
+				cfg: &entity.Config{NutServers: []*entity.NutServer{
 					{
 						Name:     "testNUTServer",
 						Host:     "127.0.0.1",
@@ -105,7 +104,7 @@ func TestRootHandler_Health(t *testing.T) {
 				rulesFS: newMemFS(t, map[string][]byte{}),
 			},
 			wantedResponse: wantedResponse{
-				body:       `{"message": "could not connect to NUT server: connection failed\ndial tcp 127.0.0.1:1234: connect: connection refused"}`,
+				body:       `{"message": "could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"}`,
 				statusCode: http.StatusInternalServerError,
 			},
 		},

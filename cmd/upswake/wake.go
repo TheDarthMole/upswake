@@ -53,8 +53,7 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 	if len(broadcasts) == 0 {
 		return ErrNoBroadcasts
 	}
-
-	var joined error
+	var joinedErr error
 	for _, broadcast := range broadcasts {
 		ts, err := entity.NewTargetServer(
 			"CLI Request",
@@ -67,8 +66,8 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			wake.logger.Warn("Failed to create target server",
 				slog.String("broadcast", broadcast.String()),
-				slog.String("error", err.Error()))
-			joined = errors.Join(joined, fmt.Errorf("invalid target for %s: %w", broadcast, err))
+				slog.Any("error", err))
+			joinedErr = errors.Join(joinedErr, fmt.Errorf("invalid target for %s: %w", broadcast, err))
 			continue
 		}
 		wolClient := wol.NewWoLClient(ts)
@@ -77,13 +76,13 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			wake.logger.Warn("failed to send WoL packet",
 				slog.String("broadcast", broadcast.String()),
 				slog.String("mac", mac),
-				slog.String("error", err.Error()))
-			joined = errors.Join(joined, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
+				slog.Any("error", err))
+			joinedErr = errors.Join(joinedErr, fmt.Errorf("failed to wake %s via %s: %w", mac, broadcast, err))
 			continue
 		}
 		wake.logger.Info("Sent WoL packet",
 			slog.String("broadcast", broadcast.String()),
 			slog.String("mac", mac))
 	}
-	return joined
+	return joinedErr
 }

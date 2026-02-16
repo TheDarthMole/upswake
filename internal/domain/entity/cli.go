@@ -22,6 +22,13 @@ type CLIArgs struct {
 	TLSConfig  *tls.Config
 }
 
+var (
+	ErrCertFilesNotSet    = errors.New("SSL is enabled but certFile or keyFile is not set")
+	ErrTLSConfigNotSet    = errors.New("TLSConfig cannot be null")
+	ErrFailedParsePEM     = errors.New("failed to parse PEM certificate")
+	ErrFailedReadCertFile = errors.New("failed to read certificate file")
+)
+
 func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, keyFile, host, port string) (*CLIArgs, error) {
 	cliArgs := &CLIArgs{
 		ConfigFile: configFile,
@@ -48,23 +55,23 @@ func NewCLIArgs(fileSystem afero.Fs, configFile string, useSSL bool, certFile, k
 func (c *CLIArgs) Validate() error {
 	if c.UseSSL {
 		if c.CertFile == "" || c.KeyFile == "" {
-			return errors.New("SSL is enabled but certFile or keyFile is not set")
+			return ErrCertFilesNotSet
 		}
 		if c.TLSConfig == nil {
-			return errors.New("TLSConfig cannot be null")
+			return ErrTLSConfigNotSet
 		}
 	}
 
 	if c.Host == nil {
-		return errors.New("invalid listen host IP address")
+		return ErrHostRequired
 	}
 
 	portInt, err := strconv.Atoi(c.Port)
 	if err != nil {
-		return fmt.Errorf("invalid port number: %w", err)
+		return fmt.Errorf("%w: %w", ErrInvalidPort, err)
 	}
 	if portInt <= 0 || portInt > 65535 {
-		return fmt.Errorf("invalid listen port %d", portInt)
+		return fmt.Errorf("%w: %d", ErrInvalidPort, portInt)
 	}
 	return nil
 }
@@ -72,23 +79,24 @@ func (c *CLIArgs) Validate() error {
 func (c *CLIArgs) x509Cert(fileSystem afero.Fs) (*tls.Config, error) {
 	certFile, err := afero.ReadFile(fileSystem, c.CertFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedReadCertFile, err)
 	}
 
 	// Decode the PEM certificate
 	data, _ := pem.Decode(certFile)
 	if data == nil {
-		return nil, errors.New("failed to parse PEM certificate")
+		return nil, ErrFailedParsePEM
 	}
 
 	// Parse the certificate
 	cert, err := x509.ParseCertificate(data.Bytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedParsePEM, err)
 	}
 
-	conf := &tls.Config{}
-	conf.RootCAs = x509.NewCertPool()
+	conf := &tls.Config{
+		RootCAs: x509.NewCertPool(),
+	}
 	conf.RootCAs.AddCert(cert)
 
 	return conf, nil

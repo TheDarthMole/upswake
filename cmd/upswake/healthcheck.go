@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -71,9 +72,15 @@ func (h *healthCheck) HealthCheckRunE(cmd *cobra.Command, _ []string) error {
 			"error making healthcheck request",
 			slog.String("url", healthURL),
 			slog.Any("error", err))
-		return errors.Join(ErrHealthCheckFailed, ErrMakingRequest, err)
+		return fmt.Errorf("%w: %w: %w", ErrHealthCheckFailed, ErrMakingRequest, err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		if err := Body.Close(); err != nil {
+			h.logger.Warn("error closing response body",
+				slog.String("url", healthURL),
+				slog.Any("error", err))
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		h.logger.Error("healthcheck status not ok",

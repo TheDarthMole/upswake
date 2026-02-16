@@ -167,9 +167,7 @@ func TestCLIArgs_URL(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.URL(); got != tt.want {
-				t.Errorf("URL() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, c.URL())
 		})
 	}
 }
@@ -273,9 +271,8 @@ func TestCLIArgs_ListenAddress(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.ListenAddress(); got != tt.want {
-				t.Errorf("ListenAddress() = %v, want %v", got, tt.want)
-			}
+			got := c.ListenAddress()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -321,9 +318,8 @@ func TestCLIArgs_URLPrefix(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if got := c.URLPrefix(); got != tt.want {
-				t.Errorf("URLPrefix() = %v, want %v", got, tt.want)
-			}
+			got := c.URLPrefix()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -341,7 +337,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -354,7 +350,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Valid HTTPS Config",
@@ -367,7 +363,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "HTTPS Config without Certfile",
@@ -380,7 +376,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			wantErr: true,
+			wantErr: ErrCertFilesNotSet,
 		},
 		{
 			name: "HTTPS Config without Keyfile",
@@ -393,7 +389,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			wantErr: true,
+			wantErr: ErrCertFilesNotSet,
 		},
 		{
 			name: "HTTPS Config without TLSConfig",
@@ -406,7 +402,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  nil,
 			},
-			wantErr: true,
+			wantErr: ErrTLSConfigNotSet,
 		},
 		{
 			name: "HTTP Config without valid host",
@@ -419,7 +415,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			wantErr: true,
+			wantErr: ErrHostRequired,
 		},
 		{
 			name: "HTTP Config with non-integer port",
@@ -432,7 +428,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "invalidPort",
 				TLSConfig:  nil,
 			},
-			wantErr: true,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "HTTP Config with port too large",
@@ -445,7 +441,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "999999999",
 				TLSConfig:  nil,
 			},
-			wantErr: true,
+			wantErr: ErrInvalidPort,
 		},
 		{
 			name: "HTTP Config with port too small",
@@ -458,7 +454,7 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       "-1",
 				TLSConfig:  nil,
 			},
-			wantErr: true,
+			wantErr: ErrInvalidPort,
 		},
 	}
 	for _, tt := range tests {
@@ -472,9 +468,9 @@ func TestCLIArgs_Validate(t *testing.T) {
 				Port:       tt.fields.Port,
 				TLSConfig:  tt.fields.TLSConfig,
 			}
-			if err := c.Validate(); (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := c.Validate()
+
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -506,42 +502,42 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "Valid RSA Cert",
 			fields: fields{
 				CertFile: "rsaServer.cert",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Valid ecdsa Cert",
 			fields: fields{
 				CertFile: "ecdsaServer.cert",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Invalid Cert format",
 			fields: fields{
 				CertFile: "invalidServer.cert",
 			},
-			wantErr: true,
+			wantErr: ErrFailedParsePEM,
 		},
 		{
 			name: "Cert file does not exist",
 			fields: fields{
 				CertFile: "doesNotExist.cert",
 			},
-			wantErr: true,
+			wantErr: ErrFailedReadCertFile,
 		},
 		{
 			name: "Cert file PEM encoded but invalid",
 			fields: fields{
 				CertFile: "invalidCert.cert",
 			},
-			wantErr: true,
+			wantErr: ErrFailedParsePEM,
 		},
 	}
 	for _, tt := range tests {
@@ -556,10 +552,7 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 				TLSConfig:  tt.fields.TLSConfig,
 			}
 			_, err := c.x509Cert(fileSystem)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("x509Cert() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -582,7 +575,7 @@ func TestNewCLIArgs(t *testing.T) {
 		name    string
 		args    args
 		want    *CLIArgs
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -604,7 +597,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8080",
 				TLSConfig:  nil,
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Valid HTTPS Config",
@@ -626,7 +619,7 @@ func TestNewCLIArgs(t *testing.T) {
 				Port:       "8443",
 				TLSConfig:  &tls.Config{},
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Invalid HTTPS Config",
@@ -640,7 +633,7 @@ func TestNewCLIArgs(t *testing.T) {
 				fileSystem: fileSystem,
 			},
 			want:    nil,
-			wantErr: true,
+			wantErr: ErrHostRequired,
 		},
 		{
 			name: "HTTPS Certificate Not Found",
@@ -654,20 +647,18 @@ func TestNewCLIArgs(t *testing.T) {
 				fileSystem: fileSystem,
 			},
 			want:    nil,
-			wantErr: true,
+			wantErr: ErrFailedReadCertFile,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewCLIArgs(tt.args.fileSystem, tt.args.configFile, tt.args.useSSL, tt.args.certFile, tt.args.keyFile, tt.args.host, tt.args.port)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewCLIArgs() error = %v, wantErr %v", err, tt.wantErr)
+			assert.ErrorIs(t, err, tt.wantErr)
+
+			if tt.wantErr != nil {
 				return
 			}
-			if tt.wantErr {
-				assert.Nil(t, got)
-				return
-			}
+			assert.NotNil(t, got)
 			assert.Equal(t, tt.want.ConfigFile, got.ConfigFile, "ConfigFile")
 			assert.Equal(t, tt.want.UseSSL, got.UseSSL, "UseSSL")
 			assert.Equal(t, tt.want.CertFile, got.CertFile, "CertFile")

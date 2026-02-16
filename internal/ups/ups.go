@@ -15,23 +15,23 @@ type UPS struct {
 }
 
 var (
-	ErrAuthenticationFailed  = errors.New("authentication failed")
-	ErrFailureAuthenticating = errors.New("an error occurred during authentication")
-	ErrConnectionFailed      = errors.New("connection failed")
+	ErrAuthenticationFailed  = errors.New("failed to authenticate to NUT server")
+	ErrFailureAuthenticating = errors.New("an error occurred during authentication to NUT server")
+	ErrConnectionFailed      = errors.New("could not connect to NUT server")
 )
 
 func connect(host string, port int, username, password string) (UPS, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
-		return UPS{}, errors.Join(ErrConnectionFailed, err)
+		return UPS{}, fmt.Errorf("%w: %w", ErrConnectionFailed, err)
 	}
 
 	authenticate, err := client.Authenticate(username, password)
 	if err != nil {
-		return UPS{}, errors.Join(ErrFailureAuthenticating, err)
+		return UPS{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
-		return UPS{}, errors.Join(ErrAuthenticationFailed, fmt.Errorf("could not authenticate to NUT server at %s:%d", host, port))
+		return UPS{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
 	}
 	return UPS{client}, nil
 }
@@ -39,7 +39,7 @@ func connect(host string, port int, username, password string) (UPS, error) {
 func GetJSON(ns *entity.NutServer) (string, error) {
 	client, err := connect(ns.Host, ns.Port, ns.Username, ns.Password)
 	if err != nil {
-		return "", fmt.Errorf("could not connect to NUT server: %w", err)
+		return "", err
 	}
 	defer func(client *UPS) {
 		_, err = client.Disconnect()

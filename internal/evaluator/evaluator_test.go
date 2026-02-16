@@ -1,12 +1,13 @@
 package evaluator
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -15,23 +16,27 @@ const (
 )
 
 var (
-	defaultConfig   = viper.CreateDefaultConfig()
-	tempFS          = afero.NewMemMapFs()
-	alwaysTrueRego  = []byte("package upswake\n\ndefault wake := true")
-	alwaysFalseRego = []byte("package upswake\n\ndefault wake := false")
+	defaultConfig  = viper.CreateDefaultConfig()
+	tempFS         = afero.NewMemMapFs()
+	regoAlwaysTrue = []byte(`package upswake
+default wake := true`)
+	regoAlwaysFalse = []byte(`package upswake
+default wake := false`)
+	regoCheck100Percent = []byte(`package upswake
+default wake := false
+wake if {
+	input[i].Name == "cyberpower900"
+	input[i].Variables[j].Name == "battery.charge"
+	input[i].Variables[j].Value == 100
+}`)
 )
 
 func TestNewRegoEvaluator(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
+	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
 
 	alwaysFalseRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysFalseRego); err != nil {
-		t.Fatal(err)
-	}
+	writeMemFile(t, alwaysFalseRegoFS, "test.rego", regoAlwaysFalse)
 
 	type args struct {
 		config  *entity.Config
@@ -74,40 +79,24 @@ func TestNewRegoEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewRegoEvaluator() = %v, want %v", got, tt.want)
-			}
+			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	testFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, testFS, "alwaysTrue.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
 
-	if err := writeMemFile(t, testFS, "alwaysFalse.rego", alwaysFalseRego); err != nil {
-		t.Fatal(err)
-	}
-
-	check100Percent := `package upswake
-default wake := false
-wake if {
-	input[i].Name == "cyberpower900"
-	input[i].Variables[j].Name == "battery.charge"
-	input[i].Variables[j].Value == 100
-}`
-	if err := writeMemFile(t, testFS, "check100Percent.rego", []byte(check100Percent)); err != nil {
-		t.Fatal(err)
-	}
+	writeMemFile(t, testFS, "alwaysTrue.rego", regoAlwaysTrue)
+	writeMemFile(t, testFS, "alwaysFalse.rego", regoAlwaysFalse)
+	writeMemFile(t, testFS, "check100Percent.rego", regoCheck100Percent)
 
 	type fields struct {
 		rulesFS afero.Fs
 	}
 	type args struct {
-		target *entity.TargetServer
-		// nutServer *entity.NutServer
+		target    *entity.TargetServer
 		inputJSON string
 	}
 	tests := []struct {
@@ -115,7 +104,7 @@ wake if {
 		fields  fields
 		args    args
 		want    bool
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "nothing to evaluate",
@@ -127,7 +116,7 @@ wake if {
 				inputJSON: "",
 			},
 			want:    false,
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "evaluate with always true rule",
@@ -140,10 +129,10 @@ wake if {
 						"alwaysTrue.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    true,
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "evaluate with always false rule",
@@ -156,10 +145,10 @@ wake if {
 						"alwaysFalse.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    false,
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "file not found",
@@ -172,10 +161,10 @@ wake if {
 						"doesnotexist.rego",
 					},
 				},
-				inputJSON: validNUTOutput, // We don't care about the input JSON, as the rule will always return true for this fs
+				inputJSON: validNUTOutput,
 			},
 			want:    false,
-			wantErr: true,
+			wantErr: ErrFailedReadRegoFile,
 		},
 		{
 			name: "ups 100% check positive",
@@ -191,7 +180,7 @@ wake if {
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
 			want:    true,
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "ups 100% check negative",
@@ -208,9 +197,9 @@ wake if {
 				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":10,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
 			},
 			want:    false,
-			wantErr: false,
+			wantErr: nil,
 		},
-		// TODO: Add more rules that tests inputJSON
+		// TODO: Add more rules that tests inputJSON, e.g. faulty fs
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -218,26 +207,20 @@ wake if {
 				rulesFS: tt.fields.rulesFS,
 			}
 			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("evaluateExpression() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("evaluateExpression() got = %v, want %v", got, tt.want)
-			}
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func writeMemFile(_ *testing.T, fs afero.Fs, fileName string, contents []byte) error {
-	return afero.WriteFile(fs, fileName, contents, 0o644)
+func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
+	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	alwaysTrueRegoFS := afero.NewMemMapFs()
-	if err := writeMemFile(t, alwaysTrueRegoFS, "test.rego", alwaysTrueRego); err != nil {
-		t.Fatal(err)
-	}
+	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
 
 	type fields struct {
 		config  *entity.Config
@@ -253,20 +236,20 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		fields  fields
 		args    args
 		want    EvaluationResult
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "valid eval",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:11:22:33:44:55",
@@ -301,20 +284,20 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "missing mac in config",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:00:00:00:00:00",
@@ -340,20 +323,20 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				Found:   false,
 				Target:  nil,
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "invalid nutserver output",
 			fields: fields{
 				config: &entity.Config{
-					NutServers: []entity.NutServer{
+					NutServers: []*entity.NutServer{
 						{
 							Name:     "test",
 							Host:     "",
 							Port:     entity.DefaultNUTServerPort,
 							Username: "",
 							Password: "",
-							Targets: []entity.TargetServer{
+							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
 									MAC:       "00:11:22:33:44:55",
@@ -374,21 +357,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
 			},
-			want: EvaluationResult{
-				Allowed: false,
-				Found:   true,
-				Target: &entity.TargetServer{
-					Name:      "test server",
-					MAC:       "00:11:22:33:44:55",
-					Broadcast: "192.168.1.255",
-					Port:      entity.DefaultWoLPort,
-					Interval:  "15m",
-					Rules: []string{
-						"test.rego",
-					},
-				},
-			},
-			wantErr: true,
+			want:    EvaluationResult{},
+			wantErr: ErrFailedEvaluateExpression,
 		},
 	}
 	for _, tt := range tests {
@@ -399,46 +369,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				mac:     tt.fields.mac,
 			}
 			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("evaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("evaluateExpressions() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestRegoEvaluator_EvaluateExpressions(t *testing.T) {
-	type fields struct {
-		config  *entity.Config
-		rulesFS afero.Fs
-		mac     string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    EvaluationResult
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &RegoEvaluator{
-				config:  tt.fields.config,
-				rulesFS: tt.fields.rulesFS,
-				mac:     tt.fields.mac,
-			}
-			got, err := r.EvaluateExpressions()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("EvaluateExpressions() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("EvaluateExpressions() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

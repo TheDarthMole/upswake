@@ -1,8 +1,6 @@
 package viper
 
 import (
-	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -18,11 +16,10 @@ func Test_Load(t *testing.T) {
 	testFS := afero.NewBasePathFs(afero.NewOsFs(), "./testing/")
 
 	tests := []struct {
-		name       string
-		args       args
-		want       *entity.Config
-		wantErr    bool
-		wantErrMsg error
+		name    string
+		args    args
+		want    *entity.Config
+		wantErr error
 	}{
 		{
 			name: "valid config",
@@ -30,17 +27,16 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "valid_config.yaml",
 			},
-			wantErr:    false,
-			wantErrMsg: nil,
+			wantErr: nil,
 			want: &entity.Config{
-				NutServers: []entity.NutServer{
+				NutServers: []*entity.NutServer{
 					{
 						Name:     "nut_server_1",
 						Host:     "192.168.1.133",
 						Port:     3493,
 						Username: "upsmon",
 						Password: "password",
-						Targets: []entity.TargetServer{
+						Targets: []*entity.TargetServer{
 							{
 								Name:      "nas_1",
 								MAC:       "00:11:22:33:44:55",
@@ -62,17 +58,16 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "no_targets_config.yaml",
 			},
-			wantErr:    false,
-			wantErrMsg: nil,
+			wantErr: nil,
 			want: &entity.Config{
-				NutServers: []entity.NutServer{
+				NutServers: []*entity.NutServer{
 					{
 						Name:     "nut_server_1",
 						Host:     "192.168.1.133",
 						Port:     3493,
 						Username: "upsmon",
 						Password: "password",
-						Targets:  []entity.TargetServer{},
+						Targets:  []*entity.TargetServer{},
 					},
 				},
 			},
@@ -83,9 +78,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_hostname.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidHost,
-			want:       &entity.Config{},
+			wantErr: entity.ErrInvalidHost,
+			want:    &entity.Config{},
 		},
 		{
 			name: "port number greater than 65535",
@@ -93,9 +87,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_port_too_large.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidPort,
-			want:       &entity.Config{},
+			wantErr: entity.ErrInvalidPort,
+			want:    &entity.Config{},
 		},
 		{
 			name: "port number less than 1",
@@ -103,9 +96,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_port_too_small.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidPort,
-			want:       &entity.Config{},
+			wantErr: entity.ErrInvalidPort,
+			want:    &entity.Config{},
 		},
 		{
 			name: "invalid target mac",
@@ -113,9 +105,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_target_mac.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: entity.ErrorInvalidMac,
-			want:       &entity.Config{},
+			wantErr: entity.ErrInvalidMac,
+			want:    &entity.Config{},
 		},
 		{
 			name: "config file does not exist",
@@ -123,9 +114,8 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "does_not_exist.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: nil,
-			want:       &entity.Config{},
+			wantErr: ErrReadingConfigFile,
+			want:    &entity.Config{},
 		},
 		{
 			name: "config file username is array",
@@ -133,31 +123,17 @@ func Test_Load(t *testing.T) {
 				fs:       testFS,
 				filePath: "invalid_type.yaml",
 			},
-			wantErr:    true,
-			wantErrMsg: nil, // TODO: tricky error to replicate, just checking that an error occurred
-			want:       &entity.Config{},
+			wantErr: ErrUnmarshallingConfig,
+			want:    &entity.Config{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fileSystem := tt.args.fs
-			InitConfig(fileSystem, tt.args.filePath)
+			InitConfig(tt.args.fs, tt.args.filePath)
 			got, err := Load()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("load() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr && tt.wantErrMsg == nil {
-				// If the error is tool specific, we might not have a predefined error to compare to
-				// So we just check that an error occurred and skip the message comparison
-				return
-			}
-			if !errors.Is(err, tt.wantErrMsg) {
-				t.Errorf("load() error = %v, want error message %v", err, tt.wantErrMsg)
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("load() got = %v, want %v", got, tt.want)
-			}
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 
@@ -182,14 +158,14 @@ func TestCreateDefaultConfig(t *testing.T) {
 	got := CreateDefaultConfig()
 
 	want := &entity.Config{
-		NutServers: []entity.NutServer{
+		NutServers: []*entity.NutServer{
 			{
 				Name:     "NUT Server 1",
 				Host:     "192.168.1.13",
 				Port:     entity.DefaultNUTServerPort,
 				Username: "",
 				Password: "",
-				Targets: []entity.TargetServer{
+				Targets: []*entity.TargetServer{
 					{
 						Name:      "NAS 1",
 						MAC:       "00:00:00:00:00:00",

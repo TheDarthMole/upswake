@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"net"
 	"testing"
 
@@ -242,7 +241,8 @@ func Test_getIPBroadcast(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getIPBroadcast(tt.args.addr); !got.Equal(tt.want) {
+			got := getIPBroadcast(tt.args.addr)
+			if !got.Equal(tt.want) {
 				t.Errorf("getIPBroadcast() = %v, want %v", got, tt.want)
 			}
 		})
@@ -263,7 +263,7 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 		name    string
 		args    args
 		want    []net.Addr
-		wantErr assert.ErrorAssertionFunc
+		wantErr error
 	}{
 		{
 			name: "No Interfaces",
@@ -271,7 +271,7 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 				interfaces: []net.Interface{},
 			},
 			want:    []net.Addr(nil),
-			wantErr: assert.NoError,
+			wantErr: nil,
 		},
 		{
 			name: "Loopback Interface",
@@ -287,7 +287,7 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 				},
 			},
 			want:    []net.Addr(nil),
-			wantErr: assert.NoError,
+			wantErr: nil,
 		},
 		// Unfortunately, we cannot easily mock net.Interfaces() to return custom interfaces.
 		// Therefore, we will just test with the actual interfaces on the system running the tests.
@@ -295,9 +295,7 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := filterAddressesFromInterfaces(tt.args.interfaces)
-			if !tt.wantErr(t, err, fmt.Sprintf("filterAddressesFromInterfaces(%v)", tt.args.interfaces)) {
-				return
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equalf(t, tt.want, got, "filterAddressesFromInterfaces(%v)", tt.args.interfaces)
 		})
 	}
