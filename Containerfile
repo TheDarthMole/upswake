@@ -10,9 +10,8 @@ ARG TARGETVARIANT
 
 # To improve layer caching
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/root/.cache/go-build,id=build-${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
-    --mount=type=cache,target=/go/pkg/mod \
-    go mod download
+RUN go mod download
+RUN go mod verify
 
 COPY . .
 
