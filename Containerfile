@@ -17,8 +17,8 @@ COPY . .
 
 ARG GIT_DESCRIBE
 
-RUN --mount=type=cache,target=/root/.cache/go-build,sharing=locked \
-    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} GOCACHE=/root/.cache/go-build/${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
+RUN --mount=type=cache,target=/root/.cache/go-build,id=${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
     go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${GIT_DESCRIBE}'" \
     -o /opt/upswake/upswake ./cmd/upswake
 

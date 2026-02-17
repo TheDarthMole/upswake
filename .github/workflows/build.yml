@@ -120,9 +120,41 @@ jobs:
           dockerfile: Containerfile
           skip-extraction: ${{ steps.go-cache.outputs.cache-hit }}
           # Cache only the go builds, the module download is cached via the docker layer caching
+          # "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
           cache-map: |
             {
-              "go-build-cache/build": "/root/.cache/go-build"
+              "go-build-cache/build/linux386": {
+                "target": "/root/.cache/go-build",
+                "id": "linux386"
+              },
+              "go-build-cache/build/linuxarmv6": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarmv6"
+              },
+              "go-build-cache/build/linuxarmv7": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarmv7"
+              },
+              "go-build-cache/build/linuxarm64v8": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarm64v8"
+              },
+              "go-build-cache/build/linuxamd64": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxamd64"
+              },
+              "go-build-cache/build/linuxppc64le": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxppc64le"
+              },
+              "go-build-cache/build/linuxriscv64": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxriscv64"
+              },
+              "go-build-cache/build/linuxs390x": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxs390x"
+              }
             }
 
       - name: 🚀 Build and deploy minimal Docker images
