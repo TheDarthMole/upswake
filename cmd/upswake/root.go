@@ -67,7 +67,6 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer)
 			slog.String("cmd", "root"),
 			slog.Any("error", err),
 		)
-
 		return 1
 	}
 
