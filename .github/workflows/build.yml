@@ -135,9 +135,9 @@ jobs:
                 "target": "/root/.cache/go-build",
                 "id": "linuxarmv7"
               },
-              "go-build-cache/build/linuxarm64v8": {
+              "go-build-cache/build/linuxarm64": {
                 "target": "/root/.cache/go-build",
-                "id": "linuxarm64v8"
+                "id": "linuxarm64"
               },
               "go-build-cache/build/linuxamd64": {
                 "target": "/root/.cache/go-build",
