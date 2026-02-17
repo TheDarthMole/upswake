@@ -69,7 +69,6 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer)
 		)
 		return 1
 	}
-
 	return 0
 }
 
