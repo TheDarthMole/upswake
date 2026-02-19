@@ -42,6 +42,7 @@ jobs:
             index.docker.io:443
             oauth2.sigstore.dev:443
             objects.githubusercontent.com:443
+            pkg-containers.githubusercontent.com:443
             production.cloudflare.docker.com:443
             proxy.golang.org:443
             raw.githubusercontent.com:443
@@ -60,6 +61,7 @@ jobs:
 
       - name: 🏗️ Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        id: setup-buildx
         with:
           version: latest
 
@@ -104,6 +106,57 @@ jobs:
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
+      - name: 💾 Go Build Cache for Docker
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        id: go-cache
+        with:
+          path: go-build-cache
+          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: 💉 Inject go-build-cache
+        uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          dockerfile: Containerfile
+          skip-extraction: ${{ steps.go-cache.outputs.cache-hit }}
+          # Cache only the go builds, the module download is cached via the docker layer caching
+          # "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
+          cache-map: |
+            {
+              "go-build-cache/build/linux386": {
+                "target": "/root/.cache/go-build",
+                "id": "linux386"
+              },
+              "go-build-cache/build/linuxarmv6": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarmv6"
+              },
+              "go-build-cache/build/linuxarmv7": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarmv7"
+              },
+              "go-build-cache/build/linuxarm64": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxarm64"
+              },
+              "go-build-cache/build/linuxamd64": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxamd64"
+              },
+              "go-build-cache/build/linuxppc64le": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxppc64le"
+              },
+              "go-build-cache/build/linuxriscv64": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxriscv64"
+              },
+              "go-build-cache/build/linuxs390x": {
+                "target": "/root/.cache/go-build",
+                "id": "linuxs390x"
+              }
+            }
+
       - name: 🚀 Build and deploy minimal Docker images
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         id: build
@@ -112,8 +165,8 @@ jobs:
           context: .
           file: ./Containerfile
           push: ${{ github.event_name != 'pull_request' }}
-#          cache-from: type=gha # caching actually increases build time from 5m to 8m
-#          cache-to: type=gha,mode=max
+          cache-from: type=gha # caching actually increases build time from 5m to 8m
+          cache-to: type=gha,mode=max
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
           platforms: ${{ env.platforms }}

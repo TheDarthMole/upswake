@@ -10,16 +10,13 @@ ARG TARGETVARIANT
 
 # To improve layer caching
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/root/.cache/go-build,id=build-${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
-    --mount=type=cache,target=/go/pkg/mod \
-    go mod download
+RUN go mod download
 
 COPY . .
 
 ARG GIT_DESCRIBE
 
-RUN --mount=type=cache,target=/root/.cache/go-build,id=build-${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
-    --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/root/.cache/go-build,id=${TARGETOS}${TARGETARCH}${TARGETVARIANT} \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${TARGETVARIANT#v} \
     go build -tags "timetzdata" -trimpath -ldflags="-w -s -X 'main.Version=${GIT_DESCRIBE}'" \
     -o /opt/upswake/upswake ./cmd/upswake
