@@ -102,7 +102,7 @@ nut_servers:
 			},
 			err: ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
-				`"msg":"Starting worker","cmd":"serve","worker_name":"test-target-server"`,
+				`"msg":"Starting worker","cmd":"serve","type":"serveJob","worker_name":"test-target-server"`,
 				`"status":200`,
 				`"level":"INFO"`,
 				`"msg":"REQUEST","cmd":"serve","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200}`,
@@ -125,7 +125,7 @@ nut_servers:
 			t.Log(gotOutput)
 
 			for _, wantOutput := range test.wantOutputs {
-				assert.Contains(t, gotOutput, wantOutput)
+				assert.Containsf(t, gotOutput, wantOutput, "%s\n was not found in \n%s", wantOutput, gotOutput)
 			}
 			for _, notWantOutput := range test.notWantOutputs {
 				assert.NotContains(t, gotOutput, notWantOutput)
