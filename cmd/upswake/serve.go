@@ -34,12 +34,13 @@ type serveCMD struct {
 }
 
 type serveJob struct {
-	ctx      context.Context
-	wg       *sync.WaitGroup
-	logger   *slog.Logger
-	interval time.Duration
-	request  *http.Request
-	client   *http.Client
+	ctx         context.Context
+	wg          *sync.WaitGroup
+	logger      *slog.Logger
+	interval    time.Duration
+	client      *http.Client
+	requestBody []byte
+	url         string
 }
 
 func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConfig *tls.Config, wg *sync.WaitGroup, logger *slog.Logger, endpoint string) (*serveJob, error) {
@@ -69,21 +70,14 @@ func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConf
 
 	url := endpoint + "/api/upswake"
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		jobLogger.Error("Error creating post request",
-			slog.Any("error", err))
-		return &serveJob{}, err
-	}
-	r.Header.Set("Content-Type", "application/json")
-
 	return &serveJob{
-		ctx:      ctx,
-		client:   client,
-		wg:       wg,
-		logger:   jobLogger,
-		interval: interval,
-		request:  r,
+		ctx:         ctx,
+		client:      client,
+		wg:          wg,
+		logger:      jobLogger,
+		interval:    interval,
+		requestBody: body,
+		url:         url,
 	}, nil
 }
 
@@ -108,7 +102,15 @@ func (j *serveJob) run() {
 }
 
 func (j *serveJob) sendWakeRequest() {
-	resp, err := j.client.Do(j.request)
+	r, err := http.NewRequestWithContext(j.ctx, http.MethodPost, j.url, bytes.NewBuffer(j.requestBody))
+	if err != nil {
+		j.logger.Error("Error creating post request",
+			slog.Any("error", err))
+		return
+	}
+	r.Header.Set("Content-Type", "application/json")
+
+	resp, err := j.client.Do(r)
 	if errors.Is(err, context.Canceled) {
 		j.logger.Warn("Context canceled when making request",
 			slog.Any("error", err))
