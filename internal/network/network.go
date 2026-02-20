@@ -3,7 +3,6 @@ package network
 import (
 	"errors"
 	"net"
-	"strings"
 )
 
 var ErrNoInterfaceFound = errors.New("no local interface found")
@@ -68,22 +67,4 @@ func calculateIPv4Broadcast(ipNet *net.IPNet) net.IP {
 		broadcast[i] = ip[i] | ^mask[i]
 	}
 	return broadcast
-}
-
-func HasLocalInterface(ip string) error {
-	ifaces, err := net.InterfaceAddrs()
-	if err != nil {
-		return err
-	}
-	for _, iface := range ifaces {
-		parsedIP, _, err := net.ParseCIDR(iface.String())
-		if err != nil {
-			return err
-		}
-		if strings.Contains(ip, parsedIP.String()) {
-			return nil
-		}
-	}
-
-	return ErrNoInterfaceFound
 }

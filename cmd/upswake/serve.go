@@ -17,7 +17,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
-	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
@@ -103,22 +102,8 @@ func (j *serveJob) run() {
 }
 
 func (j *serveJob) sendWakeRequest() {
-	// Validate that the endpoint is a local interface before starting the job to avoid SSRF
-	if err := network.HasLocalInterface(j.url); err != nil {
-		// jobLogger.Error("Error validating local interface",
-		//	slog.Any("error", err))
-		return
-	}
+	resp, err := j.client.Post(j.url, "application/json", bytes.NewBuffer(j.requestBody))
 
-	request, err := http.NewRequestWithContext(j.ctx, http.MethodPost, j.url, bytes.NewBuffer([]byte{}))
-	if err != nil {
-		j.logger.Error("Error creating post request",
-			slog.Any("error", err))
-		return
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	resp, err := j.client.Do(request)
 	if errors.Is(err, context.Canceled) {
 		j.logger.Warn("Context canceled when making request",
 			slog.Any("error", err))
