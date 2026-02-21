@@ -102,7 +102,14 @@ func (j *serveJob) run() {
 }
 
 func (j *serveJob) sendWakeRequest() {
-	resp, err := j.client.Post(j.url, "application/json", bytes.NewBuffer(j.requestBody))
+	req, err := http.NewRequestWithContext(j.ctx, http.MethodPost, j.url, bytes.NewBuffer(j.requestBody))
+	if err != nil {
+		j.logger.Error("Error creating HTTP request",
+			slog.Any("error", err))
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := j.client.Do(req) //nolint:gosec // G704: This url is only controlled by the user via the config file loaded, which also contains the MAC we are sending anyway
 
 	if errors.Is(err, context.Canceled) {
 		j.logger.Warn("Context canceled when making request",
