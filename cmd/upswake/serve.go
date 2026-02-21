@@ -57,7 +57,7 @@ func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConf
 	}
 
 	client := &http.Client{
-		Timeout:   time.Duration(30) * time.Second,
+		Timeout:   30 * time.Second,
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
 	}
 
@@ -121,6 +121,7 @@ func (j *serveJob) sendWakeRequest() {
 	}
 
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body) // Drain body to enable connection reuse
 		err := Body.Close()
 		if err != nil {
 			j.logger.Error("Error closing response body",
@@ -217,19 +218,22 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		for _, target := range mapping.Targets {
 			job, jobErr := newServeJob(ctx, target, cliArgs.TLSConfig, &wg, j.logger, cliArgs.URL())
 			if jobErr != nil {
+				cancel()
+				wg.Wait()
 				return jobErr
 			}
 			wg.Add(1)
 			job.run()
 		}
 	}
+
 	wg.Add(1)
 	go func(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		<-ctx.Done()
 		j.logger.Info("Shutting down server")
 		if stopErr := server.Stop(); stopErr != nil {
-			j.logger.Warn("Error stopping server", slog.Any("error", stopErr))
+			j.logger.Error("Error stopping server", slog.Any("error", stopErr))
 		}
 	}(ctx, &wg)
 
