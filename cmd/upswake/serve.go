@@ -89,6 +89,9 @@ func (j *serveJob) run() {
 		ticker := time.NewTicker(j.interval)
 		defer ticker.Stop()
 
+		// Send an initial wake request immediately on startup
+		j.sendWakeRequest()
+
 		for {
 			select {
 			case <-j.ctx.Done():
