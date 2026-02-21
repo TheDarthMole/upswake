@@ -227,16 +227,6 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
-		defer wg.Done()
-		<-ctx.Done()
-		j.logger.Info("Shutting down server")
-		if stopErr := server.Stop(); stopErr != nil {
-			j.logger.Error("Error stopping server", slog.Any("error", stopErr))
-		}
-	}(ctx, &wg)
-
 	err = server.Start(
 		j.fs,
 		cliArgs.ListenAddress(),
@@ -245,10 +235,14 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		cliArgs.KeyFile,
 	)
 
+	j.logger.Info("Server stopped, waiting for workers to finish")
 	cancel()
 	wg.Wait()
-	if errors.Is(err, http.ErrServerClosed) {
-		return nil
+	j.logger.Info("All workers stopped, exiting")
+
+	if err != nil {
+		j.logger.Error("Server exited with error", slog.Any("error", err))
+		return err
 	}
-	return err
+	return nil
 }
