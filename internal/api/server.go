@@ -81,12 +81,12 @@ func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 }
 
 func (s *Server) Start(fs afero.Fs, address string, useSSL bool, certFile, keyFile string) error {
-	fsFileSystem := afero.NewIOFS(fs)
+	ioFS := afero.NewIOFS(fs)
 	start := echo.StartConfig{
 		Address:         address,
 		HideBanner:      true,
 		HidePort:        false,
-		CertFilesystem:  fsFileSystem,
+		CertFilesystem:  ioFS,
 		GracefulTimeout: 5 * time.Second,
 	}
 	if useSSL {
