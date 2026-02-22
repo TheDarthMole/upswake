@@ -93,9 +93,6 @@ func (j *serveJob) run() {
 		startupTime := rand.IntN(500-350) + 350 // Stagger initial requests to avoid thundering herd, min 350ms, max 500ms
 		time.Sleep(time.Duration(startupTime) * time.Millisecond)
 
-		// Send an initial wake request immediately on startup
-		j.sendWakeRequest()
-
 		for {
 			select {
 			case <-j.ctx.Done():
