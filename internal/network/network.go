@@ -1,11 +1,8 @@
 package network
 
 import (
-	"errors"
 	"net"
 )
-
-var ErrNoInterfaceFound = errors.New("no local interface found")
 
 func getAllInterfaceAddresses() ([]net.Addr, error) {
 	// Get a list of network interfaces
