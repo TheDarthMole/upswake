@@ -196,7 +196,7 @@ nut_servers:
         mac: "00:00:00:00:00:00"
         broadcast: 127.0.0.255
         port: 9
-        interval: 300ms
+        interval: 500ms
         rules: {}`
 					err := afero.WriteFile(fs, "config.yaml", []byte(configYaml), 0o644)
 					require.NoError(t, err)
@@ -210,7 +210,10 @@ nut_servers:
 				"http(s) server started",
 				"Gracefully stopping worker",
 			},
-			notWantOutput: []string{"ERROR", "error"},
+			notWantOutput: []string{
+				`"level":"ERROR"`,
+				`"level":"error"`,
+			},
 		},
 		{
 			name: "non-existent command help",

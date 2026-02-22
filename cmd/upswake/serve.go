@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"sync"
 	"time"
@@ -31,6 +32,114 @@ type serveCMD struct {
 	logger *slog.Logger
 	fs     afero.Fs
 	regoFs afero.Fs
+}
+
+type serveJob struct {
+	ctx         context.Context
+	wg          *sync.WaitGroup
+	logger      *slog.Logger
+	interval    time.Duration
+	client      *http.Client
+	requestBody []byte
+	url         string
+}
+
+func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConfig *tls.Config, wg *sync.WaitGroup, logger *slog.Logger, endpoint string) (*serveJob, error) {
+	jobLogger := logger.With(
+		slog.String("type", "serveJob"),
+		slog.String("worker_name", targetServer.Name),
+	)
+
+	interval, err := time.ParseDuration(targetServer.Interval)
+	if err != nil {
+		jobLogger.Error("Stopping Worker. Could not parse interval",
+			slog.Any("error", err))
+		return &serveJob{}, err
+	}
+
+	client := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: &http.Transport{TLSClientConfig: tlsConfig},
+	}
+
+	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC})
+	if err != nil {
+		jobLogger.Error("Error marshalling JSON",
+			slog.Any("error", err))
+		return &serveJob{}, err
+	}
+
+	url := endpoint + "/api/upswake"
+
+	return &serveJob{
+		ctx:         ctx,
+		client:      client,
+		wg:          wg,
+		logger:      jobLogger,
+		interval:    interval,
+		requestBody: body,
+		url:         url,
+	}, nil
+}
+
+func (j *serveJob) run() {
+	j.logger.Info("Starting worker")
+
+	go func() {
+		defer j.wg.Done()
+		ticker := time.NewTicker(j.interval)
+		defer ticker.Stop()
+
+		startupTime := rand.IntN(500-350) + 350 // Stagger initial requests to avoid thundering herd, min 350ms, max 500ms
+		time.Sleep(time.Duration(startupTime) * time.Millisecond)
+
+		for {
+			select {
+			case <-j.ctx.Done():
+				j.logger.Info("Gracefully stopping worker")
+				return
+			case <-ticker.C:
+				j.sendWakeRequest()
+			}
+		}
+	}()
+}
+
+func (j *serveJob) sendWakeRequest() {
+	req, err := http.NewRequestWithContext(j.ctx, http.MethodPost, j.url, bytes.NewBuffer(j.requestBody))
+	if err != nil {
+		j.logger.Error("Error creating HTTP request",
+			slog.Any("error", err))
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := j.client.Do(req) //nolint:gosec // G704: This url is only controlled by the user via the config file loaded, which also contains the MAC we are sending anyway
+
+	if errors.Is(err, context.Canceled) {
+		j.logger.Warn("Context canceled when making request",
+			slog.Any("error", err))
+		return
+	}
+	if err != nil {
+		j.logger.Error("Error sending post request",
+			slog.Any("error", err))
+		return
+	}
+
+	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body) // Drain body to enable connection reuse
+		err = Body.Close()
+		if err != nil {
+			j.logger.Error("Error closing response body",
+				slog.Any("error", err))
+		}
+	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		j.logger.Error("Unexpected status code from upswake endpoint",
+			slog.String("status_code", resp.Status))
+		return
+	}
 }
 
 func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
@@ -113,19 +222,16 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	for _, mapping := range cfg.NutServers {
 		for _, target := range mapping.Targets {
+			job, jobErr := newServeJob(ctx, target, cliArgs.TLSConfig, &wg, j.logger, cliArgs.URL())
+			if jobErr != nil {
+				cancel()
+				wg.Wait()
+				return jobErr
+			}
 			wg.Add(1)
-			go j.processTarget(cmd.Context(), &wg, target, cliArgs.URL()+"/api/upswake", cliArgs.TLSConfig)
+			job.run()
 		}
 	}
-	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
-		defer wg.Done()
-		<-ctx.Done()
-		j.logger.Info("Shutting down server")
-		if err1 := server.Stop(); err1 != nil {
-			j.logger.Warn("Error stopping server", slog.Any("error", err1))
-		}
-	}(ctx, &wg)
 
 	err = server.Start(
 		j.fs,
@@ -135,94 +241,14 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		cliArgs.KeyFile,
 	)
 
+	j.logger.Info("Server stopped, waiting for workers to finish")
 	cancel()
 	wg.Wait()
-	if errors.Is(err, http.ErrServerClosed) {
-		return nil
-	}
-	return err
-}
+	j.logger.Info("All workers stopped, exiting")
 
-func (j *serveCMD) processTarget(ctx context.Context, wg *sync.WaitGroup, target *config.TargetServer, endpoint string, tlsConfig *tls.Config) {
-	defer wg.Done()
-	j.logger.Info("Starting worker",
-		slog.String("worker_name", target.Name))
-	interval, err := time.ParseDuration(target.Interval)
 	if err != nil {
-		j.logger.Error("Stopping Worker. Could not parse interval",
-			slog.String("worker_name", target.Name),
-			slog.Any("error", err))
-		return
+		j.logger.Error("Server exited with error", slog.Any("error", err))
+		return err
 	}
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	client := &http.Client{
-		Timeout:   time.Duration(30) * time.Second,
-		Transport: &http.Transport{TLSClientConfig: tlsConfig},
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			j.logger.Info("Gracefully stopping worker",
-				slog.String("worker_name", target.Name))
-			return
-		case <-ticker.C:
-			j.sendWakeRequest(ctx, target, endpoint, client)
-		}
-	}
-}
-
-func (j *serveCMD) sendWakeRequest(ctx context.Context, target *config.TargetServer, address string, client *http.Client) {
-	body, err := json.Marshal(map[string]string{"mac": target.MAC})
-	if err != nil {
-		j.logger.Error("Error marshalling JSON",
-			slog.String("worker_name", target.Name),
-			slog.Any("error", err))
-		return
-	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, address, bytes.NewBuffer(body))
-	if err != nil {
-		j.logger.Error("Error creating post request",
-			slog.String("worker_name", target.Name),
-			slog.Any("error", err))
-		return
-	}
-	r.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(r)
-	if errors.Is(err, context.Canceled) {
-		j.logger.Info("Gracefully stopping worker",
-			slog.String("worker_name", target.Name))
-		return
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		j.logger.Warn("Timeout sending post request",
-			slog.String("worker_name", target.Name),
-			slog.Any("error", err))
-		return
-	}
-	if err != nil {
-		j.logger.Error("Error sending post request",
-			slog.String("worker_name", target.Name),
-			slog.Any("error", err))
-		return
-	}
-
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			j.logger.Error("Error closing response body",
-				slog.String("worker_name", target.Name),
-				slog.Any("error", err))
-		}
-	}(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		j.logger.Error("Error sending post request",
-			slog.String("worker_name", target.Name),
-			slog.String("status_code", resp.Status))
-		return
-	}
+	return nil
 }

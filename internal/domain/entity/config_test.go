@@ -151,7 +151,7 @@ func TestNutServer_Validate(t *testing.T) {
 		Host     string
 		Port     int
 		Username string
-		Password string
+		Password string //nolint:gosec // G117: This is a test so we don't care about hardcoding a password here
 		Targets  []*TargetServer
 	}
 	tests := []struct {

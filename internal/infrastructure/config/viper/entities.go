@@ -9,7 +9,7 @@ type NutServer struct {
 	Host     string          `mapstructure:"host"`
 	Port     int             `mapstructure:"port"`
 	Username string          `mapstructure:"username"`
-	Password string          `mapstructure:"password"`
+	Password string          `mapstructure:"password"` //nolint:gosec // G117: TODO investigate secure ways to handle this password, such as using environment variables
 	Targets  []*TargetServer `mapstructure:"targets"`
 }
 
