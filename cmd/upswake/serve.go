@@ -135,7 +135,7 @@ func (j *serveJob) sendWakeRequest() {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		j.logger.Error("Error sending post request",
+		j.logger.Error("Unexpected status code from upswake endpoint",
 			slog.String("status_code", resp.Status))
 		return
 	}
