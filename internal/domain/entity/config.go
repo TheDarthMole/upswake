@@ -23,6 +23,7 @@ var (
 	ErrInvalidBroadcast  = errors.New("broadcast is invalid, must be an IP address")
 	ErrIntervalRequired  = errors.New("interval is required")
 	ErrInvalidInterval   = errors.New("interval is invalid, must be a duration")
+	ErrIntervalTooShort  = errors.New("interval must be greater than 0")
 	validate             *validator.Validate
 )
 
@@ -70,11 +71,10 @@ func (c *Config) Validate() error {
 }
 
 type NutServer struct {
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
-
+	Name     string          `json:"name"`
+	Host     string          `json:"host"`
+	Port     int             `json:"port"`
+	Username string          `json:"username"`
 	Password string          `json:"password"` //nolint:gosec // G117: TODO investigate secure ways to handle this password, such as using environment variables
 	Targets  []*TargetServer `json:"targets"`
 }
@@ -139,6 +139,13 @@ func (ts *TargetServer) Validate() error {
 	}
 	if validate.Var(ts.Interval, "duration") != nil {
 		return ErrInvalidInterval
+	}
+	interval, err := time.ParseDuration(ts.Interval)
+	if err != nil {
+		return ErrInvalidInterval
+	}
+	if interval <= 0 {
+		return ErrIntervalTooShort
 	}
 
 	return nil
