@@ -47,7 +47,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: 🏗️Set up Just
-        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff
+        uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b
         with:
           just-version: 1.42.4
       - name: Set up QEMU
