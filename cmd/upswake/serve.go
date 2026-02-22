@@ -119,11 +119,6 @@ func (j *serveJob) sendWakeRequest() {
 			slog.Any("error", err))
 		return
 	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		j.logger.Warn("Timeout sending post request",
-			slog.Any("error", err))
-		return
-	}
 	if err != nil {
 		j.logger.Error("Error sending post request",
 			slog.Any("error", err))
@@ -132,7 +127,7 @@ func (j *serveJob) sendWakeRequest() {
 
 	defer func(Body io.ReadCloser) {
 		_, _ = io.Copy(io.Discard, Body) // Drain body to enable connection reuse
-		err := Body.Close()
+		err = Body.Close()
 		if err != nil {
 			j.logger.Error("Error closing response body",
 				slog.Any("error", err))
