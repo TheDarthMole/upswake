@@ -54,7 +54,7 @@ func Test_JSONRunE(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			output, err := executeCommandWithContext(t, NewJSONCommand, 1*time.Second, testCase.in...)
+			output, err := executeCommandWithContext(t, NewJSONCommand, 1*time.Second, testCase.in)
 
 			if testCase.err != "" {
 				assert.ErrorContains(t, err, testCase.err)

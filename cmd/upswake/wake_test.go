@@ -145,7 +145,7 @@ func Test_wakeCmdRunE(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args...)
+			output, err := executeCommandWithContext(t, tt.args.cmdFunc, 1*time.Second, tt.args.args)
 
 			t.Log(output)
 
