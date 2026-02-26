@@ -196,7 +196,7 @@ nut_servers:
         mac: "00:00:00:00:00:00"
         broadcast: 127.0.0.255
         port: 9
-        interval: 500ms
+        interval: 1s
         rules: {}`
 					err := afero.WriteFile(fs, "config.yaml", []byte(configYaml), 0o644)
 					require.NoError(t, err)
