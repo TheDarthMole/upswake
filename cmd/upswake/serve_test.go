@@ -50,6 +50,7 @@ func Test_serveCmdRunE(t *testing.T) {
 		name           string
 		args           args
 		err            error
+		timeout        time.Duration
 		wantOutputs    []string
 		notWantOutputs []string
 	}{
@@ -67,6 +68,7 @@ func Test_serveCmdRunE(t *testing.T) {
 				},
 				args: []string{"serve", "--config", "upswake.yaml", "--port", "8081"},
 			},
+			timeout:        5 * time.Second,
 			err:            ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs:    []string{`"msg":"http(s) server started","cmd":"serve","address":"[::]:8081"`},
 			notWantOutputs: []string{`"level":"ERROR"`, `"level":"error"`, `"level":"Error"`},
@@ -88,8 +90,8 @@ nut_servers:
         mac: "00:00:00:00:00:00"
         broadcast: 127.0.0.255
         port: 9
-        interval: 50ms
-        rules: {}
+        interval: 400ms
+        rules: []
 `
 					err := afero.WriteFile(fs, "upswake.yml", []byte(cfgYaml), 0o644)
 					require.NoError(t, err)
@@ -100,7 +102,8 @@ nut_servers:
 				},
 				args: []string{"serve", "--config", "upswake.yml", "--port", "8082"},
 			},
-			err: ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
+			timeout: 5 * time.Second,
+			err:     ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
 			wantOutputs: []string{
 				`"msg":"Starting worker","cmd":"serve","type":"serveJob","worker_name":"test-target-server"`,
 				`"status":200`,
@@ -118,7 +121,7 @@ nut_servers:
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, 1*time.Second, test.args.args...)
+			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, test.timeout, test.args.args)
 
 			assert.ErrorIs(t, err, test.err)
 

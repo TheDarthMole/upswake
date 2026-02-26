@@ -26,7 +26,7 @@ func newTestLogger() *slog.Logger {
 	return logger
 }
 
-func executeCommandWithContext(t *testing.T, cmdFunc func(logger *slog.Logger) *cobra.Command, timeout time.Duration, args ...string) (output string, err error) {
+func executeCommandWithContext(t *testing.T, cmdFunc func(logger *slog.Logger) *cobra.Command, timeout time.Duration, args []string) (output string, err error) {
 	logger, logBuf := newTestLoggerWithBuffer()
 
 	cmd := cmdFunc(logger)
