@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -78,6 +77,5 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer,
 func main() {
 	fs := afero.NewOsFs()
 	regoFs := afero.NewBasePathFs(fs, "rules")
-	fmt.Println(os.Args[1:])
 	os.Exit(Execute(context.Background(), fs, regoFs, os.Stdout, os.Args))
 }
