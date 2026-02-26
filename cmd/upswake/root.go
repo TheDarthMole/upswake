@@ -33,7 +33,7 @@ func NewRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer) int {
+func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer, args []string) int {
 	handler := slog.NewJSONHandler(logDestination, nil)
 	logger := slog.New(handler)
 
@@ -47,6 +47,7 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer)
 		return 1
 	}
 	rootCmd := NewRootCommand()
+	rootCmd.SetArgs(args)
 
 	wakeCmd := NewWakeCmd(logger, bc)
 	rootCmd.AddCommand(wakeCmd)
@@ -76,5 +77,5 @@ func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer)
 func main() {
 	fs := afero.NewOsFs()
 	regoFs := afero.NewBasePathFs(fs, "rules")
-	os.Exit(Execute(context.Background(), fs, regoFs, os.Stdout))
+	os.Exit(Execute(context.Background(), fs, regoFs, os.Stdout, os.Args[1:]))
 }
