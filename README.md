@@ -2,8 +2,8 @@
 
 [![Build](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg)](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml)
 [![Tests](https://github.com/TheDarthMole/upswake/actions/workflows/test.yml/badge.svg)](https://github.com/TheDarthMole/upswake/actions/workflows/test.yml)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
+[![License](https://img.shields.io/github/license/TheDarthMole/UPSWake?color=blue)](LICENSE)
 [![Docker Image Size](https://img.shields.io/docker/image-size/thedarthmole/upswake/latest)](https://hub.docker.com/r/thedarthmole/upswake)
 [![Docker Pulls](https://img.shields.io/docker/pulls/thedarthmole/upswake)](https://hub.docker.com/r/thedarthmole/upswake)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11143/badge)](https://www.bestpractices.dev/projects/11143)
