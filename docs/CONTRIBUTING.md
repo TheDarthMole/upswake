@@ -26,7 +26,7 @@ Please ensure that you follow these guidelines:
 ### Check the license
 
 By contributing, you agree that your contributions will be licensed under the same license as the
-project (MIT License) and you assert that you have full power to license your contribution under the [MIT License](../LICENSE).
+project, and you assert that you have full power to license your contribution under the [GPL-3.0 License](../LICENSE).
 Please refer to the [LICENSE](../LICENSE) file for more details.
 
 ### Write clear commit messages

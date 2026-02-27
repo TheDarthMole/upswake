@@ -100,9 +100,12 @@ jobs:
             type=semver,pattern=v{{major}}
             type=edge
           annotations: |
-            io.artifacthub.package.license=MIT
+            io.artifacthub.package.license=GPL-3.0
             io.artifacthub.package.readme-url=https://github.com/${{ github.repository }}/blob/main/README.md
             io.artifacthub.package.maintainers=[{"name":"DarthMole","email":"upswake@darthmole.dev"}]
+          labels: |
+            org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/main/README.md
+            org.opencontainers.image.authors=[{"name":"DarthMole","email":"upswake@darthmole.dev"}]
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
