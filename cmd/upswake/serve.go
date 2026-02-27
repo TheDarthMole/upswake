@@ -11,7 +11,10 @@ import (
 	"log/slog"
 	"math/rand/v2"
 	"net/http"
+	"os/signal"
+	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -178,7 +181,7 @@ func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.
 }
 
 func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
-	ctx, cancel := context.WithCancel(cmd.Context())
+	ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 	cmd.SetContext(ctx)
 
@@ -232,6 +235,11 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 			job.run()
 		}
 	}
+
+	go func() {
+		time.Sleep(500 * time.Millisecond) // Small delay to ensure all workers have started before the server starts accepting requests
+
+	}()
 
 	err = server.Start(
 		j.fs,
