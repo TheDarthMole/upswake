@@ -5,13 +5,14 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"math/rand/v2"
 	"net/http"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
@@ -115,25 +116,29 @@ func (j *serveJob) sendWakeRequest() {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := j.client.Do(req) //nolint:gosec // G704: This url is only controlled by the user via the config file loaded, which also contains the MAC we are sending anyway
 
-	if errors.Is(err, context.Canceled) {
-		j.logger.Warn("Context canceled when making request",
-			slog.Any("error", err))
+	defer func(resp *http.Response) {
+		if resp == nil {
+			return
+		}
+		_, _ = io.Copy(io.Discard, resp.Body) // Drain body to enable connection reuse
+		err = resp.Body.Close()
+		if err != nil {
+			j.logger.Error("Error closing response body",
+				slog.Any("error", err))
+		}
+	}(resp)
+
+	if ctxErr := context.Cause(j.ctx); ctxErr != nil {
+		j.logger.Warn("Context cancelled when making request",
+			slog.Any("error", ctxErr))
 		return
 	}
+
 	if err != nil {
 		j.logger.Error("Error sending post request",
 			slog.Any("error", err))
 		return
 	}
-
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body) // Drain body to enable connection reuse
-		err = Body.Close()
-		if err != nil {
-			j.logger.Error("Error closing response body",
-				slog.Any("error", err))
-		}
-	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		j.logger.Error("Unexpected status code from upswake endpoint",
@@ -178,7 +183,7 @@ func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.
 }
 
 func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
-	ctx, cancel := context.WithCancel(cmd.Context())
+	ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 	cmd.SetContext(ctx)
 
