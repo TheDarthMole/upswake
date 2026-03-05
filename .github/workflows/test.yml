@@ -51,7 +51,7 @@ jobs:
         with:
           just-version: 1.42.4
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@7e10951aea186e886cef2f1a25a7bbf4e593d710
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - name: ⚙️ Setup Nut Server
         run: |
           CONTAINER_TOOL=docker just start-nut-server
