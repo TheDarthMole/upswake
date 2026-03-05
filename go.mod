@@ -16,6 +16,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/echo-swagger v1.5.0
+	github.com/swaggo/echo-swagger/v2 v2.0.1
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260213171211-a408498e5541
 )
