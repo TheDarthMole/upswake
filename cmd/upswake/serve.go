@@ -114,7 +114,7 @@ func (j *serveJob) sendWakeRequest() {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := j.client.Do(req) //nolint:gosec // G704: This url is only controlled by the user via the config file loaded, which also contains the MAC we are sending anyway
+	resp, err := j.client.Do(req)
 
 	defer func(resp *http.Response) {
 		if resp == nil {
