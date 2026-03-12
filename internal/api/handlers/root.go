@@ -11,7 +11,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
-	echoSwagger "github.com/swaggo/echo-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
 )
 
 type RootHandler struct {
