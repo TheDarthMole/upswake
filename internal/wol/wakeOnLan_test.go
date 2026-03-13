@@ -3,6 +3,7 @@ package wol
 import (
 	"io"
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/stretchr/testify/assert"
@@ -63,7 +64,7 @@ func newValidTestWoLTarget() *entity.TargetServer {
 		MAC:       "01:02:03:04:05:06",
 		Broadcast: "127.0.0.255",
 		Port:      9,
-		Interval:  "15m",
+		Interval:  15 * time.Minute,
 		Rules:     []string{},
 	}
 }

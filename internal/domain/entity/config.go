@@ -43,10 +43,9 @@ func duration(fl validator.FieldLevel) bool {
 	field := fl.Field()
 
 	switch field.Kind() {
-	case reflect.String:
-		dur, err := time.ParseDuration(fl.Field().String())
-		// true if there is no error and the time is greater than 1ms, else false
-		return err == nil && dur >= 1*time.Millisecond
+	case reflect.Int64:
+		// true if the time is greater than 1ms
+		return time.Duration(field.Int()) >= 1*time.Millisecond
 	default:
 		slog.Warn("could not parse duration",
 			slog.String("field_name", fl.FieldName()),
@@ -109,7 +108,7 @@ type TargetServer struct {
 	Name      string   `json:"name"`
 	MAC       string   `json:"mac"`
 	Broadcast string   `json:"broadcast"`
-	Interval  string   `json:"interval" default:"15m"`
+	Interval  time.Duration   `json:"interval" default:"15m"`
 	Rules     []string `json:"rules"`
 	Port      int      `json:"port" default:"9"`
 }
@@ -133,7 +132,7 @@ func (ts *TargetServer) Validate() error {
 	if ts.Port < 1 || ts.Port > 65535 {
 		return ErrInvalidPort
 	}
-	if ts.Interval == "" {
+	if ts.Interval == 0 {
 		return ErrIntervalRequired
 	}
 	if validate.Var(ts.Interval, "duration") != nil {
@@ -143,7 +142,7 @@ func (ts *TargetServer) Validate() error {
 	return nil
 }
 
-func NewTargetServer(name, mac, broadcast, interval string, port int, rules []string) (*TargetServer, error) {
+func NewTargetServer(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*TargetServer, error) {
 	ts := &TargetServer{
 		Name:      name,
 		MAC:       mac,

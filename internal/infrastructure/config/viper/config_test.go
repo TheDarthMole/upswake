@@ -2,6 +2,7 @@ package viper
 
 import (
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/spf13/afero"
@@ -42,7 +43,7 @@ func Test_Load(t *testing.T) {
 								MAC:       "00:11:22:33:44:55",
 								Broadcast: "192.168.1.255",
 								Port:      9,
-								Interval:  "5m",
+								Interval:  5 * time.Minute,
 								Rules: []string{
 									"80percentOn.rego",
 								},
@@ -171,7 +172,7 @@ func TestCreateDefaultConfig(t *testing.T) {
 						MAC:       "00:00:00:00:00:00",
 						Broadcast: "192.168.1.255",
 						Port:      entity.DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"80percentOn.rego",
 						},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
@@ -110,7 +111,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		"API Request",
 		result.Target.MAC,
 		result.Target.Broadcast,
-		"15m",
+		15*time.Minute,
 		result.Target.Port,
 		[]string{},
 	)

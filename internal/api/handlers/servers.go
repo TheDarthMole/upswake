@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/network"
@@ -26,7 +27,7 @@ const (
 )
 
 type ServerHandler struct {
-	newTargetServer    func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+	newTargetServer    func(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*entity.TargetServer, error)
 	broadcastAddresses func() ([]net.IP, error)
 }
 
@@ -93,7 +94,7 @@ func (s *ServerHandler) WakeServer(c *echo.Context) error {
 		"API Request",
 		wsRequest.Mac,
 		wsRequest.Broadcast,
-		"15m",
+		15*time.Minute,
 		wsRequest.Port,
 		[]string{},
 	)
@@ -157,7 +158,7 @@ func (s *ServerHandler) BroadcastWakeServer(c *echo.Context) error {
 			"API Request",
 			wsRequest.Mac,
 			broadcast.String(),
-			"15m",
+			15*time.Minute,
 			wsRequest.Port,
 			[]string{},
 		)

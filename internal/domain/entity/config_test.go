@@ -2,6 +2,7 @@ package entity
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,7 @@ func TestNewTargetServer(t *testing.T) {
 		name      string
 		mac       string
 		broadcast string
-		interval  string
+		interval  time.Duration
 		rules     []string
 		port      int
 	}
@@ -98,7 +99,7 @@ func TestNewTargetServer(t *testing.T) {
 				name:      "test",
 				mac:       "11:22:33:44:55:66",
 				broadcast: "192.168.1.255",
-				interval:  "15m",
+				interval:  15 * time.Minute,
 				port:      DefaultWoLPort,
 				rules: []string{
 					"test1.rego",
@@ -110,7 +111,7 @@ func TestNewTargetServer(t *testing.T) {
 				MAC:       "11:22:33:44:55:66",
 				Broadcast: "192.168.1.255",
 				Port:      DefaultWoLPort,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules: []string{
 					"test1.rego",
 					"test2.rego",
@@ -124,7 +125,7 @@ func TestNewTargetServer(t *testing.T) {
 				name:      "test",
 				mac:       "11:22:33:44:55:66",
 				broadcast: "192.168.1.555",
-				interval:  "15m",
+				interval:  15 * time.Minute,
 				port:      DefaultWoLPort,
 				rules: []string{
 					"test1.rego",
@@ -221,7 +222,7 @@ func TestNutServer_Validate(t *testing.T) {
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"test.rego",
 						},
@@ -244,7 +245,7 @@ func TestNutServer_Validate(t *testing.T) {
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"test.rego",
 						},
@@ -254,7 +255,7 @@ func TestNutServer_Validate(t *testing.T) {
 						MAC:       "11:22:33:44:55:66",
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"test.rego",
 						},
@@ -277,7 +278,7 @@ func TestNutServer_Validate(t *testing.T) {
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"test.rego",
 						},
@@ -287,7 +288,7 @@ func TestNutServer_Validate(t *testing.T) {
 						MAC:       "xx:22:33:44:55:yy", // invalid mac address for target server
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules: []string{
 							"test.rego",
 						},
@@ -366,7 +367,7 @@ func TestTargetServer_Validate(t *testing.T) {
 		Name      string
 		MAC       string
 		Broadcast string
-		Interval  string
+		Interval  time.Duration
 		Rules     []string
 		Port      int
 	}
@@ -382,7 +383,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: nil,
@@ -394,7 +395,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules: []string{
 					"test1.rego",
 					"test2.rego",
@@ -409,7 +410,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "xx:11:22:33:44:zz",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrInvalidMac,
@@ -421,7 +422,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.555",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrInvalidBroadcast,
@@ -433,7 +434,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      1234567890,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrInvalidPort,
@@ -445,7 +446,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      -1,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrInvalidPort,
@@ -457,7 +458,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15beans",
+				Interval:  -1 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrInvalidInterval,
@@ -469,7 +470,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrNameRequired,
@@ -481,7 +482,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrMACRequired,
@@ -493,7 +494,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{},
 			},
 			wantErr: ErrBroadcastRequired,
@@ -505,7 +506,7 @@ func TestTargetServer_Validate(t *testing.T) {
 				MAC:       "00:11:22:33:44:55",
 				Broadcast: "192.168.1.255",
 				Port:      9,
-				Interval:  "",
+				Interval:  0,
 				Rules:     []string{},
 			},
 			wantErr: ErrIntervalRequired,
@@ -529,48 +530,61 @@ func TestTargetServer_Validate(t *testing.T) {
 
 func Test_duration(t *testing.T) {
 	type durationTest struct {
-		Duration string `validate:"duration"`
-	}
-
-	type nonStringDurationTest struct {
-		Duration float64 `validate:"duration"`
+		Duration any `validate:"duration"`
 	}
 
 	type args struct {
-		fl any
+		fl durationTest
 	}
 	tests := []struct {
-		args    args
-		name    string
-		wantErr bool
+		duration durationTest
+		name     string
+		wantErr  bool
 	}{
 		{
-			name: "15m",
-			args: args{
-				fl: durationTest{Duration: "15m"},
-			},
-			wantErr: false,
+			name:     "valid 1 minute duration",
+			duration: durationTest{Duration: 1 * time.Minute},
+			wantErr:  false,
 		},
 		{
-			name: "1s",
-			args: args{
-				fl: durationTest{Duration: "1s"},
-			},
-			wantErr: false,
+			name:     "valid 1 millisecond duration",
+			duration: durationTest{Duration: 1 * time.Millisecond},
+			wantErr:  false,
 		},
 		{
-			name: "twenty minutes",
-			args: args{
-				fl: durationTest{Duration: "twenty minutes"},
-			},
-			wantErr: true,
+			name:     "invalid 1 microsecond duration",
+			duration: durationTest{Duration: 1 * time.Microsecond},
+			wantErr:  true,
 		},
 		{
-			name: "non-string duration",
-			args: args{
-				fl: nonStringDurationTest{Duration: 1},
-			},
-			wantErr: true,
+			name:     "negative duration",
+			duration: durationTest{Duration: -1 * time.Millisecond},
+			wantErr:  true,
+		},
+		{
+			name:     "15m",
+			duration: durationTest{Duration: "15m"},
+			wantErr:  true,
+		},
+		{
+			name:     "1s",
+			duration: durationTest{Duration: "1s"},
+			wantErr:  true,
+		},
+		{
+			name:     "twenty minutes",
+			duration: durationTest{Duration: "twenty minutes"},
+			wantErr:  true,
+		},
+		{
+			name:     "uint8 duration",
+			duration: durationTest{Duration: uint8(100)},
+			wantErr:  true,
+		},
+		{
+			name:     "boolean duration",
+			duration: durationTest{Duration: false},
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
@@ -579,7 +593,7 @@ func Test_duration(t *testing.T) {
 			err := validate.RegisterValidation("duration", duration, true)
 			require.NoError(t, err)
 
-			err = validate.Struct(tt.args.fl)
+			err = validate.Struct(tt.duration)
 
 			assert.Equal(t, tt.wantErr, err != nil)
 		})

@@ -51,13 +51,6 @@ func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConf
 		slog.String("worker_name", targetServer.Name),
 	)
 
-	interval, err := time.ParseDuration(targetServer.Interval)
-	if err != nil {
-		jobLogger.Error("Stopping Worker. Could not parse interval",
-			slog.Any("error", err))
-		return &serveJob{}, err
-	}
-
 	client := &http.Client{
 		Timeout:   30 * time.Second,
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
@@ -77,7 +70,7 @@ func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConf
 		client:      client,
 		wg:          wg,
 		logger:      jobLogger,
-		interval:    interval,
+		interval:    targetServer.Interval,
 		requestBody: body,
 		url:         url,
 	}, nil

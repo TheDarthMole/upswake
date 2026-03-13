@@ -71,7 +71,7 @@ func TestCustomValidator_Validate(t *testing.T) {
 				MAC:       "00:1A:2B:3C:4D:5E",
 				Broadcast: "127.0.0.1",
 				Port:      9,
-				Interval:  "15m",
+				Interval:  15 * time.Minute,
 				Rules:     []string{"test"},
 			}},
 			error: false,

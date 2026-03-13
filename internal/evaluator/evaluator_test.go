@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
@@ -255,7 +256,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 									MAC:       "00:11:22:33:44:55",
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
-									Interval:  "15m",
+									Interval:  15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -278,7 +279,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					MAC:       "00:11:22:33:44:55",
 					Broadcast: "192.168.1.255",
 					Port:      entity.DefaultWoLPort,
-					Interval:  "15m",
+					Interval:  15 * time.Minute,
 					Rules: []string{
 						"test.rego",
 					},
@@ -303,7 +304,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 									MAC:       "00:00:00:00:00:00",
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
-									Interval:  "15m",
+									Interval:  15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -342,7 +343,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 									MAC:       "00:11:22:33:44:55",
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
-									Interval:  "15m",
+									Interval:  15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},

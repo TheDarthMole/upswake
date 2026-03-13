@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -27,7 +28,7 @@ var cfg = &entity.Config{
 					MAC:       "00:00:00:00:00:00",
 					Broadcast: "192.168.1.255",
 					Port:      9,
-					Interval:  "15s",
+					Interval:  15 * time.Second,
 					Rules:     nil,
 				},
 			},
