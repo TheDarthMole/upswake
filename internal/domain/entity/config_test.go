@@ -533,9 +533,6 @@ func Test_duration(t *testing.T) {
 		Duration any `validate:"duration"`
 	}
 
-	type args struct {
-		fl durationTest
-	}
 	tests := []struct {
 		duration durationTest
 		name     string

@@ -269,8 +269,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "interval": {
-                    "type": "string",
-                    "default": "15m"
+                    "description": "15 minutes in nanoseconds",
+                    "default": 900000000000,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/time.Duration"
+                        }
+                    ]
                 },
                 "mac": {
                     "type": "string"
@@ -347,6 +352,38 @@ const docTemplate = `{
                     "example": "00:11:22:33:44:55"
                 }
             }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "format": "int64",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                1,
+                1000,
+                1000000,
+                1000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second"
+            ]
         }
     }
 }`

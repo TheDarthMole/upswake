@@ -42,7 +42,6 @@ func fromFileNutServer(nutServer *NutServer) (*entity.NutServer, error) {
 }
 
 func fromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, error) {
-
 	interval, err := time.ParseDuration(targetServer.Interval)
 	if err != nil {
 		return nil, err

@@ -105,12 +105,12 @@ func (ns *NutServer) Validate() error {
 }
 
 type TargetServer struct {
-	Name      string   `json:"name"`
-	MAC       string   `json:"mac"`
-	Broadcast string   `json:"broadcast"`
-	Interval  time.Duration   `json:"interval" default:"15m"`
-	Rules     []string `json:"rules"`
-	Port      int      `json:"port" default:"9"`
+	Name      string        `json:"name"`
+	MAC       string        `json:"mac"`
+	Broadcast string        `json:"broadcast"`
+	Interval  time.Duration `json:"interval" default:"900000000000"` // 15 minutes in nanoseconds
+	Rules     []string      `json:"rules"`
+	Port      int           `json:"port" default:"9"`
 }
 
 func (ts *TargetServer) Validate() error {

@@ -21,8 +21,10 @@ definitions:
       broadcast:
         type: string
       interval:
-        default: 15m
-        type: string
+        allOf:
+        - $ref: '#/definitions/time.Duration'
+        default: 900000000000
+        description: 15 minutes in nanoseconds
       mac:
         type: string
       name:
@@ -76,6 +78,35 @@ definitions:
         example: "00:11:22:33:44:55"
         type: string
     type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    format: int64
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
 info:
   contact: {}
 paths:
