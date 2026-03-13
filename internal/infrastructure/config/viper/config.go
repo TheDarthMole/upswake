@@ -18,7 +18,7 @@ var (
 	config                 = &entity.Config{}
 	configFilePath         = DefaultConfigFile
 	ErrReadingConfigFile   = errors.New("error reading config file")
-	ErrUnmarshallingConfig = errors.New("error unmarshaling config")
+	ErrUnmarshallingConfig = errors.New("error unmarshalling config")
 )
 
 func InitConfig(fs afero.Fs, cfgPath string) {
