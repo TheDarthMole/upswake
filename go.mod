@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/echo-swagger/v2 v2.0.1
 	github.com/swaggo/swag v1.16.6
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260311141749-982eaa62dfb7
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260320152806-81c6cb34a8fc
 )
 
 require (
