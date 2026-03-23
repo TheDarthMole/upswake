@@ -19,15 +19,15 @@ var (
 func TestConnect(t *testing.T) {
 	type args struct {
 		host     string
-		port     int
 		username string
 		password string
+		port     int
 	}
 	tests := []struct {
-		name    string
-		args    args
 		want    UPS
 		wantErr error
+		name    string
+		args    args
 	}{
 		{
 			name: "Invalid Server",
@@ -97,10 +97,10 @@ func TestGetJSON(t *testing.T) {
 		ns *entity.NutServer
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
 		wantErr error
+		args    args
+		name    string
+		want    string
 	}{
 		{
 			name: "Invalid Server",

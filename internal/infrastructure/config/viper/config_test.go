@@ -16,10 +16,10 @@ func Test_Load(t *testing.T) {
 	testFS := afero.NewBasePathFs(afero.NewOsFs(), "./testing/")
 
 	tests := []struct {
-		name    string
-		args    args
-		want    *entity.Config
 		wantErr error
+		want    *entity.Config
+		args    args
+		name    string
 	}{
 		{
 			name: "valid config",

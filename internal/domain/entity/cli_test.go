@@ -88,18 +88,18 @@ func genEcdsaCertAndKey(t *testing.T) ([]byte, []byte) {
 
 func TestCLIArgs_URL(t *testing.T) {
 	type fields struct {
+		TLSConfig  *tls.Config
 		ConfigFile string
-		UseSSL     bool
 		CertFile   string
 		KeyFile    string
-		Host       net.IP
 		Port       string
-		TLSConfig  *tls.Config
+		Host       net.IP
+		UseSSL     bool
 	}
 	tests := []struct {
 		name   string
-		fields fields
 		want   string
+		fields fields
 	}{
 		{
 			name: "HTTP Port 8080 on 127.0.0.1",
@@ -174,18 +174,18 @@ func TestCLIArgs_URL(t *testing.T) {
 
 func TestCLIArgs_ListenAddress(t *testing.T) {
 	type fields struct {
+		TLSConfig  *tls.Config
 		ConfigFile string
-		UseSSL     bool
 		CertFile   string
 		KeyFile    string
-		Host       net.IP
 		Port       string
-		TLSConfig  *tls.Config
+		Host       net.IP
+		UseSSL     bool
 	}
 	tests := []struct {
 		name   string
-		fields fields
 		want   string
+		fields fields
 	}{
 		{
 			name: "Port 8080 on 127.0.0.1",
@@ -279,18 +279,18 @@ func TestCLIArgs_ListenAddress(t *testing.T) {
 
 func TestCLIArgs_URLPrefix(t *testing.T) {
 	type fields struct {
+		TLSConfig  *tls.Config
 		ConfigFile string
-		UseSSL     bool
 		CertFile   string
 		KeyFile    string
-		Host       net.IP
 		Port       string
-		TLSConfig  *tls.Config
+		Host       net.IP
+		UseSSL     bool
 	}
 	tests := []struct {
 		name   string
-		fields fields
 		want   string
+		fields fields
 	}{
 		{
 			name: "Test HTTP URL Prefix",
@@ -326,18 +326,18 @@ func TestCLIArgs_URLPrefix(t *testing.T) {
 
 func TestCLIArgs_Validate(t *testing.T) {
 	type fields struct {
+		TLSConfig  *tls.Config
 		ConfigFile string
-		UseSSL     bool
 		CertFile   string
 		KeyFile    string
-		Host       net.IP
 		Port       string
-		TLSConfig  *tls.Config
+		Host       net.IP
+		UseSSL     bool
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		fields  fields
-		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",
@@ -491,18 +491,18 @@ func TestCLIArgs_x509Cert(t *testing.T) {
 	_, invalidRSACertPEM := encodeRSA(t, rsaKey, []byte("invalid cert"))
 	assert.NoError(t, afero.WriteFile(fileSystem, "invalidCert.cert", invalidRSACertPEM, 0o644))
 	type fields struct {
+		TLSConfig  *tls.Config
 		ConfigFile string
-		UseSSL     bool
 		CertFile   string
 		KeyFile    string
-		Host       net.IP
 		Port       string
-		TLSConfig  *tls.Config
+		Host       net.IP
+		UseSSL     bool
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		fields  fields
-		wantErr error
 	}{
 		{
 			name: "Valid RSA Cert",
@@ -563,19 +563,19 @@ func TestNewCLIArgs(t *testing.T) {
 	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.cert", ecdsaCertPEM, 0o644))
 	assert.NoError(t, afero.WriteFile(fileSystem, "ecdsaServer.key", ecdsaPrivPEM, 0o644))
 	type args struct {
+		fileSystem afero.Fs
 		configFile string
-		useSSL     bool
 		certFile   string
 		keyFile    string
 		host       string
 		port       string
-		fileSystem afero.Fs
+		useSSL     bool
 	}
 	tests := []struct {
+		wantErr error
+		want    *CLIArgs
 		name    string
 		args    args
-		want    *CLIArgs
-		wantErr error
 	}{
 		{
 			name: "Valid HTTP Config",

@@ -47,12 +47,12 @@ func Test_serveCmdRunE(t *testing.T) {
 		args    []string
 	}
 	tests := []struct {
+		err            error
 		name           string
 		args           args
-		err            error
-		timeout        time.Duration
 		wantOutputs    []string
 		notWantOutputs []string
+		timeout        time.Duration
 	}{
 		{
 			name: "empty config",

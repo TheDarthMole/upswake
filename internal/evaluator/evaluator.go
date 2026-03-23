@@ -22,9 +22,9 @@ type RegoEvaluator struct {
 }
 
 type EvaluationResult struct {
+	Target  *entity.TargetServer
 	Allowed bool
 	Found   bool
-	Target  *entity.TargetServer
 }
 
 func NewRegoEvaluator(config *entity.Config, mac string, rulesFS afero.Fs) *RegoEvaluator {

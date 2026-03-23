@@ -57,9 +57,9 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 	const validMac = `{"mac": "00:11:22:33:44:55"}`
 
 	type fields struct {
-		body                   string
 		mockBroadcastAddresses func() ([]net.IP, error)
 		mockNewTargetServer    func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+		body                   string
 	}
 	type wantedResponse struct {
 		body       string
@@ -235,8 +235,8 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 
 func TestServerHandler_WakeServer(t *testing.T) {
 	type fields struct {
-		body                string
 		mockNewTargetServer func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+		body                string
 	}
 	type wantedResponse struct {
 		body       string

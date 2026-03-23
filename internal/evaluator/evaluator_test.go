@@ -39,15 +39,15 @@ func TestNewRegoEvaluator(t *testing.T) {
 	writeMemFile(t, alwaysFalseRegoFS, "test.rego", regoAlwaysFalse)
 
 	type args struct {
+		rulesFS afero.Fs
 		config  *entity.Config
 		mac     string
-		rulesFS afero.Fs
 	}
 
 	tests := []struct {
-		name string
 		args args
 		want *RegoEvaluator
+		name string
 	}{
 		{
 			name: "valid config 1",
@@ -100,11 +100,11 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		inputJSON string
 	}
 	tests := []struct {
-		name    string
 		fields  fields
-		args    args
-		want    bool
 		wantErr error
+		args    args
+		name    string
+		want    bool
 	}{
 		{
 			name: "nothing to evaluate",
@@ -232,11 +232,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		getUPSJSON func(server *entity.NutServer) (string, error)
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
 		want    EvaluationResult
 		wantErr error
+		args    args
+		fields  fields
+		name    string
 	}{
 		{
 			name: "valid eval",

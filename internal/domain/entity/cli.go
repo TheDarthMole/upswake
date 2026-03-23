@@ -13,13 +13,13 @@ import (
 )
 
 type CLIArgs struct {
+	TLSConfig  *tls.Config
 	ConfigFile string
-	UseSSL     bool
 	CertFile   string
 	KeyFile    string
-	Host       net.IP
 	Port       string
-	TLSConfig  *tls.Config
+	Host       net.IP
+	UseSSL     bool
 }
 
 var (

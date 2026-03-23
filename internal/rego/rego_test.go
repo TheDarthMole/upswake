@@ -32,10 +32,10 @@ func TestEvaluateExpression(t *testing.T) {
 		regoRule string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    bool
 		wantErr error
+		args    args
+		name    string
+		want    bool
 	}{
 		{
 			name: "Valid Rego Rule and Valid JSON",
@@ -127,9 +127,9 @@ func TestIsValidRego(t *testing.T) {
 		rego string
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		args    args
-		wantErr error
 	}{
 		{
 			name: "Valid Rego Rule",

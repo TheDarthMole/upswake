@@ -27,9 +27,9 @@ func Test_NewJSONCommand(t *testing.T) {
 func Test_JSONRunE(t *testing.T) {
 	tests := []struct {
 		name string
-		in   []string
 		err  string
 		out  string
+		in   []string
 	}{
 		{
 			name: "invalid port",

@@ -52,9 +52,9 @@ func TestCustomValidator_Validate(t *testing.T) {
 		i any
 	}
 	tests := []struct {
-		name   string
-		fields fields
 		args   args
+		fields fields
+		name   string
 		error  bool
 	}{
 		{
@@ -110,9 +110,9 @@ func TestNewCustomValidator(t *testing.T) {
 		ctx context.Context
 	}
 	tests := []struct {
-		name string
 		args args
 		want *CustomValidator
+		name string
 	}{
 		{
 			name: "Test with background context",
@@ -152,9 +152,9 @@ func TestNewServer(t *testing.T) {
 	ctx := context.Background()
 	logger := newTestLogger()
 	tests := []struct {
-		name string
 		args args
 		want *Server
+		name string
 	}{
 		{
 			name: "New Server with background context and slog logger",
@@ -299,16 +299,16 @@ func TestServer_Start_Stop(t *testing.T) {
 
 	type args struct {
 		address  string
-		useSSL   bool
 		certFile string
 		keyFile  string
+		useSSL   bool
 	}
 	tests := []struct {
-		name        string
 		fields      fields
-		args        args
 		wantErr     error
 		wantStopErr error
+		name        string
+		args        args
 	}{
 		{
 			name: "Start server without SSL",

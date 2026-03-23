@@ -87,10 +87,10 @@ func Test_newMagicPacket(t *testing.T) {
 		mac string
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		args    args
 		want    []byte
-		wantErr error
 	}{
 		{
 			name: "invalid MAC",
@@ -232,9 +232,9 @@ func TestNewWoLClient(t *testing.T) {
 		target *entity.TargetServer
 	}
 	tests := []struct {
-		name string
 		args args
 		want *WakeOnLan
+		name string
 	}{
 		{
 			name: "valid target",
@@ -258,9 +258,9 @@ func TestWakeOnLan_Wake(t *testing.T) {
 		WoLTarget *entity.TargetServer
 	}
 	tests := []struct {
-		name    string
-		fields  fields
 		wantErr error
+		fields  fields
+		name    string
 	}{
 		{
 			name: "valid",
