@@ -1,7 +1,7 @@
 package viper
 
 type Config struct {
-	NutServers []NutServer `mapstructure:"nut_servers"`
+	NutServers []*NutServer `mapstructure:"nut_servers"`
 }
 
 type NutServer struct {

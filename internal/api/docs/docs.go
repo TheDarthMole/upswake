@@ -142,7 +142,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.NutServer"
+                                "$ref": "#/definitions/viper.NutServer"
                             }
                         }
                     }
@@ -236,65 +236,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "entity.NutServer": {
-            "type": "object",
-            "properties": {
-                "host": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "targets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TargetServer"
-                    }
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TargetServer": {
-            "type": "object",
-            "properties": {
-                "broadcast": {
-                    "type": "string"
-                },
-                "interval": {
-                    "description": "15 minutes in nanoseconds",
-                    "default": 900000000000,
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/time.Duration"
-                        }
-                    ]
-                },
-                "mac": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer",
-                    "default": 9
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "handlers.BroadcastWakeRequest": {
             "type": "object",
             "required": [
@@ -353,37 +294,59 @@ const docTemplate = `{
                 }
             }
         },
-        "time.Duration": {
-            "type": "integer",
-            "format": "int64",
-            "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000
-            ],
-            "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second"
-            ]
+        "viper.NutServer": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/viper.TargetServer"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "viper.TargetServer": {
+            "type": "object",
+            "properties": {
+                "broadcast": {
+                    "type": "string"
+                },
+                "interval": {
+                    "type": "string",
+                    "default": "15m"
+                },
+                "mac": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 9
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         }
     }
 }`
