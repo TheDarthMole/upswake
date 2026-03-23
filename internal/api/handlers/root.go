@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 type RootHandler struct {
@@ -32,11 +33,11 @@ func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs) *RootHandler {
 
 func sanitizeString(input string) string {
 	// Replace any non-printable characters with an empty string
-	sanatised := strconv.QuoteToASCII(input)
-	sanatised = strings.TrimSpace(sanatised)
-	sanatised = strings.ReplaceAll(sanatised, "\n", "")
-	sanatised = strings.ReplaceAll(sanatised, "\r", "")
-	return sanatised
+	sanitised := strconv.QuoteToASCII(input)
+	sanitised = strings.TrimSpace(sanitised)
+	sanitised = strings.ReplaceAll(sanitised, "\n", "")
+	sanitised = strings.ReplaceAll(sanitised, "\r", "")
+	return sanitised
 }
 
 func (h *RootHandler) Register(g *echo.Group) {
@@ -78,12 +79,20 @@ func (h *RootHandler) Health(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	// TODO: Speed this up by running in parallel
+	g := errgroup.Group{}
 	for _, server := range h.cfg.NutServers {
-		if _, err := ups.GetJSON(server); err != nil {
-			c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
-			return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
-		}
+		g.Go(func() error {
+			if _, err := ups.GetJSON(server); err != nil {
+				c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		c.Logger().Debug("Health check failed", slog.Any("error", err))
+		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	c.Logger().Debug("Health check OK")

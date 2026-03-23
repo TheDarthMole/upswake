@@ -87,10 +87,12 @@ func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSO
 		if err != nil {
 			return false, fmt.Errorf("%w: %w", ErrFailedReadRegoFile, err)
 		}
+
 		allowed, err := rego.EvaluateExpression(inputJSON, string(regoRule))
 		if err != nil {
 			return false, fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
 		}
+
 		if allowed {
 			return true, nil
 		}
