@@ -23,17 +23,17 @@ func Test_NewRootCommand(t *testing.T) {
 
 func Test_Execute(t *testing.T) {
 	type args struct {
-		args       []string
 		filesystem func() afero.Fs
 		regoFiles  func() afero.Fs
+		args       []string
 	}
 	tests := []struct {
-		name          string
 		args          args
-		exitCode      int
-		timeout       time.Duration
+		name          string
 		wantOutput    []string
 		notWantOutput []string
+		exitCode      int
+		timeout       time.Duration
 	}{
 		{
 			name: "root command help",

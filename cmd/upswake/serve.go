@@ -39,10 +39,10 @@ type serveJob struct {
 	ctx         context.Context
 	wg          *sync.WaitGroup
 	logger      *slog.Logger
-	interval    time.Duration
 	client      *http.Client
-	requestBody []byte
 	url         string
+	requestBody []byte
+	interval    time.Duration
 }
 
 func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConfig *tls.Config, wg *sync.WaitGroup, logger *slog.Logger, endpoint string) (*serveJob, error) {

@@ -18,9 +18,9 @@ func TestNewWakeCmd(t *testing.T) {
 		broadcasts []net.IP
 	}
 	tests := []struct {
+		want func() *cobra.Command
 		name string
 		args args
-		want func() *cobra.Command
 	}{
 		{
 			name: "empty broadcasts",

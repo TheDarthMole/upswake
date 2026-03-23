@@ -37,11 +37,11 @@ func Test_healthCheck_HealthCheckRunE(t *testing.T) {
 		cmd *cobra.Command
 	}
 	tests := []struct {
-		name        string
 		fields      fields
-		args        args
-		closeServer bool
 		err         error
+		args        args
+		name        string
+		closeServer bool
 	}{
 		{
 			name: "successful healthcheck",

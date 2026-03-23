@@ -180,9 +180,9 @@ func TestNewRootHandler(t *testing.T) {
 		"test": []byte("test"),
 	})
 	tests := []struct {
-		name string
 		args args
 		want *RootHandler
+		name string
 	}{
 		{
 			name: "test-1",

@@ -260,10 +260,10 @@ func Test_filterAddressesFromInterfaces(t *testing.T) {
 		interfaces []net.Interface
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		args    args
 		want    []net.Addr
-		wantErr error
 	}{
 		{
 			name: "No Interfaces",

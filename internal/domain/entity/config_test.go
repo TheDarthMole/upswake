@@ -13,9 +13,9 @@ func TestConfig_Validate(t *testing.T) {
 		NutServers []*NutServer
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		fields  fields
-		wantErr error
 	}{
 		{
 			name: "empty NutServers",
@@ -83,14 +83,14 @@ func TestNewTargetServer(t *testing.T) {
 		mac       string
 		broadcast string
 		interval  string
-		port      int
 		rules     []string
+		port      int
 	}
 	tests := []struct {
+		wantErr error
+		want    *TargetServer
 		name    string
 		args    args
-		want    *TargetServer
-		wantErr error
 	}{
 		{
 			name: "valid NewTargetServer",
@@ -149,15 +149,15 @@ func TestNutServer_Validate(t *testing.T) {
 	type fields struct {
 		Name     string
 		Host     string
-		Port     int
 		Username string
 		Password string
 		Targets  []*TargetServer
+		Port     int
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		fields  fields
-		wantErr error
 	}{
 		{
 			name: "valid NutServer",
@@ -366,14 +366,14 @@ func TestTargetServer_Validate(t *testing.T) {
 		Name      string
 		MAC       string
 		Broadcast string
-		Port      int
 		Interval  string
 		Rules     []string
+		Port      int
 	}
 	tests := []struct {
+		wantErr error
 		name    string
 		fields  fields
-		wantErr error
 	}{
 		{
 			name: "valid TargetServer",
@@ -540,8 +540,8 @@ func Test_duration(t *testing.T) {
 		fl any
 	}
 	tests := []struct {
-		name    string
 		args    args
+		name    string
 		wantErr bool
 	}{
 		{
