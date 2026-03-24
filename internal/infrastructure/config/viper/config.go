@@ -53,7 +53,7 @@ func Load() (*entity.Config, error) {
 	if err := viper.Unmarshal(loadConfig); err != nil {
 		return &entity.Config{}, fmt.Errorf("%w: %w", ErrUnmarshallingConfig, err)
 	}
-	entityConfig, err := fromFileConfig(loadConfig)
+	entityConfig, err := FromFileConfig(loadConfig)
 	if err != nil {
 		return &entity.Config{}, err
 	}

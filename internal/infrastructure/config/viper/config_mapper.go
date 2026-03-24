@@ -1,15 +1,18 @@
 package viper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 )
 
-func fromFileConfig(config *Config) (*entity.Config, error) {
+var ErrFailedParsingInterval = fmt.Errorf("failed to parse interval, must be a valid duration string")
+
+func FromFileConfig(config *Config) (*entity.Config, error) {
 	nutServers := make([]*entity.NutServer, len(config.NutServers))
 	for i, nutServer := range config.NutServers {
-		entityNutServer, err := fromFileNutServer(nutServer)
+		entityNutServer, err := FromFileNutServer(nutServer)
 		if err != nil {
 			return nil, err
 		}
@@ -32,10 +35,10 @@ func ToFileConfig(entityConfig *entity.Config) *Config {
 	}
 }
 
-func fromFileNutServer(nutServer *NutServer) (*entity.NutServer, error) {
+func FromFileNutServer(nutServer *NutServer) (*entity.NutServer, error) {
 	targets := make([]*entity.TargetServer, len(nutServer.Targets))
 	for i, target := range nutServer.Targets {
-		entityTarget, err := fromFileTargetServer(target)
+		entityTarget, err := FromFileTargetServer(target)
 		if err != nil {
 			return nil, err
 		}
@@ -67,10 +70,10 @@ func ToFileNutServer(nutServer *entity.NutServer) *NutServer {
 	}
 }
 
-func fromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, error) {
+func FromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, error) {
 	interval, err := time.ParseDuration(targetServer.Interval)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedParsingInterval, err)
 	}
 
 	return &entity.TargetServer{
