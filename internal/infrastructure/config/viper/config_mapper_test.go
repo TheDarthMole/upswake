@@ -13,10 +13,10 @@ func TestFromFileConfig(t *testing.T) {
 		config *Config
 	}
 	tests := []struct {
-		name string
+		err  error
 		args args
 		want *entity.Config
-		err  error
+		name string
 	}{
 		{
 			name: "full file config with one nut server and one target server",
@@ -151,9 +151,9 @@ func TestToFileConfig(t *testing.T) {
 		entityConfig *entity.Config
 	}
 	tests := []struct {
-		name string
 		args args
 		want *Config
+		name string
 	}{
 		{
 			name: "full entity config with one nut server and one target server",

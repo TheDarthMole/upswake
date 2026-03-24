@@ -1,13 +1,14 @@
 package viper
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 )
 
-var ErrFailedParsingInterval = fmt.Errorf("failed to parse interval, must be a valid duration string")
+var ErrFailedParsingInterval = errors.New("failed to parse interval, must be a valid duration string")
 
 func FromFileConfig(config *Config) (*entity.Config, error) {
 	nutServers := make([]*entity.NutServer, len(config.NutServers))
