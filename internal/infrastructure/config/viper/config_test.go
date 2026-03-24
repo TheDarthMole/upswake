@@ -127,6 +127,15 @@ func Test_Load(t *testing.T) {
 			wantErr: ErrUnmarshallingConfig,
 			want:    &entity.Config{},
 		},
+		{
+			name: "invalid interval",
+			args: args{
+				fs:       testFS,
+				filePath: "invalid_interval.yaml",
+			},
+			wantErr: ErrFailedParsingInterval,
+			want:    &entity.Config{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
