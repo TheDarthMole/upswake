@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
@@ -59,7 +60,7 @@ func (wake *wakeCMD) wakeCmdRunE(cmd *cobra.Command, _ []string) error {
 			"CLI Request",
 			mac,
 			broadcast.String(),
-			"1s",
+			1*time.Second,
 			entity.DefaultWoLPort,
 			[]string{},
 		)

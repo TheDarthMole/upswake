@@ -1,40 +1,4 @@
 definitions:
-  entity.NutServer:
-    properties:
-      host:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      port:
-        type: integer
-      targets:
-        items:
-          $ref: '#/definitions/entity.TargetServer'
-        type: array
-      username:
-        type: string
-    type: object
-  entity.TargetServer:
-    properties:
-      broadcast:
-        type: string
-      interval:
-        default: 15m
-        type: string
-      mac:
-        type: string
-      name:
-        type: string
-      port:
-        default: 9
-        type: integer
-      rules:
-        items:
-          type: string
-        type: array
-    type: object
   handlers.BroadcastWakeRequest:
     properties:
       mac:
@@ -75,6 +39,42 @@ definitions:
       mac:
         example: "00:11:22:33:44:55"
         type: string
+    type: object
+  viper.NutServer:
+    properties:
+      host:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      targets:
+        items:
+          $ref: '#/definitions/viper.TargetServer'
+        type: array
+      username:
+        type: string
+    type: object
+  viper.TargetServer:
+    properties:
+      broadcast:
+        type: string
+      interval:
+        default: 15m
+        type: string
+      mac:
+        type: string
+      name:
+        type: string
+      port:
+        default: 9
+        type: integer
+      rules:
+        items:
+          type: string
+        type: array
     type: object
 info:
   contact: {}
@@ -165,7 +165,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.NutServer'
+              $ref: '#/definitions/viper.NutServer'
             type: array
       summary: List NUT server mappings
       tags:

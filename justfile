@@ -23,6 +23,7 @@ lint: swagger
     golangci-lint fmt
     golangci-lint run
     go mod tidy
+    go list ./... | xargs -I {} fieldalignment -fix -test {}
 
 # Generate Swagger documentation
 swagger:

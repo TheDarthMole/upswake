@@ -142,7 +142,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.NutServer"
+                                "$ref": "#/definitions/viper.NutServer"
                             }
                         }
                     }
@@ -236,60 +236,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "entity.NutServer": {
-            "type": "object",
-            "properties": {
-                "host": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "targets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TargetServer"
-                    }
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TargetServer": {
-            "type": "object",
-            "properties": {
-                "broadcast": {
-                    "type": "string"
-                },
-                "interval": {
-                    "type": "string",
-                    "default": "15m"
-                },
-                "mac": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer",
-                    "default": 9
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "handlers.BroadcastWakeRequest": {
             "type": "object",
             "required": [
@@ -345,6 +291,60 @@ const docTemplate = `{
                 "mac": {
                     "type": "string",
                     "example": "00:11:22:33:44:55"
+                }
+            }
+        },
+        "viper.NutServer": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/viper.TargetServer"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "viper.TargetServer": {
+            "type": "object",
+            "properties": {
+                "broadcast": {
+                    "type": "string"
+                },
+                "interval": {
+                    "type": "string",
+                    "default": "15m"
+                },
+                "mac": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 9
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }

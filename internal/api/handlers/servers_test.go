@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -58,7 +59,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 
 	type fields struct {
 		mockBroadcastAddresses func() ([]net.IP, error)
-		mockNewTargetServer    func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+		mockNewTargetServer    func(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*entity.TargetServer, error)
 		body                   string
 	}
 	type wantedResponse struct {
@@ -189,7 +190,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 			fields: fields{
 				body:                   validMac,
 				mockBroadcastAddresses: mockValidBroadcastAddressesFunc,
-				mockNewTargetServer: func(_, _, _, _ string, _ int, _ []string) (*entity.TargetServer, error) {
+				mockNewTargetServer: func(_, _, _ string, _ time.Duration, _ int, _ []string) (*entity.TargetServer, error) {
 					return nil, errors.New("mock_new_target_server_error")
 				},
 			},
@@ -235,7 +236,7 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 
 func TestServerHandler_WakeServer(t *testing.T) {
 	type fields struct {
-		mockNewTargetServer func(name, mac, broadcast, interval string, port int, rules []string) (*entity.TargetServer, error)
+		mockNewTargetServer func(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*entity.TargetServer, error)
 		body                string
 	}
 	type wantedResponse struct {
@@ -328,7 +329,7 @@ func TestServerHandler_WakeServer(t *testing.T) {
 			name: "mock_new_target_server_error",
 			fields: fields{
 				body: validMacBroadcast,
-				mockNewTargetServer: func(_, _, _, _ string, _ int, _ []string) (*entity.TargetServer, error) {
+				mockNewTargetServer: func(_, _, _ string, _ time.Duration, _ int, _ []string) (*entity.TargetServer, error) {
 					return nil, errors.New("mock_new_target_server_error")
 				},
 			},

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -27,7 +28,7 @@ var cfg = &entity.Config{
 					MAC:       "00:00:00:00:00:00",
 					Broadcast: "192.168.1.255",
 					Port:      9,
-					Interval:  "15s",
+					Interval:  15 * time.Second,
 					Rules:     nil,
 				},
 			},
@@ -119,7 +120,36 @@ func TestRootHandler_Health(t *testing.T) {
 				statusCode: http.StatusOK,
 			},
 		},
-		//	TODO: Add tests that check for valid NUT server responses, where the config isn't empty
+		{
+			name: "valid-healthy-config",
+			fields: fields{
+				cfg: &entity.Config{NutServers: []*entity.NutServer{
+					{
+						Name:     "testNUTServer",
+						Host:     "127.0.0.1",
+						Port:     entity.DefaultNUTServerPort,
+						Username: "test-user",
+						Password: "test-password",
+						Targets: []*entity.TargetServer{
+							{
+								Name:      "testTarget",
+								MAC:       "00:00:00:00:00:00",
+								Broadcast: "127.0.0.255",
+								Port:      9,
+								Interval:  15 * time.Second,
+								Rules:     nil,
+							},
+						},
+					},
+				}},
+				rulesFS: newMemFS(t, map[string][]byte{}),
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message": "OK"}`,
+				statusCode: http.StatusOK,
+			},
+		},
+		//	TODO: Add tests that check for where the config isn't empty
 		// 		    and test when the GetAllBroadcastAddresses fails
 	}
 	e := echo.New()

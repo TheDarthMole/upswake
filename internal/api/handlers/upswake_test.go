@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -40,7 +41,7 @@ default wake := false`),
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "127.0.0.255",
 						Port:      9,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules:     []string{"always_true.rego"},
 					},
 				},
@@ -61,7 +62,7 @@ default wake := false`),
 						MAC:       "00:11:22:33:44:55",
 						Broadcast: "777.666.555.444",
 						Port:      9,
-						Interval:  "15m",
+						Interval:  15 * time.Minute,
 						Rules:     []string{"always_true.rego"},
 					},
 				},

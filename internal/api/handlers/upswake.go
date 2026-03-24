@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
@@ -45,15 +47,17 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 //	@Tags			UPSWake
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	[]entity.NutServer
+//	@Success		200	{object}	[]viper.NutServer
 //	@Router			/api/upswake [get]
 func (h *UPSWakeHandler) ListNutServerMappings(c *echo.Context) error {
-	nutServers := h.cfg.NutServers
-	// Don't leak passwords
-	for i, nutServer := range nutServers {
-		nutServer.Password = "********"
-		nutServers[i] = nutServer
+	nutServers := make([]*viper.NutServer, len(h.cfg.NutServers))
+
+	for i, nutServer := range h.cfg.NutServers {
+		nutServers[i] = viper.ToFileNutServer(nutServer)
+		// Don't leak passwords
+		nutServers[i].Password = "********"
 	}
+
 	return c.JSON(http.StatusOK, nutServers)
 }
 
@@ -110,7 +114,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		"API Request",
 		result.Target.MAC,
 		result.Target.Broadcast,
-		"15m",
+		15*time.Minute,
 		result.Target.Port,
 		[]string{},
 	)
