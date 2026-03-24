@@ -83,8 +83,8 @@ func TestNewTargetServer(t *testing.T) {
 		name      string
 		mac       string
 		broadcast string
-		interval  time.Duration
 		rules     []string
+		interval  time.Duration
 		port      int
 	}
 	tests := []struct {
@@ -367,8 +367,8 @@ func TestTargetServer_Validate(t *testing.T) {
 		Name      string
 		MAC       string
 		Broadcast string
-		Interval  time.Duration
 		Rules     []string
+		Interval  time.Duration
 		Port      int
 	}
 	tests := []struct {

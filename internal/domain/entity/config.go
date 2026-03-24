@@ -108,8 +108,8 @@ type TargetServer struct {
 	Name      string        `json:"name"`
 	MAC       string        `json:"mac"`
 	Broadcast string        `json:"broadcast"`
-	Interval  time.Duration `json:"interval" default:"900000000000"` // 15 minutes in nanoseconds
 	Rules     []string      `json:"rules"`
+	Interval  time.Duration `json:"interval" default:"900000000000"`
 	Port      int           `json:"port" default:"9"`
 }
 
