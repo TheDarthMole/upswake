@@ -45,8 +45,7 @@ _check-container-tool:
 
 # Install development dependencies
 install-deps: && _check-container-tool
-    go install github.com/swaggo/swag/cmd/swag@latest
-    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+    mise install
 
 # Run upswake with arguments
 run *args:
