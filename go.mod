@@ -21,6 +21,7 @@ require (
 	golang.org/x/sync v0.20.0
 )
 
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
