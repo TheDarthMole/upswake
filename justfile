@@ -17,8 +17,11 @@ test:
     go clean -testcache
     go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
 
+pre-commit:
+    pre-commit run -a --verbose
+
 # Runs all linters
-lint: swagger
+lint: pre-commit swagger
     swag fmt .
     golangci-lint fmt
     golangci-lint run

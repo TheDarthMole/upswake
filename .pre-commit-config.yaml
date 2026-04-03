@@ -1,3 +1,5 @@
+exclude: '^internal/api/docs' # swagger.json is auto-generated but doesn't have a trailing newline, which causes the end-of-file-fixer to always fail
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
