@@ -51,16 +51,16 @@ cosign verify ghcr.io/thedarthmole/upswake:latest \
 
 ## 🔍 Overview
 
-UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of 
+UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of
 a NUT UPS server.
 
-The OPA Rego language is used in order to allow for dynamic rules to be defined for when to wake a server. 
-The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met, 
+The OPA Rego language is used in order to allow for dynamic rules to be defined for when to wake a server.
+The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met,
 a Wake on Lan packet is sent to the defined server.
 
 Upswake is designed to run on a [Raspberry Pi](https://www.raspberrypi.org/) or any small, always-on computer that
-shares the same network as the servers you want to wake. 
-It is ideal for environments where the servers are set to shut down using the [NUT client](https://technotim.live/posts/NUT-server-guide/) 
+shares the same network as the servers you want to wake.
+It is ideal for environments where the servers are set to shut down using the [NUT client](https://technotim.live/posts/NUT-server-guide/)
 when the UPS switches to battery power, as Upswake provides the capability to wake them back up using intelligent rules.
 
 ## 🏎️ Getting Started
@@ -92,15 +92,15 @@ nut_servers:
           - alwaysTrue.rego
 ```
 
-The above config allows for a flexible configuration where you can define multiple NUT hosts and multiple target hosts. 
+The above config allows for a flexible configuration where you can define multiple NUT hosts and multiple target hosts.
 Multiple rules can also be defined for each server to be woken.
 YAML anchors can be used if the same NUT client is used for multiple servers.
 
-> [!NOTE] 
+> [!NOTE]
 > The Rego rules are evaluated in a logical OR fashion. If any of the rules evaluate to true, the host will be woken.
 
-Rules are stored and read from the [rules](rules) folder and are written in the OPA Rego language. 
-The example rule [80percentOn.rego](./rules/80percentOn.rego) will wake the server if the UPS named "cyberpower900" is 
+Rules are stored and read from the [rules](rules) folder and are written in the OPA Rego language.
+The example rule [80percentOn.rego](./rules/80percentOn.rego) will wake the server if the UPS named "cyberpower900" is
 on line power and the battery level is above 80%.
 
 ### 🐋 Deployment with Docker Compose
@@ -203,7 +203,7 @@ Use "upswake [command] --help" for more information about a command.
 ## Development
 
 This project uses [Golang](https://go.dev/), [Just](https://github.com/casey/just) and your choice of [Docker](https://www.docker.com/) or [Podman](https://podman.io/) for development.
-To install other dependencies, build or run the application, you can use the `just` tool to run the commands defined in 
+To install other dependencies, build or run the application, you can use the `just` tool to run the commands defined in
 the [justfile](justfile).
 
 ```

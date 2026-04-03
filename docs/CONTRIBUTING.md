@@ -1,24 +1,24 @@
 # Contributing to UPSWake
 
-Firstly, thank you for considering contributing to UPSWake! We welcome contributions from the community to help improve 
+Firstly, thank you for considering contributing to UPSWake! We welcome contributions from the community to help improve
 and enhance the project.
 
 ## Security Reports
 
 If you discover a security vulnerability in UPSWake, please do not open a pull request or issue. Instead, please follow
-the instructions in our [Security Policy](https://github.com/TheDarthMole/upswake/security/policy) to report the 
+the instructions in our [Security Policy](https://github.com/TheDarthMole/upswake/security/policy) to report the
 vulnerability privately.
 
 ## Raise an Issue
 
 Before starting work on a new feature or bug fix, please check the issue tracker to see if someone else has already
 reported the same issue. If not, please open a new issue to discuss your proposed changes with any relevant information
-required for context (including configuration details, logs, and steps to reproduce the issue). Please redact any 
+required for context (including configuration details, logs, and steps to reproduce the issue). Please redact any
 sensitive information such as passwords or public IP addresses.
 
 ## Make a Pull Request
 
-If you have a fix or feature ready, please fork the repository and create a pull request. 
+If you have a fix or feature ready, please fork the repository and create a pull request.
 Once you have made a pull request, a maintainer will review your changes and decide what to do next.
 
 Please ensure that you follow these guidelines:
@@ -31,12 +31,12 @@ Please refer to the [LICENSE](../LICENSE) file for more details.
 
 ### Write clear commit messages
 
-Please write clear and concise commit messages that describe the changes you have made. Generally following the 
+Please write clear and concise commit messages that describe the changes you have made. Generally following the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification is a good idea.
 
 ### Follow the coding style
 
-Please follow the existing coding style and conventions used in the project. Golang-ci lint 
+Please follow the existing coding style and conventions used in the project. Golang-ci lint
 is used for linting, ensure that all checks pass before submitting your pull request. You can run the linters using:
 
 ```bash
