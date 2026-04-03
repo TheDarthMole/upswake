@@ -255,9 +255,6 @@ linters:
     staticcheck:
       checks:
         - all
-        - -ST1003 # FIXME: Poorly chosen identifier
-        - -ST1005 # FIXME: Incorrectly formatted error string
-        - -ST1011 # FIXME: Poorly chosen name for variable of type time.Duration
 
     testifylint:
       disable:
