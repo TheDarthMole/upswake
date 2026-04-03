@@ -2,7 +2,7 @@ exclude: '^internal/api/docs' # swagger.json is auto-generated but doesn't have 
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -10,6 +10,25 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.11.1
+    rev: v2.11.4
     hooks:
       - id: golangci-lint
+      - id: golangci-lint-fmt
+
+  - repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.4
+    hooks:
+      - id: go-mod-tidy
+
+  - repo: https://github.com/muya/swaggo-hooks
+    rev: v1.1.1
+    hooks:
+      - id: swag-init
+        args:
+          - --parseDependency
+          - --parseInternal
+          - --parseDepth=1
+          - --dir=./internal/api/handlers
+          - --generalInfo=./root.go
+          - --output=./internal/api/docs
+      - id: swag-fmt
