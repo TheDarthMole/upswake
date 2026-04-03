@@ -1,6 +1,0 @@
-[tools]
-go = "1.26.1"
-golangci-lint = "latest"
-oasdiff = "1.12.4"
-pre-commit = "4.5.1"
-swag = "latest"
