@@ -13,6 +13,8 @@ repos:
     rev: v2.11.4
     hooks:
       - id: golangci-lint
+        args:
+          - --fix
       - id: golangci-lint-fmt
 
   - repo: https://github.com/TekWizely/pre-commit-golang

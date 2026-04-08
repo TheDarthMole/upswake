@@ -2,6 +2,8 @@ formatters:
   enable:
     - gci
     - gofumpt
+    - goimports
+    - swaggo
 
   settings:
     gci:
