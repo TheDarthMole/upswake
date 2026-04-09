@@ -202,27 +202,7 @@ Use "upswake [command] --help" for more information about a command.
 ```
 ## Development
 
-This project uses [Golang](https://go.dev/), [Just](https://github.com/casey/just) and your choice of [Docker](https://www.docker.com/) or [Podman](https://podman.io/) for development.
-To install other dependencies, build or run the application, you can use the `just` tool to run the commands defined in
-the [justfile](justfile).
-
-```
-just -l
-Available recipes:
-    build            # Build upswake
-    build-container  # Build the thedarthmole/upswake:local container
-    help             # Display this help message
-    install-deps     # Install development dependencies
-    lint             # Runs all linters
-    run *args        # Run upswake with arguments
-    run-container    # Builds and runs the upswake container
-    start-nut-server # Runs a NUT server in a container for testing
-    stop-nut-server  # Stops the NUT server container
-    swagger          # Generate Swagger documentation
-    test             # Run all Go tests
-```
-
-For more information about contributing to UPSWake, please read the [CONTRIBUTING.md](docs/CONTRIBUTING.md) and
+For information about contributing to UPSWake, please read the [CONTRIBUTING.md](docs/CONTRIBUTING.md) and
 [MAINTAINERS.md](docs/MAINTAINERS.md) docs.
 
 ## License

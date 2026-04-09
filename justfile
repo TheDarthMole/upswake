@@ -21,6 +21,7 @@ test:
 lint:
     hk check --all
 
+# Runs all formatters
 fmt:
     hk fix --all
 

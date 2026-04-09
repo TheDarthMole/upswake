@@ -34,14 +34,49 @@ Please refer to the [LICENSE](../LICENSE) file for more details.
 Please write clear and concise commit messages that describe the changes you have made. Generally following the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification is a good idea.
 
-### Follow the coding style
+### Setting up your development environment
 
-Please follow the existing coding style and conventions used in the project. Golang-ci lint
-is used for linting, ensure that all checks pass before submitting your pull request. You can run the linters using:
+This project uses [Golang](https://go.dev/), [Just](https://github.com/casey/just), [mise](https://mise.jdx.dev/) and your choice of [Docker](https://www.docker.com/) or [Podman](https://podman.io/) for development.
+To install the dependencies, please run the following commands:
 
 ```bash
-just install-deps # Install golangci-lint and swag if you haven't already
+# Install 'mise' from https://mise.jdx.dev/
+mise install # Installs dependencies
+hk install # Install hk pre-commit checker
+```
+
+Just is used to build or run the application along with other useful development commands, you can use the `just` tool 
+to run the commands defined in the [justfile](../justfile).
+
+```
+just -l
+Available recipes:
+    build            # Build upswake
+    build-container  # Build the thedarthmole/upswake:local container
+    clean            # Clean up generated files and test cache
+    fmt              # Runs all formatters
+    generate-certs   # Generate self-signed certificates for testing
+    help             # Display this help message
+    install-deps     # Install development dependencies
+    lint             # Runs all linters
+    run *args        # Run upswake with arguments
+    run-container    # Builds and runs the upswake container
+    start-nut-server # Runs a NUT server in a container for testing
+    stop-container   # Stops the upswake container
+    stop-nut-server  # Stops the NUT server container
+    test             # Run all Go tests, assuming the NUT server is already running and certs are generated
+    test-local       # Run all Go tests locally
+```
+
+### Follow the coding style
+
+Please follow the existing coding style and conventions used in the project. [Hk](https://hk.jdx.dev/) is used as a pre-commit checker to
+ensure standards for the project are maintained. Ensure that all checks pass before submitting your pull request. 
+You can run the linters using:
+
+```bash
 just lint
+just fix # to automatically fix any issues that can be fixed automatically
 ```
 
 ### Write tests
