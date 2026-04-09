@@ -48,7 +48,7 @@ hk install # Install hk pre-commit checker
 Just is used to build or run the application along with other useful development commands, you can use the `just` tool 
 to run the commands defined in the [justfile](../justfile).
 
-```
+```text
 just -l
 Available recipes:
     build            # Build upswake
@@ -76,7 +76,7 @@ You can run the linters using:
 
 ```bash
 just lint
-just fix # to automatically fix any issues that can be fixed automatically
+just fmt # to automatically fix any issues that can be fixed automatically
 ```
 
 ### Write tests
