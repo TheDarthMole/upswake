@@ -1,5 +1,5 @@
 golang        1.26.1
-golangci-lint latest
+golangci-lint 2.11.4
 oasdiff       1.12.4
 swag          v1.16.6
 hk            1.41.0
