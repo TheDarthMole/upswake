@@ -18,21 +18,12 @@ test:
     go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
 
 # Runs all linters
-lint: swagger
-    swag fmt .
-    golangci-lint fmt
-    golangci-lint run
-    go mod tidy
-    go list ./... | xargs -I {} fieldalignment -fix -test {}
+lint:
+    hk check --all
 
-# Generate Swagger documentation
-swagger:
-    swag init --parseDependency \
-        --parseInternal \
-        --parseDepth 1 \
-        -d "./internal/api/handlers" \
-        -g "./root.go" \
-        -o "./internal/api/docs"
+# Runs all formatters
+fmt:
+    hk fix --all
 
 # Define the container tool with auto-detection, or allow override via CONTAINER_TOOL
 container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL")
@@ -45,8 +36,8 @@ _check-container-tool:
 
 # Install development dependencies
 install-deps: && _check-container-tool
-    go install github.com/swaggo/swag/cmd/swag@latest
-    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+    mise install
+    hk install
 
 # Run upswake with arguments
 run *args:
@@ -77,6 +68,7 @@ start-nut-server: _check-container-tool
 stop-nut-server: _check-container-tool
     {{container-tool}} compose -f fixtures/nut/compose.yaml down
 
+# Generate self-signed certificates for testing
 generate-certs:
     mkdir -p certs
     openssl req -nodes -new -x509 -keyout certs/rsa.key -out certs/rsa.cert \
@@ -87,6 +79,7 @@ generate-certs:
         -subj "/CN=localhost" \
         -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 
+# Clean up generated files and test cache
 clean:
     rm coverage.txt || true
     rm upswake || true
