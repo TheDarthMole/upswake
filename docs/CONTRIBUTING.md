@@ -41,7 +41,8 @@ To install the dependencies, please run the following commands:
 
 ```bash
 # Install 'mise' from https://mise.jdx.dev/
-mise install # Installs dependencies
+# Also install podman or docker from their respective websites
+mise install # Install the rest of the dependencies
 hk install # Install hk pre-commit checker
 ```
 
