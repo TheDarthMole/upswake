@@ -18,6 +18,7 @@ permissions:
 jobs:
   build:
     name: "Build"
+    environment: release
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
@@ -112,12 +113,14 @@ jobs:
       - name: 💾 Go Build Cache for Docker
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: go-cache
+        if: ${{ github.event_name != 'release' }}
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
 
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
+        if: ${{ github.event_name != 'release' }}
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
