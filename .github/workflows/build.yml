@@ -187,9 +187,15 @@ jobs:
       - name: ✍️ Sign the Docker Hub images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_PROJECT }}@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "${DOCKER_USERNAME}/${DOCKER_PROJECT}@${BUILD_DIGEST}"
+        env:
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+          DOCKER_PROJECT: ${{ vars.DOCKER_PROJECT }}
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
 
       - name: ✍️ Sign the GitHub Container Registry images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${BUILD_DIGEST}"
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
