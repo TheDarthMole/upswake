@@ -37,6 +37,12 @@ hooks {
         stash = "git"
         steps = linters
     }
+    ["commit-msg"] {
+        steps {
+            ["check-conventional-commit"] = Builtins.check_conventional_commit
+        }
+    }
+
     ["fix"] {
         fix = true
         steps = linters
