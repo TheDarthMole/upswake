@@ -1,0 +1,47 @@
+amends "package://github.com/jdx/hk/releases/download/v1.41.0/hk@1.41.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.41.0/hk@1.41.0#/Builtins.pkl"
+
+exclude  = List("internal/api/docs")
+
+local linters = new Mapping<String, Step> {
+    ["trailing-whitespace"] = Builtins.trailing_whitespace
+    ["end-of-file-fixer"] = Builtins.newlines
+
+    ["golangci-lint"] = Builtins.golangci_lint
+    ["golangci-lint-config-verify"] {
+        glob = List("**/.golangci.yml")
+        check = "golangci-lint config verify"
+    }
+
+    ["go-mod-tidy"] = Builtins.gomod_tidy
+
+    ["swag-fmt"] {
+        glob = List("**/*.go")
+        fix = "swag fmt {{ files }}"
+    }
+    ["swag-init"] {
+        //glob = List("**/*.go")
+        fix = "swag init --parseDependency --parseInternal --parseDepth=1 --dir=./internal/api/handlers --generalInfo=./root.go --output=./internal/api/docs"
+    }
+
+    ["hadolint"] = (Builtins.hadolint) {
+        glob = List("**/Dockerfile*","**/Containerfile*")
+    }
+
+    // ["zizmor"] = Builtins.zizmor
+}
+
+hooks {
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps = linters
+    }
+    ["fix"] {
+        fix = true
+        steps = linters
+    }
+    ["check"] {
+        steps = linters
+    }
+}

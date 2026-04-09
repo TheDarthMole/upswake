@@ -19,8 +19,10 @@ test:
 
 # Runs all linters
 lint:
-    pre-commit run --all-files --verbose
-    go list ./... | xargs -I {} fieldalignment -fix -test {}
+    hk check --all
+
+fmt:
+    hk fix --all
 
 # Define the container tool with auto-detection, or allow override via CONTAINER_TOOL
 container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL")
@@ -34,6 +36,7 @@ _check-container-tool:
 # Install development dependencies
 install-deps: && _check-container-tool
     mise install
+    hk install
 
 # Run upswake with arguments
 run *args:

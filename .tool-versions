@@ -1,6 +1,8 @@
-golang                                                                     1.26.1
-golangci-lint                                                              latest
-oasdiff                                                                    1.12.4
-pre-commit                                                                 4.5.1
-swag                                                                       v1.16.6
-go:golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment 0.43.0
+golang        1.26.1
+golangci-lint latest
+oasdiff       1.12.4
+swag          v1.16.6
+hk            latest
+pkl           latest
+zizmor        latest
+hadolint      latest
