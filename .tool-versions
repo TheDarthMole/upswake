@@ -2,7 +2,8 @@ golang        1.26.1
 golangci-lint latest
 oasdiff       1.12.4
 swag          v1.16.6
-hk            latest
-pkl           latest
-zizmor        latest
-hadolint      latest
+hk            1.41.0
+pkl           0.31.1
+zizmor        1.23.1
+hadolint      2.14.0
+just          1.49.0
