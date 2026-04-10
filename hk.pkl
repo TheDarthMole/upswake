@@ -6,6 +6,10 @@ exclude = List("internal/api/docs")
 local linters = new Mapping<String, Step> {
     ["trailing-whitespace"] = Builtins.trailing_whitespace
     ["end-of-file-fixer"] = Builtins.newlines
+    ["check-added-large-files"] = Builtins.check_added_large_files
+    ["check-case-conflict"] = Builtins.check_case_conflict
+    ["check-merge-conflict"] = Builtins.check_merge_conflict
+    ["fix-smart-quotes"] = Builtins.fix_smart_quotes
 
     ["golangci-lint"] = Builtins.golangci_lint
     ["golangci-lint-config-verify"] {
@@ -14,7 +18,12 @@ local linters = new Mapping<String, Step> {
     }
 
     ["go-mod-tidy"] = Builtins.gomod_tidy
-
+    ["mise"] = Builtins.mise
+    ["just-format"] {
+        glob = List("**/justfile")
+        check = "for f in {{ files }}; do just --fmt --check --unstable --justfile ${f}; done"
+        fix = "for f in {{ files }}; do just --fmt --unstable --justfile ${f}; done"
+    }
     ["swag-fmt"] {
         glob = List("**/*.go")
         fix = "swag fmt {{ files }}"
