@@ -63,8 +63,6 @@ jobs:
       - name: 🏗️ Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
         id: setup-buildx
-        with:
-          version: latest
 
       - name: 🔑 Log in to Docker
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
@@ -113,14 +111,13 @@ jobs:
       - name: 💾 Go Build Cache for Docker
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: go-cache
-        if: ${{ github.event_name != 'release' }}
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+          lookup-only: ${{ github.event_name == 'pull_request' }}
 
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
-        if: ${{ github.event_name != 'release' }}
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
@@ -171,8 +168,8 @@ jobs:
           context: .
           file: ./Containerfile
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha # caching actually increases build time from 5m to 8m
-          cache-to: type=gha,mode=max
+          cache-from: "type=gha"
+          cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max' || '' }}
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
           platforms: ${{ env.platforms }}
