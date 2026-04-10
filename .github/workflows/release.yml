@@ -111,14 +111,14 @@ jobs:
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
-          lookup-only: true
+          lookup-only: true # Skip downloading cache on release builds to avoid cache poisoning
 
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
-          skip-extraction: ${{ steps.go-cache.outputs.cache-hit }}
+          skip-extraction: false # Populate cache on release builds, but skip extraction to avoid cache poisoning attacks on pull request builds
           # Cache only the go builds, the module download is cached via the docker layer caching
           # "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
           cache-map: |
