@@ -46,7 +46,7 @@ mise install # Install the rest of the dependencies
 hk install # Install hk pre-commit checker
 ```
 
-Just is used to build or run the application along with other useful development commands, you can use the `just` tool 
+Just is used to build or run the application along with other useful development commands, you can use the `just` tool
 to run the commands defined in the [justfile](../justfile).
 
 ```text
@@ -72,7 +72,7 @@ Available recipes:
 ### Follow the coding style
 
 Please follow the existing coding style and conventions used in the project. [Hk](https://hk.jdx.dev/) is used as a pre-commit checker to
-ensure standards for the project are maintained. Ensure that all checks pass before submitting your pull request. 
+ensure standards for the project are maintained. Ensure that all checks pass before submitting your pull request.
 You can run the linters using:
 
 ```bash

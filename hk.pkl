@@ -1,20 +1,29 @@
 amends "package://github.com/jdx/hk/releases/download/v1.41.0/hk@1.41.0#/Config.pkl"
 import "package://github.com/jdx/hk/releases/download/v1.41.0/hk@1.41.0#/Builtins.pkl"
 
-exclude  = List("internal/api/docs")
+exclude = List("internal/api/docs")
 
 local linters = new Mapping<String, Step> {
     ["trailing-whitespace"] = Builtins.trailing_whitespace
     ["end-of-file-fixer"] = Builtins.newlines
+    ["check-added-large-files"] = Builtins.check_added_large_files
+    ["check-case-conflict"] = Builtins.check_case_conflict
+    ["check-merge-conflict"] = Builtins.check_merge_conflict
+    ["fix-smart-quotes"] = Builtins.fix_smart_quotes
 
     ["golangci-lint"] = Builtins.golangci_lint
     ["golangci-lint-config-verify"] {
-        glob = List("**/.golangci.yml")
-        check = "golangci-lint config verify"
+        workspace_indicator = ".golangci.yml"
+        check = "cd {{workspace}} && golangci-lint config verify"
     }
 
     ["go-mod-tidy"] = Builtins.gomod_tidy
-
+    ["mise"] = Builtins.mise
+    ["just-format"] {
+        glob = List("**/justfile")
+        check = "for f in {{ files }}; do just --fmt --check --unstable --justfile ${f}; done"
+        fix = "for f in {{ files }}; do just --fmt --unstable --justfile ${f}; done"
+    }
     ["swag-fmt"] {
         glob = List("**/*.go")
         fix = "swag fmt {{ files }}"
@@ -28,7 +37,7 @@ local linters = new Mapping<String, Step> {
         glob = List("**/Dockerfile*","**/Containerfile*")
     }
 
-    // ["zizmor"] = Builtins.zizmor
+    ["zizmor"] = Builtins.zizmor
 }
 
 hooks {
@@ -37,10 +46,18 @@ hooks {
         stash = "git"
         steps = linters
     }
+
+    ["commit-msg"] {
+        steps {
+            ["check-conventional-commit"] = Builtins.check_conventional_commit
+        }
+    }
+
     ["fix"] {
         fix = true
         steps = linters
     }
+
     ["check"] {
         steps = linters
     }

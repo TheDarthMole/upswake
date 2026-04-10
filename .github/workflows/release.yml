@@ -1,7 +1,12 @@
-name: Docker
+name: Release
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
 
 env:
   platforms: "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
@@ -10,8 +15,9 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: "Build"
+  release:
+    name: "Release"
+    environment: release
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
@@ -30,18 +36,23 @@ jobs:
             api.github.com:443
             auth.docker.io:443
             docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com:443
+            fulcio.sigstore.dev:443
             ghcr.io:443
             github.com:443
             index.docker.io:443
+            oauth2.sigstore.dev:443
             objects.githubusercontent.com:443
             pkg-containers.githubusercontent.com:443
             production.cloudflare.docker.com:443
             proxy.golang.org:443
             raw.githubusercontent.com:443
             registry-1.docker.io:443
+            rekor.sigstore.dev:443
             release-assets.githubusercontent.com:443
             storage.googleapis.com:443
             sum.golang.org:443
+            timestamp.sigstore.dev:443
+            tuf-repo-cdn.sigstore.dev:443
 
       - name: 🚚 Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -51,6 +62,19 @@ jobs:
       - name: 🏗️ Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
         id: setup-buildx
+
+      - name: 🔑 Log in to Docker
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 🔑 Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏷️ Fetch git tags for `git describe`
         run: "git fetch --force --prune --unshallow --tags"
@@ -87,14 +111,14 @@ jobs:
         with:
           path: go-build-cache
           key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
-          lookup-only: false
+          lookup-only: true # Skip downloading cache on release builds to avoid cache poisoning
 
       - name: 💉 Inject go-build-cache
         uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
-          skip-extraction: true # Skip extraction to avoid cache poisoning attacks, but do populate the cache for release builds
+          skip-extraction: false # Populate cache on release builds, but skip extraction to avoid cache poisoning attacks on pull request builds
           # Cache only the go builds, the module download is cached via the docker layer caching
           # "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
           cache-map: |
@@ -140,9 +164,9 @@ jobs:
           target: "minimal"
           context: .
           file: ./Containerfile
-          push: false
-          cache-from: "type=gha"
-          cache-to: ""
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: "" # Don't use cache on pull request builds to avoid cache poisoning attacks, but do populate it for release builds
+          cache-to: "type=gha,mode=max" # Populate cache on release builds, but don't use it to avoid cache poisoning attacks on pull request builds
           build-args: |
             ${{ format('GIT_DESCRIBE={0}', steps.git-describe.outputs.GIT_DESCRIBE) }}
           platforms: ${{ env.platforms }}
@@ -150,3 +174,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
           provenance: "mode=max"
+
+      - name: ✍️ Install Cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+
+      - name: ✍️ Sign the Docker Hub images
+        run: |
+          cosign sign --recursive --yes "${DOCKER_USERNAME}/${DOCKER_PROJECT}@${BUILD_DIGEST}"
+        env:
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+          DOCKER_PROJECT: ${{ vars.DOCKER_PROJECT }}
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+
+      - name: ✍️ Sign the GitHub Container Registry images
+        run: |
+          cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${BUILD_DIGEST}"
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
