@@ -2,10 +2,10 @@
 lockfile = true
 
 [tools]
-go = "1.26.1"
+go = "1.26.2"
 golangci-lint = "2.11.4"
 hadolint = "2.14.0"
-hk = "1.41.0"
+hk = "1.41.1"
 just = "1.49.0"
 pkl = "0.31.1"
 swag = "v1.16.6"
