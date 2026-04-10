@@ -9,8 +9,8 @@ local linters = new Mapping<String, Step> {
 
     ["golangci-lint"] = Builtins.golangci_lint
     ["golangci-lint-config-verify"] {
-        glob = List("**/.golangci.yml")
-        check = "golangci-lint config verify"
+        workspace_indicator = ".golangci.yml"
+        check = "cd {{workspace}} && golangci-lint config verify"
     }
 
     ["go-mod-tidy"] = Builtins.gomod_tidy
@@ -28,7 +28,7 @@ local linters = new Mapping<String, Step> {
         glob = List("**/Dockerfile*","**/Containerfile*")
     }
 
-    // ["zizmor"] = Builtins.zizmor
+    ["zizmor"] = Builtins.zizmor
 }
 
 hooks {
@@ -37,6 +37,7 @@ hooks {
         stash = "git"
         steps = linters
     }
+
     ["commit-msg"] {
         steps {
             ["check-conventional-commit"] = Builtins.check_conventional_commit
@@ -47,6 +48,7 @@ hooks {
         fix = true
         steps = linters
     }
+
     ["check"] {
         steps = linters
     }
