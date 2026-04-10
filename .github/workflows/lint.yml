@@ -40,7 +40,7 @@ jobs:
       - name: 👀 Check for uncommitted changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Swagger documentation is out of date. Please run 'swag init' and commit the results."
+            echo "Uncommitted changes detected, please run 'hk fix --all' and commit the changes."
             git diff
             exit 1
           fi
