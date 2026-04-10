@@ -156,10 +156,6 @@ url = "https://github.com/casey/just/releases/download/1.49.0/just-1.49.0-x86_64
 checksum = "sha256:657338772efd17a31d67285bb5ed691da87741e44311c0366273c6cb7d913b15"
 url = "https://github.com/casey/just/releases/download/1.49.0/just-1.49.0-x86_64-pc-windows-msvc.zip"
 
-[[tools.oasdiff]]
-version = "1.12.4"
-backend = "asdf:oasdiff"
-
 [[tools.pkl]]
 version = "0.31.1"
 backend = "aqua:apple/pkl"
