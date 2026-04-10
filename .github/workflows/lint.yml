@@ -34,7 +34,7 @@ jobs:
           version: latest
 
       - name: 🧹 Run HK lint
-        run: hk lint --all
+        run: hk check --all
 
       - name: 🧹 Run HK fix
         run: hk fix --all
