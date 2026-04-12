@@ -16,6 +16,17 @@
 A Wake on Lan application that dynamically wakes servers based on the status of a NUT UPS server using the Rego policy language.
 </p>
 
+<p style="text-align: center;">
+  <a href="#-highlights">Highlights</a> •
+  <a href="#-overview">Overview</a> •
+  <a href="#-getting-started">Getting Started</a> •
+  <a href="#usage">Usage</a> •
+  <a href="docs/CONTRIBUTING.md">Contributing</a> •
+  <a href="docs/MAINTAINERS.md">Maintainers</a> •
+  <a href="docs/CODE_OF_CONDUCT.md">Code of Conduct</a> •
+  <a href="docs/SECURITY.md">Security</a>
+</p>
+
 ## 📜 Highlights
 
 ### ⚡ Efficiency
@@ -25,6 +36,8 @@ A Wake on Lan application that dynamically wakes servers based on the status of 
 - 🥧 Can be run on a Raspberry Pi or other small computer
 
 ### 🛠️ Flexibility
+
+[something](#-getting-started)
 
 - 📝 Define dynamic rules using the Rego policy language
 - 📦 Multi-arch Docker image can run on any platform
@@ -56,10 +69,10 @@ cosign verify ghcr.io/thedarthmole/upswake:latest \
 ## 🔍 Overview
 
 UPSWake is an application that allows you to dynamically wake servers using Wake on Lan based on the status of
-a NUT UPS server.
+a [NUT UPS server](https://networkupstools.org/).
 
 The OPA Rego language is used in order to allow for dynamic rules to be defined for when to wake a server.
-The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met,
+The status of one or more [NUT](https://networkupstools.org/) UPS servers is checked against the defined rules and if the rules are met,
 a Wake on Lan packet is sent to the defined server.
 
 UPSWake is designed to run on a [Raspberry Pi](https://www.raspberrypi.org/) or any small, always-on computer that
