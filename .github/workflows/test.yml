@@ -49,7 +49,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: 🏗️Set up Just
-        uses: extractions/setup-just@c26183993cea0054160ffaaa55fab2cad53c12fc
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
         with:
           just-version: 1.46.0
       - name: Set up QEMU
@@ -67,7 +67,7 @@ jobs:
         run: |
           just stop-nut-server
       - name: ☂️ Report coverage rates to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           fail_ci_if_error: true
           files: ./coverage.txt
