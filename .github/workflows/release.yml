@@ -164,7 +164,7 @@ jobs:
           target: "minimal"
           context: .
           file: ./Containerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           cache-from: "" # Don't use cache on pull request builds to avoid cache poisoning attacks, but do populate it for release builds
           cache-to: "type=gha,mode=max" # Populate cache on release builds, but don't use it to avoid cache poisoning attacks on pull request builds
           build-args: |
@@ -176,9 +176,11 @@ jobs:
           provenance: "mode=max"
 
       - name: ✍️ Install Cosign
+        if: ${{ github.event_name == 'release' }}
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: ✍️ Sign the Docker Hub images
+        if: ${{ github.event_name == 'release' }}
         run: |
           cosign sign --recursive --yes "${DOCKER_USERNAME}/${DOCKER_PROJECT}@${BUILD_DIGEST}"
         env:
@@ -187,6 +189,7 @@ jobs:
           BUILD_DIGEST: ${{ steps.build.outputs.digest }}
 
       - name: ✍️ Sign the GitHub Container Registry images
+        if: ${{ github.event_name == 'release' }}
         run: |
           cosign sign --recursive --yes "ghcr.io/${GITHUB_REPOSITORY@L}@${BUILD_DIGEST}"
         env:
