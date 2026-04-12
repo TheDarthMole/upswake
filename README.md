@@ -1,16 +1,20 @@
 # 🌟 UPSWake
 
-[![Build](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg)](https://github.com/TheDarthMole/upswake/actions/workflows/build.yml)
-[![Tests](https://github.com/TheDarthMole/upswake/actions/workflows/test.yml/badge.svg)](https://github.com/TheDarthMole/upswake/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake)](https://goreportcard.com/report/github.com/TheDarthMole/UPSWake)
-[![License](https://img.shields.io/github/license/TheDarthMole/UPSWake?color=blue)](LICENSE)
-[![Docker Image Size](https://img.shields.io/docker/image-size/thedarthmole/upswake/latest)](https://hub.docker.com/r/thedarthmole/upswake)
-[![Docker Pulls](https://img.shields.io/docker/pulls/thedarthmole/upswake)](https://hub.docker.com/r/thedarthmole/upswake)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11143/badge)](https://www.bestpractices.dev/projects/11143)
-[![codecov](https://codecov.io/github/TheDarthMole/upswake/graph/badge.svg?token=B23QF8JDVJ)](https://codecov.io/github/TheDarthMole/upswake)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield)
+<p style="text-align: center;">
+<a href="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml"><img src="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+<a href="https://github.com/TheDarthMole/upswake/actions/workflows/test.yml"><img src="https://github.com/TheDarthMole/upswake/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+<a href="https://goreportcard.com/report/github.com/TheDarthMole/UPSWake"><img src="https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake" alt="Go Report Card"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/TheDarthMole/UPSWake?color=blue" alt="License"></a>
+<a href="https://hub.docker.com/r/thedarthmole/upswake"><img src="https://img.shields.io/docker/image-size/thedarthmole/upswake/latest" alt="Docker Image Size"></a>
+<a href="https://hub.docker.com/r/thedarthmole/upswake"><img src="https://img.shields.io/docker/pulls/thedarthmole/upswake" alt="Docker Pulls"></a>
+<a href="https://www.bestpractices.dev/projects/11143"><img src="https://www.bestpractices.dev/projects/11143/badge" alt="OpenSSF Best Practices"></a>
+<a href="https://codecov.io/github/TheDarthMole/upswake"><img src="https://codecov.io/github/TheDarthMole/upswake/graph/badge.svg?token=B23QF8JDVJ" alt="Codecov"></a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield" alt="FOSSA Status"></a>
+</p>
 
-A dynamic Wake on Lan application that wakes servers based on the status of a NUT UPS server using the Rego policy language.
+<p style="text-align: center;">
+A Wake on Lan application that dynamically wakes servers based on the status of a NUT UPS server using the Rego policy language.
+</p>
 
 ## 📜 Highlights
 
@@ -31,9 +35,8 @@ A dynamic Wake on Lan application that wakes servers based on the status of a NU
 
 <details><summary><em>Click to expand:</em> ✍️ You can verify the Docker images were built from this repository using the cosign tool.</summary>
 
-
 ```bash
-cosign verify thedarthmole/upswake:latest \
+cosign verify docker.io/thedarthmole/upswake:latest \
     --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -43,6 +46,7 @@ cosign verify ghcr.io/thedarthmole/upswake:latest \
     --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
+
 
 > [!NOTE]
 > This only proves that the Docker image is from this repository, assuming that no one hacks into GitHub or the repository. It does not prove that the code itself is secure.
@@ -58,10 +62,10 @@ The OPA Rego language is used in order to allow for dynamic rules to be defined 
 The status of one or many NUT UPS servers is checked against the defined rules and if the rules are met,
 a Wake on Lan packet is sent to the defined server.
 
-Upswake is designed to run on a [Raspberry Pi](https://www.raspberrypi.org/) or any small, always-on computer that
+UPSWake is designed to run on a [Raspberry Pi](https://www.raspberrypi.org/) or any small, always-on computer that
 shares the same network as the servers you want to wake.
 It is ideal for environments where the servers are set to shut down using the [NUT client](https://technotim.live/posts/NUT-server-guide/)
-when the UPS switches to battery power, as Upswake provides the capability to wake them back up using intelligent rules.
+when the UPS switches to battery power, as UPSWake provides the capability to wake them back up using intelligent rules.
 
 ## 🏎️ Getting Started
 
@@ -160,9 +164,9 @@ docker run \
 
 </details>
 
-<details><summary><em>Click to expand:</em> 🧬 Directly install upswake from its source</summary>
+<details><summary><em>Click to expand:</em> 🧬 Directly install UPSWake from its source</summary>
 
-You need the [Go tool](https://golang.org/doc/install) to run upswake from its source.
+You need the [Go tool](https://golang.org/doc/install) to run UPSWake from its source.
 
 ```bash
 go install github.com/TheDarthMole/UPSWake/cmd/upswake@latest
@@ -170,9 +174,9 @@ go install github.com/TheDarthMole/UPSWake/cmd/upswake@latest
 
 </details>
 
-<details><summary><em>Click to expand:</em> 🏗️ Build upswake from its source</summary>
+<details><summary><em>Click to expand:</em> 🏗️ Build UPSWake from its source</summary>
 
-You need the [Go tool](https://golang.org/doc/install) to build upswake from its source.
+You need the [Go tool](https://golang.org/doc/install) to build UPSWake from its source.
 
 ```bash
 git clone git@github.com:TheDarthMole/upswake.git
@@ -184,7 +188,7 @@ go build -o upswake ./cmd/upswake
 
 ## Usage
 
-```yaml
+```text
 Usage:
   upswake [command]
 
