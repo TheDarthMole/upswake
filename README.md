@@ -1,6 +1,6 @@
 # 🌟 UPSWake
 
-<p style="text-align: center;">
+<p align="center">
 <a href="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml"><img src="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg" alt="Build"></a>
 <a href="https://github.com/TheDarthMole/upswake/actions/workflows/test.yml"><img src="https://github.com/TheDarthMole/upswake/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
 <a href="https://goreportcard.com/report/github.com/TheDarthMole/UPSWake"><img src="https://goreportcard.com/badge/github.com/TheDarthMole/UPSWake" alt="Go Report Card"></a>
@@ -12,11 +12,11 @@
 <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=shield" alt="FOSSA Status"></a>
 </p>
 
-<p style="text-align: center;">
+<p align="center">
 A Wake on Lan application that dynamically wakes servers based on the status of a NUT UPS server using the Rego policy language.
 </p>
 
-<p style="text-align: center;">
+<p align="center">
   <a href="#-highlights">Highlights</a> •
   <a href="#-overview">Overview</a> •
   <a href="#-getting-started">Getting Started</a> •
