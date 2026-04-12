@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     permissions:
       id-token: write # This is required for requesting the JWT for CoSign
       contents: read  # This is required for actions/checkout
