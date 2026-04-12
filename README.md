@@ -1,4 +1,4 @@
-# 🌟 UPSWake
+<h1 align="center">🌟 UPSWake</h1>
 
 <p align="center">
 <a href="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml"><img src="https://github.com/TheDarthMole/upswake/actions/workflows/build.yml/badge.svg" alt="Build"></a>
