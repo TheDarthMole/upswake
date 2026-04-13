@@ -37,8 +37,6 @@ A Wake on Lan application that dynamically wakes servers based on the status of 
 
 ### 🛠️ Flexibility
 
-[something](#-getting-started)
-
 - 📝 Define dynamic rules using the Rego policy language
 - 📦 Multi-arch Docker image can run on any platform
 - ⚙️ CLI tool to manually wake a server
