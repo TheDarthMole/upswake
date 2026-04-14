@@ -19,9 +19,17 @@ jobs:
         uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
         with:
           disable-sudo: true
-          egress-policy: audit
+          egress-policy: block
           allowed-endpoints: >
+            dl.google.com:443
             github.com:443
+            golangci-lint.run:443
+            mise-versions.jdx.dev:443
+            mise.jdx.dev:443
+            proxy.golang.org:443
+            release-assets.githubusercontent.com:443
+            storage.googleapis.com:443
+            tuf-repo-cdn.sigstore.dev:443
 
       - name: 🚚 Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
