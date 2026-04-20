@@ -1,7 +1,7 @@
 # Default shell for script-like behavior
 
 set shell := ["bash", "-cu"]
-set unstable := true
+set unstable
 
 export GIT_DESCRIBE := `git describe --tags --always --long`
 BUILD_ARGS := '-tags "timetzdata" -trimpath -ldflags="-w -s -X main.Version=${GIT_DESCRIBE}"'
