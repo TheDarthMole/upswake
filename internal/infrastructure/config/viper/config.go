@@ -15,7 +15,6 @@ const (
 )
 
 var (
-	config                 = &entity.Config{}
 	configFilePath         = DefaultConfigFile
 	ErrReadingConfigFile   = errors.New("error reading config file")
 	ErrUnmarshallingConfig = errors.New("error unmarshalling config")
@@ -53,15 +52,15 @@ func Load() (*entity.Config, error) {
 	if err := viper.Unmarshal(loadConfig); err != nil {
 		return &entity.Config{}, fmt.Errorf("%w: %w", ErrUnmarshallingConfig, err)
 	}
-	entityConfig, err := FromFileConfig(loadConfig)
+	config, err := FromFileConfig(loadConfig)
 	if err != nil {
 		return &entity.Config{}, err
 	}
 
-	if err := entityConfig.Validate(); err != nil {
+	if err := config.Validate(); err != nil {
 		return &entity.Config{}, err
 	}
-	config = entityConfig
+
 	return config, nil
 }
 
