@@ -1,71 +1,45 @@
 package evaluator
 
 import (
+	"context"
 	"errors"
-	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/rego"
-	"github.com/TheDarthMole/UPSWake/internal/ups"
-	"github.com/spf13/afero"
 )
 
 var (
-	ErrFailedReadRegoFile       = errors.New("failed to read rego file")
+	ErrFailedReadFile           = errors.New("failed to read file")
 	ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
 )
 
-type RegoEvaluator struct {
-	config  *entity.Config
-	rulesFS afero.Fs
-	mac     string
+type Evaluator struct {
+	config *entity.Config
+	entity.Evaluator
 }
 
-type EvaluationResult struct {
-	Target  *entity.TargetServer
-	Allowed bool
-	Found   bool
-}
-
-func NewRegoEvaluator(config *entity.Config, mac string, rulesFS afero.Fs) *RegoEvaluator {
-	return &RegoEvaluator{
-		config:  config,
-		mac:     mac,
-		rulesFS: rulesFS,
+func NewRulesEvaluator(evaluator entity.Evaluator, config *entity.Config) *Evaluator {
+	return &Evaluator{
+		Evaluator: evaluator,
+		config:    config,
 	}
 }
 
-func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
-	return r.evaluateExpressions(ups.GetJSON)
-}
-
-// EvaluateExpressions evaluates the expressions in the rules files
-func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutServer) (string, error)) (EvaluationResult, error) {
-	// For each NUT server
-	evaluationResult := EvaluationResult{
+func (r *Evaluator) EvaluateExpressions(ctx context.Context, upsJSON, mac string) (entity.EvaluationResult, error) {
+	evaluationResult := entity.EvaluationResult{
 		Allowed: false,
 		Found:   false,
 		Target:  nil,
 	}
 
 	for _, nutServer := range r.config.NutServers {
-		inputJSON, err := getUPSJSON(nutServer)
-		if err != nil {
-			return EvaluationResult{
-				Allowed: false,
-				Found:   false,
-				Target:  nil,
-			}, err
-		}
-
 		// For each target
 		for _, target := range nutServer.Targets {
-			if target.MAC != r.mac {
+			if target.MAC != mac {
 				continue
 			}
-			allowed, err := r.evaluateExpression(target, inputJSON)
+			allowed, err := r.Evaluate(ctx, upsJSON)
 			if err != nil {
-				return EvaluationResult{}, err
+				return entity.EvaluationResult{}, err
 			}
 
 			evaluationResult.Found = true
@@ -75,27 +49,4 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 	}
 
 	return evaluationResult, nil
-}
-
-func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSON string) (bool, error) {
-	if target == nil {
-		return false, nil
-	}
-
-	for _, ruleName := range target.Rules {
-		regoRule, err := afero.ReadFile(r.rulesFS, ruleName)
-		if err != nil {
-			return false, fmt.Errorf("%w: %w", ErrFailedReadRegoFile, err)
-		}
-
-		allowed, err := rego.EvaluateExpression(inputJSON, string(regoRule))
-		if err != nil {
-			return false, fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
-		}
-
-		if allowed {
-			return true, nil
-		}
-	}
-	return false, nil
 }

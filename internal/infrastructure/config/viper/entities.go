@@ -14,10 +14,22 @@ type NutServer struct {
 }
 
 type TargetServer struct {
-	Name      string   `mapstructure:"name" json:"name"`
-	MAC       string   `mapstructure:"mac" json:"mac"`
-	Broadcast string   `mapstructure:"broadcast" json:"broadcast"`
-	Interval  string   `mapstructure:"interval" json:"interval" default:"15m"`
-	Rules     []string `mapstructure:"rules" json:"rules"`
-	Port      int      `mapstructure:"port" json:"port" default:"9"`
+	Name         string   `mapstructure:"name" json:"name"`
+	MAC          string   `mapstructure:"mac" json:"mac"`
+	Broadcast    string   `mapstructure:"broadcast" json:"broadcast"`
+	Interval     string   `mapstructure:"interval" json:"interval" default:"15m"`
+	Rules        []string `mapstructure:"rules" json:"rules"`
+	RulesContent []string
+	Port         int `mapstructure:"port" json:"port" default:"9"`
+}
+
+type EvaluatorConfig struct {
+	ruleEvaluators []RuleEvaluator
+}
+
+type RuleEvaluator struct {
+}
+
+func (e *RuleEvaluator) Eval() (bool, error) {
+	return false, nil
 }

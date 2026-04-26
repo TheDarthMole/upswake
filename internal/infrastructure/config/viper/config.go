@@ -15,9 +15,10 @@ const (
 )
 
 var (
-	configFilePath         = DefaultConfigFile
-	ErrReadingConfigFile   = errors.New("error reading config file")
-	ErrUnmarshallingConfig = errors.New("error unmarshalling config")
+	configFilePath           = DefaultConfigFile
+	ErrReadingConfigFile     = errors.New("error reading config file")
+	ErrUnmarshallingConfig   = errors.New("error unmarshalling config")
+	ErrFailedReadingRegoFile = errors.New("failed to read rego rule file")
 )
 
 func InitConfig(fs afero.Fs, cfgPath string) {
@@ -42,7 +43,7 @@ func InitConfig(fs afero.Fs, cfgPath string) {
 	}
 }
 
-func Load() (*entity.Config, error) {
+func Load(configFS, rulesFS afero.Fs) (*entity.Config, error) {
 	if err := viper.ReadInConfig(); err != nil {
 		// Return on any read error (including file not found or decode errors)
 		return &entity.Config{}, fmt.Errorf("%w: %w", ErrReadingConfigFile, err)
@@ -55,6 +56,24 @@ func Load() (*entity.Config, error) {
 	config, err := FromFileConfig(loadConfig)
 	if err != nil {
 		return &entity.Config{}, err
+	}
+
+	// TODO: This Load function should be refactored to take in inputs of a config loader.
+	// This would allow us to separate the concerns of loading the config and reading the rego files, and would make it easier to test.
+	// As well as move towards repository pattern
+
+	for _, nutServer := range config.NutServers {
+		for _, target := range nutServer.Targets {
+			rulesContent := make([]string, len(target.Rules))
+			for index, rule := range target.Rules {
+				ruleContent, err := afero.ReadFile(rulesFS, rule)
+				if err != nil {
+					return &entity.Config{}, fmt.Errorf("%w: '%s': %w", ErrFailedReadingRegoFile, rule, err)
+				}
+				rulesContent[index] = string(ruleContent)
+			}
+			target.RulesContent = rulesContent
+		}
 	}
 
 	if err := config.Validate(); err != nil {

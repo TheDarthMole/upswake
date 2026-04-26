@@ -18,6 +18,8 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/evaluator"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/rego"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -197,10 +199,16 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	viper.InitConfig(j.fs, cliArgs.ConfigFile)
 
-	cfg, err := viper.Load()
+	cfg, err := viper.Load(j.fs, j.regoFs)
 	if err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
+
+	regoEvaluator := rego.NewRegoEvaluator()
+	if err = regoEvaluator.Load(ctx, cfg); err != nil {
+		return fmt.Errorf("error loading rego rules: %w", err)
+	}
+
 	if err = cfg.Validate(); err != nil {
 		return fmt.Errorf("error validating config: %w", err)
 	}
@@ -213,7 +221,9 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	serverHandler := handlers.NewServerHandler()
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, j.regoFs)
+	rulesEvaluator := evaluator.NewRulesEvaluator(regoEvaluator, cfg)
+
+	upsWakeHandler := handlers.NewUPSWakeHandler(rulesEvaluator)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
 	var wg sync.WaitGroup

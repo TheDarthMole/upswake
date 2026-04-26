@@ -47,7 +47,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 
 	tests := []struct {
 		args args
-		want *RegoEvaluator
+		want *Evaluator
 		name string
 	}{
 		{
@@ -57,7 +57,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 				mac:     "00:00:00:00:00:00",
 				rulesFS: alwaysTrueRegoFS,
 			},
-			want: &RegoEvaluator{
+			want: &Evaluator{
 				config:  defaultConfig,
 				rulesFS: alwaysTrueRegoFS,
 				mac:     "00:00:00:00:00:00",
@@ -70,7 +70,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 				mac:     "00:00:00:00:00:55",
 				rulesFS: alwaysFalseRegoFS,
 			},
-			want: &RegoEvaluator{
+			want: &Evaluator{
 				config:  defaultConfig,
 				rulesFS: alwaysFalseRegoFS,
 				mac:     "00:00:00:00:00:55",
@@ -80,7 +80,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS)
+			got := NewRulesEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -165,7 +165,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				inputJSON: validNUTOutput,
 			},
 			want:    false,
-			wantErr: ErrFailedReadRegoFile,
+			wantErr: ErrFailedReadFile,
 		},
 		{
 			name: "ups 100% check positive",
@@ -204,7 +204,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &RegoEvaluator{
+			r := &Evaluator{
 				rulesFS: tt.fields.rulesFS,
 			}
 			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
@@ -364,7 +364,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &RegoEvaluator{
+			r := &Evaluator{
 				config:  tt.fields.config,
 				rulesFS: tt.fields.rulesFS,
 				mac:     tt.fields.mac,

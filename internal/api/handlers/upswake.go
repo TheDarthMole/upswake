@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,12 +12,11 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v5"
-	"github.com/spf13/afero"
 )
 
 type UPSWakeHandler struct {
-	cfg     *entity.Config
-	rulesFS afero.Fs
+	cfg       *entity.Config
+	evaluator *evaluator.Evaluator
 }
 
 type macAddress struct {
@@ -28,10 +28,9 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *entity.Config, rulesFS afero.Fs) *UPSWakeHandler {
+func NewUPSWakeHandler(evaluator *evaluator.Evaluator) *UPSWakeHandler {
 	return &UPSWakeHandler{
-		cfg:     cfg,
-		rulesFS: rulesFS,
+		evaluator: evaluator,
 	}
 }
 
@@ -84,8 +83,8 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			Woken:   false,
 		})
 	}
-	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
-	result, err := eval.EvaluateExpressions()
+
+	result, err := h.evaluator.EvaluateExpressions(context.Background(), "", mac.Mac)
 	if err != nil {
 		c.Logger().Error("Failed to evaluate expressions", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, upsWakeResponse{

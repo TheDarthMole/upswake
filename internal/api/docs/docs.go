@@ -345,6 +345,12 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "rulesContent": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }
