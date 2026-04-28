@@ -201,7 +201,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
-
 	ruleRepo := newRuleRepo(t, map[string][]byte{
 		"test.rego": regoAlwaysTrue,
 	})
