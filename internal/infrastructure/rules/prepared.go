@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -41,7 +42,7 @@ func NewPreparedRepository(fs afero.Fs) (repository.RuleRepository, error) {
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".rego") {
 			continue
 		}
 		name := entry.Name()
