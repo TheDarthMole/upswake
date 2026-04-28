@@ -61,11 +61,11 @@ wake if {
 	require.NoError(t, err)
 
 	tests := []struct {
+		wantErr  error
 		name     string
 		ruleName string
 		json     string
 		want     bool
-		wantErr  error
 	}{
 		{
 			name:     "always true",

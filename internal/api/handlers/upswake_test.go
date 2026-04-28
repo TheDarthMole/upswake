@@ -9,18 +9,16 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/labstack/echo/v5"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 	regoAlwaysTrue := newMemFS(t, map[string][]byte{
 		"always_true.rego": []byte(`package upswake
-default wake := true`),
-	})
-	regoInvalidRule := newMemFS(t, map[string][]byte{
-		"always_true.rego": []byte(`package notValidPackage
 default wake := true`),
 	})
 	regoAlwaysFalse := newMemFS(t, map[string][]byte{
@@ -69,10 +67,17 @@ default wake := false`),
 			},
 		},
 	}
+
+	alwaysTrueRuleRepo, err := rules.NewPreparedRepository(regoAlwaysTrue)
+	require.NoError(t, err)
+
+	alwaysFalseRuleRepo, err := rules.NewPreparedRepository(regoAlwaysFalse)
+	require.NoError(t, err)
+
 	type fields struct {
-		cfg     *entity.Config
-		rulesFS afero.Fs
-		body    string
+		cfg      *entity.Config
+		ruleRepo repository.RuleRepository
+		body     string
 	}
 	type wantedResponse struct {
 		body       string
@@ -86,9 +91,9 @@ default wake := false`),
 		{
 			name: "invalid_request_body",
 			fields: fields{
-				cfg:     validConfig,
-				rulesFS: regoAlwaysTrue,
-				body:    `invalid json`,
+				cfg:      validConfig,
+				ruleRepo: alwaysTrueRuleRepo,
+				body:     `invalid json`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"failed to parse request body","woken":false}`,
@@ -98,9 +103,9 @@ default wake := false`),
 		{
 			name: "valid_request",
 			fields: fields{
-				cfg:     validConfig,
-				rulesFS: regoAlwaysTrue,
-				body:    `{"mac":"00:11:22:33:44:55"}`,
+				cfg:      validConfig,
+				ruleRepo: alwaysTrueRuleRepo,
+				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN sent","woken":true}`,
@@ -108,23 +113,11 @@ default wake := false`),
 			},
 		},
 		{
-			name: "valid_request_invalid_rule",
-			fields: fields{
-				cfg:     validConfig,
-				rulesFS: regoInvalidRule,
-				body:    `{"mac":"00:11:22:33:44:55"}`,
-			},
-			wantedResponse: wantedResponse{
-				body:       `{"message":"could not evaluate expression: rego rule must be in package 'upswake'","woken":false}`,
-				statusCode: http.StatusInternalServerError,
-			},
-		},
-		{
 			name: "rule_evaluates_to_false",
 			fields: fields{
-				cfg:     validConfig,
-				rulesFS: regoAlwaysFalse,
-				body:    `{"mac":"00:11:22:33:44:55"}`,
+				cfg:      validConfig,
+				ruleRepo: alwaysFalseRuleRepo,
+				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"No rule evaluated to true","woken":false}`,
@@ -134,9 +127,9 @@ default wake := false`),
 		{
 			name: "mac_not_in_config",
 			fields: fields{
-				cfg:     validConfig,
-				rulesFS: regoAlwaysTrue,
-				body:    `{"mac":"99:11:22:33:44:44"}`,
+				cfg:      validConfig,
+				ruleRepo: alwaysTrueRuleRepo,
+				body:     `{"mac":"99:11:22:33:44:44"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"MAC address not found in the config","woken":false}`,
@@ -146,9 +139,9 @@ default wake := false`),
 		{
 			name: "invalid_broadcast_address",
 			fields: fields{
-				cfg:     invalidConfig,
-				rulesFS: regoAlwaysTrue,
-				body:    `{"mac":"00:11:22:33:44:55"}`,
+				cfg:      invalidConfig,
+				ruleRepo: alwaysTrueRuleRepo,
+				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Failed to create target server: broadcast is invalid, must be an IP address","woken":false}`,
@@ -165,7 +158,7 @@ default wake := false`),
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewUPSWakeHandler(tt.fields.cfg, tt.fields.rulesFS)
+			h := NewUPSWakeHandler(tt.fields.cfg, tt.fields.ruleRepo)
 
 			if assert.NoError(t, h.RunWakeEvaluation(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
