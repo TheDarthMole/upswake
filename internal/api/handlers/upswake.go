@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v5"
-	"github.com/spf13/afero"
 )
 
 type UPSWakeHandler struct {
-	cfg     *entity.Config
-	rulesFS afero.Fs
+	cfg      *entity.Config
+	ruleRepo repository.RuleRepository
 }
 
 type macAddress struct {
@@ -28,10 +28,10 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *entity.Config, rulesFS afero.Fs) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, ruleRepo repository.RuleRepository) *UPSWakeHandler {
 	return &UPSWakeHandler{
-		cfg:     cfg,
-		rulesFS: rulesFS,
+		cfg:      cfg,
+		ruleRepo: ruleRepo,
 	}
 }
 
@@ -84,7 +84,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			Woken:   false,
 		})
 	}
-	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.rulesFS)
+	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.ruleRepo)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
 		c.Logger().Error("Failed to evaluate expressions", slog.Any("error", err))

@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/rego"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/TheDarthMole/UPSWake/internal/ups"
-	"github.com/spf13/afero"
 )
 
 var (
@@ -16,9 +15,9 @@ var (
 )
 
 type RegoEvaluator struct {
-	config  *entity.Config
-	rulesFS afero.Fs
-	mac     string
+	config   *entity.Config
+	ruleRepo repository.RuleRepository
+	mac      string
 }
 
 type EvaluationResult struct {
@@ -27,11 +26,11 @@ type EvaluationResult struct {
 	Found   bool
 }
 
-func NewRegoEvaluator(config *entity.Config, mac string, rulesFS afero.Fs) *RegoEvaluator {
+func NewRegoEvaluator(config *entity.Config, mac string, ruleRepo repository.RuleRepository) *RegoEvaluator {
 	return &RegoEvaluator{
-		config:  config,
-		mac:     mac,
-		rulesFS: rulesFS,
+		config:   config,
+		mac:      mac,
+		ruleRepo: ruleRepo,
 	}
 }
 
@@ -83,12 +82,7 @@ func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSO
 	}
 
 	for _, ruleName := range target.Rules {
-		regoRule, err := afero.ReadFile(r.rulesFS, ruleName)
-		if err != nil {
-			return false, fmt.Errorf("%w: %w", ErrFailedReadRegoFile, err)
-		}
-
-		allowed, err := rego.EvaluateExpression(inputJSON, string(regoRule))
+		allowed, err := r.ruleRepo.Evaluate(ruleName, inputJSON)
 		if err != nil {
 			return false, fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
 		}

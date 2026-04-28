@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +20,6 @@ const (
 
 var (
 	defaultConfig  = viper.CreateDefaultConfig()
-	tempFS         = afero.NewMemMapFs()
 	regoAlwaysTrue = []byte(`package upswake
 default wake := true`)
 	regoAlwaysFalse = []byte(`package upswake
@@ -32,17 +33,27 @@ wake if {
 }`)
 )
 
+func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
+	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
+}
+
+func newRuleRepo(t *testing.T, files map[string][]byte) *rules.PreparedRepository {
+	t.Helper()
+	fs := afero.NewMemMapFs()
+	for name, content := range files {
+		writeMemFile(t, fs, name, content)
+	}
+	repo, err := rules.NewPreparedRepository(fs)
+	require.NoError(t, err)
+	// Type assert to get the concrete type for tests
+	return repo.(*rules.PreparedRepository)
+}
+
 func TestNewRegoEvaluator(t *testing.T) {
-	alwaysTrueRegoFS := afero.NewMemMapFs()
-	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
-
-	alwaysFalseRegoFS := afero.NewMemMapFs()
-	writeMemFile(t, alwaysFalseRegoFS, "test.rego", regoAlwaysFalse)
-
 	type args struct {
-		rulesFS afero.Fs
-		config  *entity.Config
-		mac     string
+		config   *entity.Config
+		ruleRepo repository.RuleRepository
+		mac      string
 	}
 
 	tests := []struct {
@@ -53,55 +64,47 @@ func TestNewRegoEvaluator(t *testing.T) {
 		{
 			name: "valid config 1",
 			args: args{
-				config:  defaultConfig,
-				mac:     "00:00:00:00:00:00",
-				rulesFS: alwaysTrueRegoFS,
+				config: defaultConfig,
+				mac:    "00:00:00:00:00:00",
 			},
 			want: &RegoEvaluator{
-				config:  defaultConfig,
-				rulesFS: alwaysTrueRegoFS,
-				mac:     "00:00:00:00:00:00",
+				config: defaultConfig,
+				mac:    "00:00:00:00:00:00",
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
-				config:  defaultConfig,
-				mac:     "00:00:00:00:00:55",
-				rulesFS: alwaysFalseRegoFS,
+				config: defaultConfig,
+				mac:    "00:00:00:00:00:55",
 			},
 			want: &RegoEvaluator{
-				config:  defaultConfig,
-				rulesFS: alwaysFalseRegoFS,
-				mac:     "00:00:00:00:00:55",
+				config: defaultConfig,
+				mac:    "00:00:00:00:00:55",
 			},
 		},
 		//	TODO: Add more test cases
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.rulesFS)
+			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.ruleRepo)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
-	testFS := afero.NewMemMapFs()
+	ruleRepo := newRuleRepo(t, map[string][]byte{
+		"alwaysTrue.rego":      regoAlwaysTrue,
+		"alwaysFalse.rego":     regoAlwaysFalse,
+		"check100Percent.rego": regoCheck100Percent,
+	})
 
-	writeMemFile(t, testFS, "alwaysTrue.rego", regoAlwaysTrue)
-	writeMemFile(t, testFS, "alwaysFalse.rego", regoAlwaysFalse)
-	writeMemFile(t, testFS, "check100Percent.rego", regoCheck100Percent)
-
-	type fields struct {
-		rulesFS afero.Fs
-	}
 	type args struct {
 		target    *entity.TargetServer
 		inputJSON string
 	}
 	tests := []struct {
-		fields  fields
 		wantErr error
 		args    args
 		name    string
@@ -109,9 +112,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	}{
 		{
 			name: "nothing to evaluate",
-			fields: fields{
-				rulesFS: tempFS,
-			},
 			args: args{
 				target:    nil,
 				inputJSON: "",
@@ -121,9 +121,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		},
 		{
 			name: "evaluate with always true rule",
-			fields: fields{
-				rulesFS: testFS,
-			},
 			args: args{
 				target: &entity.TargetServer{
 					Rules: []string{
@@ -137,9 +134,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		},
 		{
 			name: "evaluate with always false rule",
-			fields: fields{
-				rulesFS: testFS,
-			},
 			args: args{
 				target: &entity.TargetServer{
 					Rules: []string{
@@ -153,9 +147,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		},
 		{
 			name: "file not found",
-			fields: fields{
-				rulesFS: testFS,
-			},
 			args: args{
 				target: &entity.TargetServer{
 					Rules: []string{
@@ -165,13 +156,10 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				inputJSON: validNUTOutput,
 			},
 			want:    false,
-			wantErr: ErrFailedReadRegoFile,
+			wantErr: rules.ErrRuleNotFound,
 		},
 		{
 			name: "ups 100% check positive",
-			fields: fields{
-				rulesFS: testFS,
-			},
 			args: args{
 				target: &entity.TargetServer{
 					Rules: []string{
@@ -185,9 +173,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		},
 		{
 			name: "ups 100% check negative",
-			fields: fields{
-				rulesFS: testFS,
-			},
 			args: args{
 				target: &entity.TargetServer{
 					Port: entity.DefaultWoLPort,
@@ -205,7 +190,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &RegoEvaluator{
-				rulesFS: tt.fields.rulesFS,
+				ruleRepo: ruleRepo,
 			}
 			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
 
@@ -215,18 +200,14 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	}
 }
 
-func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
-	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
-}
-
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
-	alwaysTrueRegoFS := afero.NewMemMapFs()
-	writeMemFile(t, alwaysTrueRegoFS, "test.rego", regoAlwaysTrue)
+	ruleRepo := newRuleRepo(t, map[string][]byte{
+		"test.rego": regoAlwaysTrue,
+	})
 
 	type fields struct {
-		config  *entity.Config
-		rulesFS afero.Fs
-		mac     string
+		config *entity.Config
+		mac    string
 	}
 
 	type args struct {
@@ -265,8 +246,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				rulesFS: alwaysTrueRegoFS,
-				mac:     "00:11:22:33:44:55",
+				mac: "00:11:22:33:44:55",
 			},
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
@@ -313,8 +293,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				rulesFS: alwaysTrueRegoFS,
-				mac:     "00:11:22:33:44:55",
+				mac: "00:11:22:33:44:55",
 			},
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
@@ -352,8 +331,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				rulesFS: alwaysTrueRegoFS,
-				mac:     "00:11:22:33:44:55",
+				mac: "00:11:22:33:44:55",
 			},
 			args: args{
 				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
@@ -365,9 +343,9 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &RegoEvaluator{
-				config:  tt.fields.config,
-				rulesFS: tt.fields.rulesFS,
-				mac:     tt.fields.mac,
+				config:   tt.fields.config,
+				mac:      tt.fields.mac,
+				ruleRepo: ruleRepo,
 			}
 			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
 			assert.ErrorIs(t, err, tt.wantErr)
