@@ -42,17 +42,17 @@ func NewPreparedRepository(fs afero.Fs) (repository.RuleRepository, error) {
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".rego") {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".rego") {
 			continue
 		}
-		name := entry.Name()
 
 		raw, readErr := afero.ReadFile(fs, name)
 		if readErr != nil {
 			return nil, fmt.Errorf("failed to read rule %s: %w", name, readErr)
 		}
 
-		if err = IsValidRego(string(raw)); err != nil {
+		if err = IsValidRego(name, string(raw)); err != nil {
 			return nil, fmt.Errorf("invalid rule %s: %w", name, err)
 		}
 
@@ -105,8 +105,8 @@ func (r *PreparedRepository) RuleNames() []string {
 	return names
 }
 
-func IsValidRego(rego string) error {
-	mod, err := ast.ParseModule("test", rego)
+func IsValidRego(filename, input string) error {
+	mod, err := ast.ParseModule(filename, input)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrInvalidRegoRule, err)
 	}
