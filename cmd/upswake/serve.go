@@ -19,6 +19,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
@@ -213,7 +214,12 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	serverHandler := handlers.NewServerHandler()
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, j.regoFs)
+	ruleRepo, err := rules.NewPreparedRepository(j.regoFs)
+	if err != nil {
+		return fmt.Errorf("error compiling rego rules: %w", err)
+	}
+
+	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
 	var wg sync.WaitGroup
