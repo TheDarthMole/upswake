@@ -6,7 +6,6 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
-	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +18,7 @@ const (
 )
 
 var (
-	defaultConfig  = viper.CreateDefaultConfig()
+	defaultConfig  = entity.CreateDefaultConfig()
 	regoAlwaysTrue = []byte(`package upswake
 default wake := true`)
 	regoAlwaysFalse = []byte(`package upswake

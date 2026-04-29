@@ -139,8 +139,8 @@ func Test_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			InitConfig(tt.args.fs, tt.args.filePath)
-			got, err := Load()
+			cl := NewConfigLoader(tt.args.fs, tt.args.filePath)
+			got, err := cl.Load()
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
@@ -149,23 +149,23 @@ func Test_Load(t *testing.T) {
 
 	t.Run("config doesn't exist", func(t *testing.T) {
 		fileSystem := afero.NewMemMapFs()
-		InitConfig(fileSystem, "non_existent_config.yaml")
-		_, err := Load()
+		cl := NewConfigLoader(fileSystem, "non_existent_config.yaml")
+		_, err := cl.Load()
 		assert.Error(t, err, "Expected error when config file does not exist")
 		assert.ErrorContains(t, err, "file does not exist")
 	})
 
 	t.Run("malformed yaml", func(t *testing.T) {
 		fileSystem := testFS
-		InitConfig(fileSystem, "malformed_file.yaml")
-		_, err := Load()
+		cl := NewConfigLoader(fileSystem, "malformed_file.yaml")
+		_, err := cl.Load()
 		assert.Error(t, err, "Expected error when config file is malformed")
 		assert.ErrorContains(t, err, "expected type 'string'")
 	})
 }
 
 func TestCreateDefaultConfig(t *testing.T) {
-	got := CreateDefaultConfig()
+	got := entity.CreateDefaultConfig()
 
 	want := &entity.Config{
 		NutServers: []*entity.NutServer{
