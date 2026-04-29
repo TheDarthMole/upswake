@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/TheDarthMole/UPSWake/internal/network"
-	"github.com/TheDarthMole/UPSWake/internal/ups"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
@@ -80,9 +80,11 @@ func (h *RootHandler) Health(c *echo.Context) error {
 	}
 
 	g := errgroup.Group{}
+
+	upsRepo := directups.NewDirectRepository()
 	for _, server := range h.cfg.NutServers {
 		g.Go(func() error {
-			if _, err := ups.GetJSON(server); err != nil {
+			if _, err := upsRepo.GetJSON(server); err != nil {
 				c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
 				return err
 			}

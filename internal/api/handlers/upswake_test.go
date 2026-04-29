@@ -16,6 +16,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type mockUPSRepo struct {
+	err  error
+	json string
+}
+
+func (m *mockUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
+	return m.json, m.err
+}
+
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 	regoAlwaysTrue := newMemFS(t, map[string][]byte{
 		"always_true.rego": []byte(`package upswake
@@ -25,6 +34,18 @@ default wake := true`),
 		"always_true.rego": []byte(`package upswake
 default wake := false`),
 	})
+
+	alwaysTrueRuleRepo, err := rules.NewPreparedRepository(regoAlwaysTrue)
+	require.NoError(t, err)
+
+	alwaysFalseRuleRepo, err := rules.NewPreparedRepository(regoAlwaysFalse)
+	require.NoError(t, err)
+
+	upsRepo := &mockUPSRepo{
+		json: `[{"Name":"test-ups","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
+		err:  nil,
+	}
+
 	validConfig := &entity.Config{
 		NutServers: []*entity.NutServer{
 			{
@@ -68,14 +89,9 @@ default wake := false`),
 		},
 	}
 
-	alwaysTrueRuleRepo, err := rules.NewPreparedRepository(regoAlwaysTrue)
-	require.NoError(t, err)
-
-	alwaysFalseRuleRepo, err := rules.NewPreparedRepository(regoAlwaysFalse)
-	require.NoError(t, err)
-
 	type fields struct {
 		cfg      *entity.Config
+		upsRepo  repository.UPSRepository
 		ruleRepo repository.RuleRepository
 		body     string
 	}
@@ -92,6 +108,7 @@ default wake := false`),
 			name: "invalid_request_body",
 			fields: fields{
 				cfg:      validConfig,
+				upsRepo:  upsRepo,
 				ruleRepo: alwaysTrueRuleRepo,
 				body:     `invalid json`,
 			},
@@ -104,6 +121,7 @@ default wake := false`),
 			name: "valid_request",
 			fields: fields{
 				cfg:      validConfig,
+				upsRepo:  upsRepo,
 				ruleRepo: alwaysTrueRuleRepo,
 				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -116,6 +134,7 @@ default wake := false`),
 			name: "rule_evaluates_to_false",
 			fields: fields{
 				cfg:      validConfig,
+				upsRepo:  upsRepo,
 				ruleRepo: alwaysFalseRuleRepo,
 				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -128,6 +147,7 @@ default wake := false`),
 			name: "mac_not_in_config",
 			fields: fields{
 				cfg:      validConfig,
+				upsRepo:  upsRepo,
 				ruleRepo: alwaysTrueRuleRepo,
 				body:     `{"mac":"99:11:22:33:44:44"}`,
 			},
@@ -140,6 +160,7 @@ default wake := false`),
 			name: "invalid_broadcast_address",
 			fields: fields{
 				cfg:      invalidConfig,
+				upsRepo:  upsRepo,
 				ruleRepo: alwaysTrueRuleRepo,
 				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -158,7 +179,7 @@ default wake := false`),
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewUPSWakeHandler(tt.fields.cfg, tt.fields.ruleRepo)
+			h := NewUPSWakeHandler(tt.fields.cfg, tt.fields.upsRepo, tt.fields.ruleRepo)
 
 			if assert.NoError(t, h.RunWakeEvaluation(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())

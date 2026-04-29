@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/ups"
+	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ func (j *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 		j.logger.Error("could not get port", slog.Any("error", err))
 		return err
 	}
-	nutServer := entity.NutServer{
+	nutServer := &entity.NutServer{
 		Name:     "test",
 		Host:     cmd.Flag("host").Value.String(),
 		Port:     port,
@@ -51,7 +51,9 @@ func (j *jsonCMD) JSONRunE(cmd *cobra.Command, _ []string) error {
 		Password: cmd.Flag("password").Value.String(),
 	}
 
-	upsData, err := ups.GetJSON(&nutServer)
+	upsRepo := directups.NewDirectRepository()
+
+	upsData, err := upsRepo.GetJSON(nutServer)
 	if err != nil {
 		j.logger.Error("failed to get JSON", slog.Any("error", err))
 		return err
