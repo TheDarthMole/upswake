@@ -157,10 +157,6 @@ func NewTargetServer(name, mac, broadcast string, interval time.Duration, port i
 	return ts, nil
 }
 
-type ConfigLoader interface {
-	Load() (*Config, error)
-}
-
 type NutServerInterface interface {
 	Validate() error
 	GetJSON() (string, error)
