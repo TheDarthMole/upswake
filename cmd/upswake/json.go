@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct_ups"
+	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/spf13/cobra"
 )
 

@@ -19,55 +19,45 @@ func NewDirectRepository() repository.UPSRepository {
 	return &DirectRepository{}
 }
 
-func (r *DirectRepository) GetJSON(server *entity.NutServer) (string, error) {
-	return GetJSON(server)
-}
-
-type UPS struct {
-	nut.Client
-}
-
 var (
 	ErrAuthenticationFailed  = errors.New("failed to authenticate to NUT server")
 	ErrFailureAuthenticating = errors.New("an error occurred during authentication to NUT server")
 	ErrConnectionFailed      = errors.New("could not connect to NUT server")
 )
 
-func connect(host string, port int, username, password string) (*UPS, error) {
+func connect(host string, port int, username, password string) (*nut.Client, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
-		return &UPS{}, fmt.Errorf("%w: %w", ErrConnectionFailed, err)
+		return &nut.Client{}, fmt.Errorf("%w: %w", ErrConnectionFailed, err)
 	}
 
 	authenticate, err := client.Authenticate(username, password)
 	if err != nil {
-		return &UPS{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
+		return &nut.Client{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
-		return &UPS{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
+		return &nut.Client{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
 	}
-	return &UPS{client}, nil
+	return &client, nil
 }
 
-func GetJSON(ns *entity.NutServer) (string, error) {
-	client, err := connect(ns.Host, ns.Port, ns.Username, ns.Password)
+func disconnect(client *nut.Client, host string) {
+	_, err := client.Disconnect()
+	if err != nil {
+		slog.Warn("Error disconnecting from NUT server",
+			slog.String("host", host),
+			slog.Any("error", err))
+	}
+}
+
+func (*DirectRepository) GetJSON(server *entity.NutServer) (string, error) {
+	client, err := connect(server.Host, server.Port, server.Username, server.Password)
 	if err != nil {
 		return "", err
 	}
-	defer func(client *UPS) {
-		_, err = client.Disconnect()
-		if err != nil {
-			slog.Warn("Error disconnecting from NUT server",
-				slog.String("host", ns.Host),
-				slog.Any("error", err))
-		}
-	}(client)
+	defer disconnect(client, server.Host)
 
-	return client.toJSON()
-}
-
-func (u *UPS) toJSON() (string, error) {
-	ups, err := u.GetUPSList()
+	ups, err := client.GetUPSList()
 	if err != nil {
 		return "", err
 	}

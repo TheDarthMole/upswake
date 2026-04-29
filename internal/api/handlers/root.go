@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct_ups"
+	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"

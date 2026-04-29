@@ -20,7 +20,7 @@ import (
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
-	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct_ups"
+	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
