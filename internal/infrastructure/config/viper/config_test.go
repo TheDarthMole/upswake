@@ -163,32 +163,3 @@ func Test_Load(t *testing.T) {
 		assert.ErrorContains(t, err, "expected type 'string'")
 	})
 }
-
-func TestCreateDefaultConfig(t *testing.T) {
-	got := entity.CreateDefaultConfig()
-
-	want := &entity.Config{
-		NutServers: []*entity.NutServer{
-			{
-				Name:     "NUT Server 1",
-				Host:     "192.168.1.13",
-				Port:     entity.DefaultNUTServerPort,
-				Username: "",
-				Password: "",
-				Targets: []*entity.TargetServer{
-					{
-						Name:      "NAS 1",
-						MAC:       "00:00:00:00:00:00",
-						Broadcast: "192.168.1.255",
-						Port:      entity.DefaultWoLPort,
-						Interval:  15 * time.Minute,
-						Rules: []string{
-							"80percentOn.rego",
-						},
-					},
-				},
-			},
-		},
-	}
-	assert.Equal(t, want, got)
-}

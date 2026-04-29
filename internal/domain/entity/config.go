@@ -174,8 +174,8 @@ func CreateDefaultConfig() *Config {
 				Name:     "NUT Server 1",
 				Host:     "192.168.1.13",
 				Port:     DefaultNUTServerPort,
-				Username: "",
-				Password: "",
+				Username: "username",
+				Password: "password",
 				Targets: []*TargetServer{
 					{
 						Name:      "NAS 1",

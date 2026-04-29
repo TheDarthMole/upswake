@@ -596,3 +596,11 @@ func Test_duration(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateDefaultConfig(t *testing.T) {
+	t.Run("validate config", func(t *testing.T) {
+		config := CreateDefaultConfig()
+		err := config.Validate()
+		assert.NoError(t, err)
+	})
+}
