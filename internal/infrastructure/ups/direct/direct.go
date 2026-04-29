@@ -36,6 +36,7 @@ func connect(host string, port int, username, password string) (*nut.Client, err
 		return &nut.Client{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
+		disconnect(&client, host)
 		return &nut.Client{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
 	}
 	return &client, nil
