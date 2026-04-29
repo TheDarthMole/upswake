@@ -18,7 +18,6 @@ const (
 )
 
 var (
-	defaultConfig  = entity.CreateDefaultConfig()
 	regoAlwaysTrue = []byte(`package upswake
 default wake := true`)
 	regoAlwaysFalse = []byte(`package upswake
@@ -73,22 +72,22 @@ func TestNewRegoEvaluator(t *testing.T) {
 		{
 			name: "valid config 1",
 			args: args{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:00",
 			},
 			want: &RegoEvaluator{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:00",
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:55",
 			},
 			want: &RegoEvaluator{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:55",
 			},
 		},
