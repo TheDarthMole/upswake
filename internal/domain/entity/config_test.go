@@ -600,7 +600,11 @@ func Test_duration(t *testing.T) {
 func TestCreateDefaultConfig(t *testing.T) {
 	t.Run("validate config", func(t *testing.T) {
 		config := CreateDefaultConfig()
-		err := config.Validate()
-		assert.NoError(t, err)
+		assert.NoError(t, config.Validate())
+		assert.Len(t, config.NutServers, 1)
+		assert.Equal(t, DefaultNUTServerPort, config.NutServers[0].Port)
+		assert.Len(t, config.NutServers[0].Targets, 1)
+		assert.Equal(t, DefaultWoLPort, config.NutServers[0].Targets[0].Port)
+		assert.Equal(t, 15*time.Minute, config.NutServers[0].Targets[0].Interval)
 	})
 }
