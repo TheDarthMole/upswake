@@ -1,4 +1,4 @@
-package ups
+package directups
 
 import (
 	"encoding/json"
@@ -7,8 +7,21 @@ import (
 	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	nut "github.com/robbiet480/go.nut"
 )
+
+// DirectRepository connects to the NUT server on every call.
+// Satisfies repository.UPSRepository.
+type DirectRepository struct{}
+
+func NewDirectRepository() repository.UPSRepository {
+	return &DirectRepository{}
+}
+
+func (r *DirectRepository) GetJSON(server *entity.NutServer) (string, error) {
+	return GetJSON(server)
+}
 
 type UPS struct {
 	nut.Client

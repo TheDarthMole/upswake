@@ -33,6 +33,15 @@ wake if {
 }`)
 )
 
+type mockUPSRepo struct {
+	err  error
+	json string
+}
+
+func (m *mockUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
+	return m.json, m.err
+}
+
 func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
 	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
 }
@@ -52,6 +61,7 @@ func newRuleRepo(t *testing.T, files map[string][]byte) *rules.PreparedRepositor
 func TestNewRegoEvaluator(t *testing.T) {
 	type args struct {
 		config   *entity.Config
+		upsRepo  repository.UPSRepository
 		ruleRepo repository.RuleRepository
 		mac      string
 	}
@@ -87,7 +97,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.ruleRepo)
+			got := NewRegoEvaluator(tt.args.config, tt.args.mac, tt.args.upsRepo, tt.args.ruleRepo)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -205,18 +215,25 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		"test.rego": regoAlwaysTrue,
 	})
 
-	type fields struct {
-		config *entity.Config
-		mac    string
+	validNUTUPSRepository := &mockUPSRepo{
+		json: validNUTOutput,
+		err:  nil,
 	}
 
-	type args struct {
-		getUPSJSON func(server *entity.NutServer) (string, error)
+	invalidNUTOutputRepository := &mockUPSRepo{
+		json: invalidNUTOutput,
+		err:  nil,
 	}
+
+	type fields struct {
+		config  *entity.Config
+		upsRepo repository.UPSRepository
+		mac     string
+	}
+
 	tests := []struct {
 		want    EvaluationResult
 		wantErr error
-		args    args
 		fields  fields
 		name    string
 	}{
@@ -246,10 +263,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				mac: "00:11:22:33:44:55",
-			},
-			args: args{
-				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
+				upsRepo: validNUTUPSRepository,
+				mac:     "00:11:22:33:44:55",
 			},
 			want: EvaluationResult{
 				Allowed: true,
@@ -293,10 +308,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				mac: "00:11:22:33:44:55",
-			},
-			args: args{
-				getUPSJSON: func(_ *entity.NutServer) (string, error) { return validNUTOutput, nil },
+				upsRepo: validNUTUPSRepository,
+				mac:     "00:11:22:33:44:55",
 			},
 			want: EvaluationResult{
 				Allowed: false,
@@ -331,10 +344,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				mac: "00:11:22:33:44:55",
-			},
-			args: args{
-				getUPSJSON: func(_ *entity.NutServer) (string, error) { return invalidNUTOutput, nil },
+				upsRepo: invalidNUTOutputRepository,
+				mac:     "00:11:22:33:44:55",
 			},
 			want:    EvaluationResult{},
 			wantErr: ErrFailedEvaluateExpression,
@@ -345,9 +356,10 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			r := &RegoEvaluator{
 				config:   tt.fields.config,
 				mac:      tt.fields.mac,
+				upsRepo:  tt.fields.upsRepo,
 				ruleRepo: ruleRepo,
 			}
-			got, err := r.evaluateExpressions(tt.args.getUPSJSON)
+			got, err := r.EvaluateExpressions()
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})

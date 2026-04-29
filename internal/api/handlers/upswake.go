@@ -16,6 +16,7 @@ import (
 
 type UPSWakeHandler struct {
 	cfg      *entity.Config
+	upsRepo  repository.UPSRepository
 	ruleRepo repository.RuleRepository
 }
 
@@ -28,9 +29,10 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
-func NewUPSWakeHandler(cfg *entity.Config, ruleRepo repository.RuleRepository) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:      cfg,
+		upsRepo:  upsRepo,
 		ruleRepo: ruleRepo,
 	}
 }
@@ -84,7 +86,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			Woken:   false,
 		})
 	}
-	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.ruleRepo)
+	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.upsRepo, h.ruleRepo)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
 		c.Logger().Error("Failed to evaluate expressions", slog.Any("error", err))

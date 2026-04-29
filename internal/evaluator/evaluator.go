@@ -6,7 +6,6 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
-	"github.com/TheDarthMole/UPSWake/internal/ups"
 )
 
 var (
@@ -17,6 +16,7 @@ var (
 type RegoEvaluator struct {
 	config   *entity.Config
 	ruleRepo repository.RuleRepository
+	upsRepo  repository.UPSRepository
 	mac      string
 }
 
@@ -26,20 +26,16 @@ type EvaluationResult struct {
 	Found   bool
 }
 
-func NewRegoEvaluator(config *entity.Config, mac string, ruleRepo repository.RuleRepository) *RegoEvaluator {
+func NewRegoEvaluator(config *entity.Config, mac string, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *RegoEvaluator {
 	return &RegoEvaluator{
 		config:   config,
 		mac:      mac,
+		upsRepo:  upsRepo,
 		ruleRepo: ruleRepo,
 	}
 }
 
 func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
-	return r.evaluateExpressions(ups.GetJSON)
-}
-
-// EvaluateExpressions evaluates the expressions in the rules files
-func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutServer) (string, error)) (EvaluationResult, error) {
 	// For each NUT server
 	evaluationResult := EvaluationResult{
 		Allowed: false,
@@ -48,7 +44,7 @@ func (r *RegoEvaluator) evaluateExpressions(getUPSJSON func(server *entity.NutSe
 	}
 
 	for _, nutServer := range r.config.NutServers {
-		inputJSON, err := getUPSJSON(nutServer)
+		inputJSON, err := r.upsRepo.GetJSON(nutServer)
 		if err != nil {
 			return EvaluationResult{
 				Allowed: false,
