@@ -203,9 +203,6 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
-	if err = cfg.Validate(); err != nil {
-		return fmt.Errorf("error validating config: %w", err)
-	}
 
 	ruleRepo, err := rules.NewPreparedRepository(j.regoFs)
 	if err != nil {
