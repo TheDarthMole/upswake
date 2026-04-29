@@ -34,9 +34,6 @@ func NewConfigLoader(fs afero.Fs, cfgPath string) *ConfigLoader {
 	viperConfig.AddConfigPath(".")
 	viperConfig.SetEnvPrefix("UPSWAKE")
 	viperConfig.AutomaticEnv() // read in environment variables that match
-	if ok, _ := afero.Exists(fs, configFilePath); ok {
-		viperConfig.WatchConfig()
-	}
 	return &ConfigLoader{
 		Viper: viperConfig,
 	}
