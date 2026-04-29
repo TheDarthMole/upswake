@@ -26,6 +26,10 @@ type EvaluationResult struct {
 	Found   bool
 }
 
+// NewRegoEvaluator creates a RegoEvaluator configured with the provided configuration, MAC address,
+// UPS repository and rule repository.
+// The returned evaluator uses the MAC to select matching targets, upsRepo to fetch per-server JSON
+// input and ruleRepo to evaluate rules against that input.
 func NewRegoEvaluator(config *entity.Config, mac string, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *RegoEvaluator {
 	return &RegoEvaluator{
 		config:   config,

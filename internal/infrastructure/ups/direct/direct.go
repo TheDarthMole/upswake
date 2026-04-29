@@ -15,6 +15,8 @@ import (
 // Satisfies repository.UPSRepository.
 type DirectRepository struct{}
 
+// NewDirectRepository constructs a DirectRepository that implements repository.UPSRepository.
+// The returned repository opens a fresh connection to the NUT server for each method call.
 func NewDirectRepository() repository.UPSRepository {
 	return &DirectRepository{}
 }
@@ -25,6 +27,12 @@ var (
 	ErrConnectionFailed      = errors.New("could not connect to NUT server")
 )
 
+// connect establishes and authenticates a NUT client connection to the specified host and port.
+// On success it returns the authenticated *nut.Client. If the network connection fails it
+// returns ErrConnectionFailed wrapped with the underlying error; if the authentication call
+// fails it returns ErrFailureAuthenticating wrapped with the underlying error. If authentication
+// is refused it closes the session and returns ErrAuthenticationFailed including the target host
+// and port.
 func connect(host string, port int, username, password string) (*nut.Client, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
@@ -42,6 +50,8 @@ func connect(host string, port int, username, password string) (*nut.Client, err
 	return &client, nil
 }
 
+// disconnect closes the client's connection to the NUT server and logs a warning if the operation fails.
+// It does not return an error to the caller.
 func disconnect(client *nut.Client, host string) {
 	_, err := client.Disconnect()
 	if err != nil {

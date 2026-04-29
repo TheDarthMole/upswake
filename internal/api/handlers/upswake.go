@@ -29,6 +29,8 @@ type upsWakeResponse struct {
 	Woken   bool   `json:"woken" example:"true"`
 }
 
+// NewUPSWakeHandler creates a UPSWakeHandler configured with the supplied server configuration and repositories.
+// The returned handler holds cfg, upsRepo and ruleRepo for use by its HTTP endpoints.
 func NewUPSWakeHandler(cfg *entity.Config, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:      cfg,
