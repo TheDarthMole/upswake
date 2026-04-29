@@ -6,7 +6,6 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
-	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +18,6 @@ const (
 )
 
 var (
-	defaultConfig  = viper.CreateDefaultConfig()
 	regoAlwaysTrue = []byte(`package upswake
 default wake := true`)
 	regoAlwaysFalse = []byte(`package upswake
@@ -74,22 +72,22 @@ func TestNewRegoEvaluator(t *testing.T) {
 		{
 			name: "valid config 1",
 			args: args{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:00",
 			},
 			want: &RegoEvaluator{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:00",
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:55",
 			},
 			want: &RegoEvaluator{
-				config: defaultConfig,
+				config: entity.CreateDefaultConfig(),
 				mac:    "00:00:00:00:00:55",
 			},
 		},

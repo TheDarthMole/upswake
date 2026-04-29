@@ -197,14 +197,11 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	viper.InitConfig(j.fs, cliArgs.ConfigFile)
+	configRepo := viper.NewConfigLoader(j.fs, cliArgs.ConfigFile)
 
-	cfg, err := viper.Load()
+	cfg, err := configRepo.Load()
 	if err != nil {
 		return fmt.Errorf("error loading config: %w", err)
-	}
-	if err = cfg.Validate(); err != nil {
-		return fmt.Errorf("error validating config: %w", err)
 	}
 
 	ruleRepo, err := rules.NewPreparedRepository(j.regoFs)

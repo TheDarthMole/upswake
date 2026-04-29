@@ -157,12 +157,34 @@ func NewTargetServer(name, mac, broadcast string, interval time.Duration, port i
 	return ts, nil
 }
 
-type ConfigLoader interface {
-	Load() (*Config, error)
-}
-
 type NutServerInterface interface {
 	Validate() error
 	GetJSON() (string, error)
 	NutServer
+}
+
+func CreateDefaultConfig() *Config {
+	return &Config{
+		NutServers: []*NutServer{
+			{
+				Name:     "NUT Server 1",
+				Host:     "192.168.1.13",
+				Port:     DefaultNUTServerPort,
+				Username: "username",
+				Password: "password",
+				Targets: []*TargetServer{
+					{
+						Name:      "NAS 1",
+						MAC:       "00:00:00:00:00:00",
+						Broadcast: "192.168.1.255",
+						Port:      DefaultWoLPort,
+						Interval:  15 * time.Minute,
+						Rules: []string{
+							"80percentOn.rego",
+						},
+					},
+				},
+			},
+		},
+	}
 }
