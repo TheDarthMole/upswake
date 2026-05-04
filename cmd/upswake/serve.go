@@ -13,7 +13,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
-	"github.com/TheDarthMole/UPSWake/internal/workers"
+	"github.com/TheDarthMole/UPSWake/internal/worker"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
@@ -110,7 +110,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, upsRepo, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
-	workerPool, err := workers.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, cliArgs.URL())
+	workerPool, err := worker.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", cliArgs.URL()))
 	if err != nil {
 		return fmt.Errorf("error creating worker pool: %w", err)
 	}

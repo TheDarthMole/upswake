@@ -1,4 +1,4 @@
-package workers
+package worker
 
 import (
 	"bytes"
@@ -15,12 +15,12 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 )
 
-type WorkerPool struct {
+type Pool struct {
 	wg      *sync.WaitGroup
 	workers []*Worker
 }
 
-func NewWorkerPool(ctx context.Context, config *entity.Config, tlsConfig *tls.Config, logger *slog.Logger, url string) (*WorkerPool, error) {
+func NewWorkerPool(ctx context.Context, config *entity.Config, tlsConfig *tls.Config, logger *slog.Logger, url string) (*Pool, error) {
 	wg := &sync.WaitGroup{}
 
 	client := &http.Client{
@@ -33,13 +33,13 @@ func NewWorkerPool(ctx context.Context, config *entity.Config, tlsConfig *tls.Co
 		for _, target := range mapping.Targets {
 			worker, err := newWorker(ctx, target, client, wg, logger, url)
 			if err != nil {
-				return &WorkerPool{}, err
+				return &Pool{}, err
 			}
 			workers = append(workers, worker)
 		}
 	}
 
-	return &WorkerPool{
+	return &Pool{
 		wg:      wg,
 		workers: workers,
 	}, nil
@@ -55,18 +55,18 @@ type Worker struct {
 	interval    time.Duration
 }
 
-func (w *WorkerPool) Start() {
+func (w *Pool) Start() {
 	for _, worker := range w.workers {
 		w.wg.Add(1)
 		worker.run()
 	}
 }
 
-func (w *WorkerPool) Wait() {
+func (w *Pool) Wait() {
 	w.wg.Wait()
 }
 
-func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *http.Client, wg *sync.WaitGroup, logger *slog.Logger, endpoint string) (*Worker, error) {
+func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *http.Client, wg *sync.WaitGroup, logger *slog.Logger, url string) (*Worker, error) {
 	jobLogger := logger.With(
 		slog.String("type", "serveJob"),
 		slog.String("worker_name", targetServer.Name),
@@ -74,12 +74,9 @@ func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *h
 
 	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC})
 	if err != nil {
-		jobLogger.Error("Error marshalling JSON",
-			slog.Any("error", err))
+		jobLogger.Error("Error marshalling JSON", slog.Any("error", err))
 		return &Worker{}, err
 	}
-
-	url := endpoint + "/api/upswake"
 
 	return &Worker{
 		ctx:         ctx,
@@ -97,11 +94,12 @@ func (w *Worker) run() {
 
 	go func() {
 		defer w.wg.Done()
-		ticker := time.NewTicker(w.interval)
-		defer ticker.Stop()
 
 		startupTime := rand.IntN(500-350) + 350 // Stagger initial requests to avoid thundering herd, min 350ms, max 500ms
 		time.Sleep(time.Duration(startupTime) * time.Millisecond)
+
+		ticker := time.NewTicker(w.interval)
+		defer ticker.Stop()
 
 		for {
 			select {
