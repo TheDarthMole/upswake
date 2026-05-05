@@ -1,19 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
-	"math/rand/v2"
-	"net/http"
 	"os/signal"
-	"sync"
 	"syscall"
-	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
@@ -21,6 +13,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
+	"github.com/TheDarthMole/UPSWake/internal/worker"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	_ "golang.org/x/crypto/x509roots/fallback" // Embeds x509root certificates into the binary
@@ -35,111 +28,6 @@ type serveCMD struct {
 	logger *slog.Logger
 	fs     afero.Fs
 	regoFs afero.Fs
-}
-
-type serveJob struct {
-	ctx         context.Context
-	wg          *sync.WaitGroup
-	logger      *slog.Logger
-	client      *http.Client
-	url         string
-	requestBody []byte
-	interval    time.Duration
-}
-
-func newServeJob(ctx context.Context, targetServer *config.TargetServer, tlsConfig *tls.Config, wg *sync.WaitGroup, logger *slog.Logger, endpoint string) (*serveJob, error) {
-	jobLogger := logger.With(
-		slog.String("type", "serveJob"),
-		slog.String("worker_name", targetServer.Name),
-	)
-
-	client := &http.Client{
-		Timeout:   30 * time.Second,
-		Transport: &http.Transport{TLSClientConfig: tlsConfig},
-	}
-
-	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC})
-	if err != nil {
-		jobLogger.Error("Error marshalling JSON",
-			slog.Any("error", err))
-		return &serveJob{}, err
-	}
-
-	url := endpoint + "/api/upswake"
-
-	return &serveJob{
-		ctx:         ctx,
-		client:      client,
-		wg:          wg,
-		logger:      jobLogger,
-		interval:    targetServer.Interval,
-		requestBody: body,
-		url:         url,
-	}, nil
-}
-
-func (j *serveJob) run() {
-	j.logger.Info("Starting worker")
-
-	go func() {
-		defer j.wg.Done()
-		ticker := time.NewTicker(j.interval)
-		defer ticker.Stop()
-
-		startupTime := rand.IntN(500-350) + 350 // Stagger initial requests to avoid thundering herd, min 350ms, max 500ms
-		time.Sleep(time.Duration(startupTime) * time.Millisecond)
-
-		for {
-			select {
-			case <-j.ctx.Done():
-				j.logger.Info("Gracefully stopping worker")
-				return
-			case <-ticker.C:
-				j.sendWakeRequest()
-			}
-		}
-	}()
-}
-
-func (j *serveJob) sendWakeRequest() {
-	req, err := http.NewRequestWithContext(j.ctx, http.MethodPost, j.url, bytes.NewBuffer(j.requestBody))
-	if err != nil {
-		j.logger.Error("Error creating HTTP request",
-			slog.Any("error", err))
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := j.client.Do(req)
-
-	defer func(resp *http.Response) {
-		if resp == nil {
-			return
-		}
-		_, _ = io.Copy(io.Discard, resp.Body) // Drain body to enable connection reuse
-		err = resp.Body.Close()
-		if err != nil {
-			j.logger.Error("Error closing response body",
-				slog.Any("error", err))
-		}
-	}(resp)
-
-	if ctxErr := context.Cause(j.ctx); ctxErr != nil {
-		j.logger.Warn("Context cancelled when making request",
-			slog.Any("error", ctxErr))
-		return
-	}
-
-	if err != nil {
-		j.logger.Error("Error sending post request",
-			slog.Any("error", err))
-		return
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		j.logger.Error("Unexpected status code from upswake endpoint",
-			slog.String("status_code", resp.Status))
-		return
-	}
 }
 
 func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
@@ -222,20 +110,11 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, upsRepo, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
-	var wg sync.WaitGroup
-
-	for _, mapping := range cfg.NutServers {
-		for _, target := range mapping.Targets {
-			job, jobErr := newServeJob(ctx, target, cliArgs.TLSConfig, &wg, j.logger, cliArgs.URL())
-			if jobErr != nil {
-				cancel()
-				wg.Wait()
-				return jobErr
-			}
-			wg.Add(1)
-			job.run()
-		}
+	workerPool, err := worker.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", cliArgs.URL()))
+	if err != nil {
+		return fmt.Errorf("error creating worker pool: %w", err)
 	}
+	workerPool.Start()
 
 	err = server.Start(
 		j.fs,
@@ -247,7 +126,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	j.logger.Info("Server stopped, waiting for workers to finish")
 	cancel()
-	wg.Wait()
+	workerPool.Wait()
 	j.logger.Info("All workers stopped, exiting")
 
 	if err != nil {
