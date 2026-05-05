@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"math/rand/v2"
@@ -14,6 +16,8 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 )
+
+var ErrFailedCreatingRequest = errors.New("failed to create request")
 
 type Pool struct {
 	wg      *sync.WaitGroup
@@ -50,8 +54,7 @@ type Worker struct {
 	wg          *sync.WaitGroup
 	logger      *slog.Logger
 	client      *http.Client
-	url         string
-	requestBody []byte
+	baseRequest *http.Request
 	interval    time.Duration
 }
 
@@ -78,14 +81,19 @@ func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *h
 		return &Worker{}, err
 	}
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return &Worker{}, fmt.Errorf("%w: %w", ErrFailedCreatingRequest, err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
 	return &Worker{
 		ctx:         ctx,
 		client:      client,
 		wg:          wg,
 		logger:      jobLogger,
 		interval:    targetServer.Interval,
-		requestBody: body,
-		url:         url,
+		baseRequest: req,
 	}, nil
 }
 
@@ -114,13 +122,8 @@ func (w *Worker) run() {
 }
 
 func (w *Worker) sendWakeRequest() {
-	req, err := http.NewRequestWithContext(w.ctx, http.MethodPost, w.url, bytes.NewBuffer(w.requestBody))
-	if err != nil {
-		w.logger.Error("Error creating HTTP request",
-			slog.Any("error", err))
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
+	req := w.baseRequest.Clone(w.ctx)
+
 	resp, err := w.client.Do(req)
 
 	defer func(resp *http.Response) {

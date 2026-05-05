@@ -347,20 +347,15 @@ func TestPool_Start(t *testing.T) {
 
 	t.Run("failed creating request", func(t *testing.T) {
 		t.Parallel()
-		httpTest := httptest.NewServer(successHandler)
-		t.Cleanup(httpTest.Close)
 
 		logger := slog.New(slog.NewJSONHandler(&strings.Builder{}, &slog.HandlerOptions{}))
 		ctx, cancel := context.WithCancel(context.Background())
 		t.Cleanup(cancel)
 
-		workerPool, err := NewWorkerPool(ctx, oneServerOneTargetConfig, tlsConfig, logger, "aa"+string(rune(5)))
-		require.NoError(t, err)
+		invalidURL := "aa" + string(rune(27)) // adds escape character to URL which is invalid
 
-		workerPool.Start()
-
-		time.Sleep(1 * time.Second)
-		cancel()
-		workerPool.Wait()
+		workerPool, err := NewWorkerPool(ctx, oneServerOneTargetConfig, tlsConfig, logger, invalidURL)
+		assert.ErrorIs(t, err, ErrFailedCreatingRequest)
+		assert.Empty(t, workerPool)
 	})
 }
