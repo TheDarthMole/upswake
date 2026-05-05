@@ -53,7 +53,7 @@ func TestNewCachedRepository(t *testing.T) {
 			},
 			want: &CachedRepository{
 				inner: &countingRepo{},
-				cache: map[string]cachedResult{},
+				cache: map[string]*cachedResult{},
 				ttl:   5 * time.Second,
 				mu:    sync.RWMutex{},
 			},
@@ -66,7 +66,7 @@ func TestNewCachedRepository(t *testing.T) {
 			},
 			want: &CachedRepository{
 				inner: &countingRepo{},
-				cache: map[string]cachedResult{},
+				cache: map[string]*cachedResult{},
 				ttl:   1 * time.Minute,
 				mu:    sync.RWMutex{},
 			},
