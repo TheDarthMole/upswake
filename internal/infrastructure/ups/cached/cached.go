@@ -24,6 +24,8 @@ type cachedResult struct {
 	json     string
 }
 
+// NewCachedRepository creates a CachedRepository that wraps the provided UPSRepository and caches GetJSON results keyed by host:port.
+// It initialises an empty cache and uses ttl as the maximum age for cached entries.
 func NewCachedRepository(inner repository.UPSRepository, ttl time.Duration) *CachedRepository {
 	return &CachedRepository{
 		inner: inner,

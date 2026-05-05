@@ -25,6 +25,8 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+// NewRootHandler constructs a RootHandler with the provided configuration, rules filesystem and UPS repository.
+// The returned handler holds the dependencies used by the package's HTTP handlers, including the repository for querying UPS/NUT servers.
 func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,
