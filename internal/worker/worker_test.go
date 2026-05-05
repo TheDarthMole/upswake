@@ -133,32 +133,38 @@ func requestAssertion(t *testing.T, req *http.Request) {
 	assert.NotEmpty(t, mac)
 }
 
+func successHandler(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		http.Error(w, "Found", http.StatusOK)
+	}
+}
+
+func slowHandler(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		time.Sleep(5 * time.Second)
+		http.Error(w, "Slow", http.StatusServiceUnavailable)
+	}
+}
+
+func internalServerErrorHandler(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		http.Error(w, "Found", http.StatusInternalServerError)
+	}
+}
+
 func TestPool_Start(t *testing.T) {
-	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	tlsConfig := &tls.Config{}
 
 	errorStrings := []string{
 		`"level","ERROR"`,
 		`"level","error"`,
 	}
-
-	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestAssertion(t, r)
-
-		http.Error(w, "Found", http.StatusOK)
-	})
-
-	slowHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestAssertion(t, r)
-
-		time.Sleep(5 * time.Second)
-		http.Error(w, "Slow", http.StatusServiceUnavailable)
-	})
-
-	internalServerErrorHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestAssertion(t, r)
-
-		http.Error(w, "Found", http.StatusInternalServerError)
-	})
 
 	oneServerOneTargetConfig := &entity.Config{
 		NutServers: []*entity.NutServer{
@@ -184,7 +190,7 @@ func TestPool_Start(t *testing.T) {
 	}
 	tests := []struct {
 		fields       fields
-		handlerFunc  http.HandlerFunc
+		handlerFunc  func(t *testing.T) http.HandlerFunc
 		name         string
 		attestations attestations
 	}{
@@ -275,7 +281,7 @@ func TestPool_Start(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			httpTest := httptest.NewServer(tt.handlerFunc)
+			httpTest := httptest.NewServer(tt.handlerFunc(t))
 			t.Cleanup(httpTest.Close)
 
 			buf := &strings.Builder{}
@@ -324,7 +330,7 @@ func TestPool_Start(t *testing.T) {
 
 	t.Run("context cancelled while making request", func(t *testing.T) {
 		t.Parallel()
-		httpTest := httptest.NewServer(slowHandler)
+		httpTest := httptest.NewServer(slowHandler(t))
 		t.Cleanup(httpTest.Close)
 
 		buf := &strings.Builder{}
