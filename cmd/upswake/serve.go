@@ -6,12 +6,14 @@ import (
 	"log/slog"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
+	cachedups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/cached"
 	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
 	"github.com/TheDarthMole/UPSWake/internal/worker"
 	"github.com/spf13/afero"
@@ -97,17 +99,18 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("error compiling rego rules: %w", err)
 	}
 
-	upsRepo := directups.NewDirectRepository()
+	directUpsRepo := directups.NewDirectRepository()
+	cachedUpsRepo := cachedups.NewCachedRepository(directUpsRepo, 5*time.Minute)
 
 	server := api.NewServer(cmd.Context(), j.logger)
 
-	rootHandler := handlers.NewRootHandler(cfg, j.regoFs)
+	rootHandler := handlers.NewRootHandler(cfg, j.regoFs, cachedUpsRepo)
 	rootHandler.Register(server.Root())
 
 	serverHandler := handlers.NewServerHandler()
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, upsRepo, ruleRepo)
+	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, cachedUpsRepo, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
 	workerPool, err := worker.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", cliArgs.URL()))

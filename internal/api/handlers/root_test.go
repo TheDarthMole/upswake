@@ -1,18 +1,32 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type countingUPSRepo struct {
+	err   error
+	json  string
+	calls atomic.Int32
+}
+
+func (r *countingUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
+	r.calls.Add(1)
+	return r.json, r.err
+}
 
 var cfg = &entity.Config{
 	NutServers: []*entity.NutServer{
@@ -55,7 +69,7 @@ func TestRootHandlerRoot(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(cfg, rulesFS)
+	h := NewRootHandler(cfg, rulesFS, &countingUPSRepo{})
 
 	if assert.NoError(t, h.Root(c)) {
 		assert.Equal(t, http.StatusMovedPermanently, rec.Code)
@@ -67,6 +81,7 @@ func TestRootHandler_Health(t *testing.T) {
 	type fields struct {
 		cfg     *entity.Config
 		rulesFS afero.Fs
+		upsRepo repository.UPSRepository
 	}
 	type wantedResponse struct {
 		body       string
@@ -84,6 +99,10 @@ func TestRootHandler_Health(t *testing.T) {
 					{},
 				}},
 				rulesFS: newMemFS(t, map[string][]byte{}),
+				upsRepo: &countingUPSRepo{
+					err:  nil,
+					json: `[{"Name":"ups1"}]`,
+				},
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message": "name is required"}`,
@@ -103,6 +122,10 @@ func TestRootHandler_Health(t *testing.T) {
 					},
 				}},
 				rulesFS: newMemFS(t, map[string][]byte{}),
+				upsRepo: &countingUPSRepo{
+					err:  errors.New("could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"),
+					json: "",
+				},
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message": "could not connect to NUT server: dial tcp 127.0.0.1:1234: connect: connection refused"}`,
@@ -114,6 +137,9 @@ func TestRootHandler_Health(t *testing.T) {
 			fields: fields{
 				cfg:     &entity.Config{},
 				rulesFS: newMemFS(t, map[string][]byte{}),
+				upsRepo: &countingUPSRepo{
+					json: `[{"Name":"ups1"}]`,
+				},
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message": "OK"}`,
@@ -143,6 +169,9 @@ func TestRootHandler_Health(t *testing.T) {
 					},
 				}},
 				rulesFS: newMemFS(t, map[string][]byte{}),
+				upsRepo: &countingUPSRepo{
+					json: `[{"Name":"ups1"}]`,
+				},
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message": "OK"}`,
@@ -159,7 +188,7 @@ func TestRootHandler_Health(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS)
+			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS, tt.fields.upsRepo)
 
 			if assert.NoError(t, h.Health(c)) {
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
@@ -173,7 +202,7 @@ func TestRootHandler_Register(t *testing.T) {
 	e := echo.New()
 	e.Validator = api.NewCustomValidator(t.Context())
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(cfg, rulesFS)
+	h := NewRootHandler(cfg, rulesFS, &countingUPSRepo{})
 
 	g := e.Group("")
 	h.Register(g)
@@ -204,10 +233,12 @@ func TestNewRootHandler(t *testing.T) {
 	type args struct {
 		cfg     *entity.Config
 		rulesFS afero.Fs
+		upsRepo repository.UPSRepository
 	}
-	memFS1 := newMemFS(t, map[string][]byte{})
-	memFS2 := newMemFS(t, map[string][]byte{
-		"test": []byte("test"),
+	emptyFS := newMemFS(t, map[string][]byte{})
+	ruleOneFS := newMemFS(t, map[string][]byte{
+		"rule1.rego": []byte(`package upswake
+default wake := true`),
 	})
 	tests := []struct {
 		args args
@@ -215,31 +246,77 @@ func TestNewRootHandler(t *testing.T) {
 		name string
 	}{
 		{
-			name: "test-1",
+			name: "empty rules filesystem",
 			args: args{
 				cfg:     cfg,
-				rulesFS: memFS1,
+				rulesFS: emptyFS,
+				upsRepo: &countingUPSRepo{
+					json: `[{"Name":"ups1"}]`,
+				},
 			},
 			want: &RootHandler{
 				cfg:     cfg,
-				rulesFS: memFS1,
+				rulesFS: emptyFS,
+				upsRepo: &countingUPSRepo{
+					json: `[{"Name":"ups1"}]`,
+				},
 			},
 		},
 		{
-			name: "test-2",
+			name: "one rule in filesystem",
 			args: args{
-				cfg:     cfg,
-				rulesFS: memFS2,
+				cfg: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "testNUTServer",
+							Host:     "127.0.0.1",
+							Port:     1234,
+							Username: "test-user",
+							Password: "test-password",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "testTarget",
+									MAC:       "00:00:00:00:00:00",
+									Broadcast: "192.168.1.255",
+									Port:      9,
+									Interval:  15 * time.Second,
+									Rules:     []string{"rule1.rego"},
+								},
+							},
+						},
+					},
+				},
+				rulesFS: ruleOneFS,
 			},
 			want: &RootHandler{
-				cfg:     cfg,
-				rulesFS: memFS2,
+				cfg: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "testNUTServer",
+							Host:     "127.0.0.1",
+							Port:     1234,
+							Username: "test-user",
+							Password: "test-password",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "testTarget",
+									MAC:       "00:00:00:00:00:00",
+									Broadcast: "192.168.1.255",
+									Port:      9,
+									Interval:  15 * time.Second,
+									Rules:     []string{"rule1.rego"},
+								},
+							},
+						},
+					},
+				},
+				rulesFS: ruleOneFS,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, NewRootHandler(tt.args.cfg, tt.args.rulesFS), "NewRootHandler(%v, %v)", tt.args.cfg, tt.args.rulesFS)
+			assert.Equalf(t, tt.want, NewRootHandler(tt.args.cfg, tt.args.rulesFS, tt.args.upsRepo), "NewRootHandler(%v, %v)", tt.args.cfg, tt.args.rulesFS)
 		})
 	}
 }
