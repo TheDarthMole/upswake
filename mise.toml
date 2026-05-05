@@ -3,9 +3,9 @@ lockfile = true
 
 [tools]
 go = "1.26.2"
-golangci-lint = "2.11.4"
+golangci-lint = "2.12.1"
 hadolint = "2.14.0"
-hk = "1.44.2"
+hk = "1.45.0"
 just = "1.50.0"
 pkl = "0.31.1"
 swag = "v1.16.6"
