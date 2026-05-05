@@ -21,7 +21,6 @@ type CachedRepository struct {
 
 type cachedResult struct {
 	cachedAt time.Time
-	err      error
 	json     string
 }
 
@@ -39,19 +38,21 @@ func (r *CachedRepository) GetJSON(server *entity.NutServer) (string, error) {
 	r.mu.RLock()
 	if result, ok := r.cache[key]; ok && time.Since(result.cachedAt) < r.ttl {
 		r.mu.RUnlock()
-		return result.json, result.err
+		return result.json, nil
 	}
 	r.mu.RUnlock()
 
 	json, err := r.inner.GetJSON(server)
-	if err == nil { // Save to cache if there was no error
-		r.mu.Lock()
-		r.cache[key] = cachedResult{
-			json:     json,
-			cachedAt: time.Now(),
-		}
-		r.mu.Unlock()
+	if err != nil { // skip saving cache on error
+		return json, err
 	}
+
+	r.mu.Lock()
+	r.cache[key] = cachedResult{
+		json:     json,
+		cachedAt: time.Now(),
+	}
+	r.mu.Unlock()
 
 	return json, err
 }
