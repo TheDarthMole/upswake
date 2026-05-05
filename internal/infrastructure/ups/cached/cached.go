@@ -14,7 +14,7 @@ import (
 // force fresh data on the next tick.
 type CachedRepository struct {
 	inner repository.UPSRepository
-	cache map[string]cachedResult
+	cache map[string]*cachedResult
 	ttl   time.Duration
 	mu    sync.RWMutex
 }
@@ -29,7 +29,7 @@ type cachedResult struct {
 func NewCachedRepository(inner repository.UPSRepository, ttl time.Duration) *CachedRepository {
 	return &CachedRepository{
 		inner: inner,
-		cache: make(map[string]cachedResult),
+		cache: make(map[string]*cachedResult),
 		ttl:   ttl,
 	}
 }
@@ -50,7 +50,7 @@ func (r *CachedRepository) GetJSON(server *entity.NutServer) (string, error) {
 	}
 
 	r.mu.Lock()
-	r.cache[key] = cachedResult{
+	r.cache[key] = &cachedResult{
 		json:     json,
 		cachedAt: time.Now(),
 	}
