@@ -24,6 +24,17 @@ func (r *countingRepo) GetJSON(_ *entity.NutServer) (string, error) {
 	return r.json, r.err
 }
 
+type slowRepo struct {
+	err   error
+	json  string
+	delay time.Duration
+}
+
+func (r *slowRepo) GetJSON(_ *entity.NutServer) (string, error) {
+	time.Sleep(r.delay)
+	return r.json, r.err
+}
+
 func TestNewCachedRepository(t *testing.T) {
 	type args struct {
 		inner repository.UPSRepository
@@ -44,7 +55,7 @@ func TestNewCachedRepository(t *testing.T) {
 				inner: &countingRepo{},
 				cache: map[string]cachedResult{},
 				ttl:   5 * time.Second,
-				mu:    sync.Mutex{},
+				mu:    sync.RWMutex{},
 			},
 		},
 		{
@@ -57,7 +68,7 @@ func TestNewCachedRepository(t *testing.T) {
 				inner: &countingRepo{},
 				cache: map[string]cachedResult{},
 				ttl:   1 * time.Minute,
-				mu:    sync.Mutex{},
+				mu:    sync.RWMutex{},
 			},
 		},
 	}
@@ -100,7 +111,7 @@ func TestCachedRepository_GetJSON(t *testing.T) {
 		assert.Equal(t, int32(2), inner.calls.Load(), "different servers should each call inner")
 	})
 
-	t.Run("errors cached", func(t *testing.T) {
+	t.Run("errors skip cache", func(t *testing.T) {
 		expectedErr := errors.New("connection refused")
 		inner := &countingRepo{err: expectedErr}
 		cached := NewCachedRepository(inner, 5*time.Second)
@@ -112,7 +123,7 @@ func TestCachedRepository_GetJSON(t *testing.T) {
 
 		assert.ErrorIs(t, err1, expectedErr)
 		assert.ErrorIs(t, err2, expectedErr)
-		assert.Equal(t, int32(1), inner.calls.Load(), "error should be cached too")
+		assert.Equal(t, int32(2), inner.calls.Load(), "error should not be saved to cache")
 	})
 
 	t.Run("reset clears cache", func(t *testing.T) {
@@ -147,4 +158,18 @@ func TestCachedRepository_GetJSON(t *testing.T) {
 		assert.Equal(t, err1, err2)
 		assert.Equal(t, int32(2), inner.calls.Load(), "inner repo should be called twice")
 	})
+}
+
+func BenchmarkCachedRepository_GetJSON(b *testing.B) {
+	inner := &slowRepo{
+		json:  `[{"Name":"ups1"}]`,
+		delay: 10 * time.Millisecond,
+	}
+	cached := NewCachedRepository(inner, 1*time.Millisecond)
+
+	server := &entity.NutServer{Host: "127.0.0.1", Port: 3493}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = cached.GetJSON(server)
+	}
 }
