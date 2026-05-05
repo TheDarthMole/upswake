@@ -128,11 +128,7 @@ func (w *Worker) sendWakeRequest() {
 			return
 		}
 		_, _ = io.Copy(io.Discard, resp.Body) // Drain body to enable connection reuse
-		err = resp.Body.Close()
-		if err != nil {
-			w.logger.Error("Error closing response body",
-				slog.Any("error", err))
-		}
+		_ = resp.Body.Close()
 	}(resp)
 
 	if ctxErr := context.Cause(w.ctx); ctxErr != nil {
@@ -152,4 +148,5 @@ func (w *Worker) sendWakeRequest() {
 			slog.String("status_code", resp.Status))
 		return
 	}
+	w.logger.Debug("Successfully sent upswake request")
 }

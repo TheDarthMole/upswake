@@ -118,12 +118,61 @@ func TestNewWorkerPool(t *testing.T) {
 	}
 }
 
+func requestAssertion(t *testing.T, req *http.Request) {
+	t.Helper()
+	assert.Equal(t, "POST", req.Method)
+	body, err := io.ReadAll(req.Body)
+	assert.NoError(t, err)
+
+	unmarshalled := map[string]string{}
+	err = json.Unmarshal(body, &unmarshalled)
+	assert.NoError(t, err)
+
+	mac, ok := unmarshalled["mac"]
+	assert.True(t, ok)
+	assert.NotEmpty(t, mac)
+}
+
 func TestPool_Start(t *testing.T) {
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 
 	errorStrings := []string{
 		`"level","ERROR"`,
 		`"level","error"`,
+	}
+
+	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		http.Error(w, "Found", http.StatusOK)
+	})
+
+	slowHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		time.Sleep(5 * time.Second)
+		http.Error(w, "Slow", http.StatusServiceUnavailable)
+	})
+
+	internalServerErrorHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestAssertion(t, r)
+
+		http.Error(w, "Found", http.StatusInternalServerError)
+	})
+
+	oneServerOneTargetConfig := &entity.Config{
+		NutServers: []*entity.NutServer{
+			{
+				Name: "Test Server",
+				Targets: []*entity.TargetServer{
+					{
+						Name:     "Test Target",
+						MAC:      "00:11:22:33:44:55",
+						Interval: 100 * time.Millisecond,
+					},
+				},
+			},
+		},
 	}
 
 	type fields struct {
@@ -134,30 +183,16 @@ func TestPool_Start(t *testing.T) {
 		notWantLogOutputs []string
 	}
 	tests := []struct {
-		name         string
 		fields       fields
+		handlerFunc  http.HandlerFunc
+		name         string
 		attestations attestations
 	}{
 		{
-			name: "one server with one target",
+			name:        "one server with one target",
+			handlerFunc: successHandler,
 			fields: fields{
-				config: &entity.Config{
-					NutServers: []*entity.NutServer{
-						{
-							Name: "Test Server",
-							Targets: []*entity.TargetServer{
-								{
-									Name: "Test Target",
-									MAC:  "00:11:22:33:44:55",
-									Rules: []string{
-										"test.rego",
-									},
-									Interval: 100 * time.Millisecond,
-								},
-							},
-						},
-					},
-				},
+				config: oneServerOneTargetConfig,
 			},
 			attestations: attestations{
 				wantLogOutputs: []string{
@@ -168,7 +203,8 @@ func TestPool_Start(t *testing.T) {
 			},
 		},
 		{
-			name: "two servers with 6 total targets",
+			name:        "two servers with 6 total targets",
+			handlerFunc: successHandler,
 			fields: fields{
 				config: &entity.Config{
 					NutServers: []*entity.NutServer{
@@ -210,7 +246,8 @@ func TestPool_Start(t *testing.T) {
 			},
 		},
 		{
-			name: "no servers",
+			name:        "no servers",
+			handlerFunc: successHandler,
 			fields: fields{
 				config: &entity.Config{
 					NutServers: []*entity.NutServer{},
@@ -221,29 +258,27 @@ func TestPool_Start(t *testing.T) {
 				notWantLogOutputs: errorStrings,
 			},
 		},
+		{
+			name:        "failed response from server",
+			handlerFunc: internalServerErrorHandler,
+			fields: fields{
+				config: oneServerOneTargetConfig,
+			},
+			attestations: attestations{
+				wantLogOutputs: []string{
+					`Unexpected status code from upswake endpoint`,
+					`"level":"ERROR"`,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			httpTest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, "POST", r.Method)
-				body, err := io.ReadAll(r.Body)
-				assert.NoError(t, err)
-
-				unmarshalled := map[string]string{}
-				err = json.Unmarshal(body, &unmarshalled)
-				assert.NoError(t, err)
-
-				mac, ok := unmarshalled["mac"]
-				assert.True(t, ok)
-				assert.NotEmpty(t, mac)
-
-				http.Error(w, "Found", http.StatusOK)
-			}))
+			httpTest := httptest.NewServer(tt.handlerFunc)
 			t.Cleanup(httpTest.Close)
 
 			buf := &strings.Builder{}
-
 			logger := slog.New(slog.NewJSONHandler(buf, &slog.HandlerOptions{}))
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -266,4 +301,66 @@ func TestPool_Start(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("failed to make request", func(t *testing.T) {
+		t.Parallel()
+
+		buf := &strings.Builder{}
+		logger := slog.New(slog.NewJSONHandler(buf, &slog.HandlerOptions{}))
+
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+
+		workerPool, err := NewWorkerPool(ctx, oneServerOneTargetConfig, tlsConfig, logger, "")
+		require.NoError(t, err)
+		workerPool.Start()
+
+		time.Sleep(2 * time.Second)
+		cancel()
+		workerPool.Wait()
+
+		assert.Contains(t, buf.String(), "Error sending post request")
+	})
+
+	t.Run("context cancelled while making request", func(t *testing.T) {
+		t.Parallel()
+		httpTest := httptest.NewServer(slowHandler)
+		t.Cleanup(httpTest.Close)
+
+		buf := &strings.Builder{}
+		logger := slog.New(slog.NewJSONHandler(buf, &slog.HandlerOptions{}))
+
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+
+		workerPool, err := NewWorkerPool(ctx, oneServerOneTargetConfig, tlsConfig, logger, httpTest.URL)
+		require.NoError(t, err)
+
+		workerPool.Start()
+
+		time.Sleep(1 * time.Second)
+		cancel()
+		workerPool.Wait()
+
+		assert.Contains(t, buf.String(), "Context cancelled when making request")
+	})
+
+	t.Run("failed creating request", func(t *testing.T) {
+		t.Parallel()
+		httpTest := httptest.NewServer(successHandler)
+		t.Cleanup(httpTest.Close)
+
+		logger := slog.New(slog.NewJSONHandler(&strings.Builder{}, &slog.HandlerOptions{}))
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+
+		workerPool, err := NewWorkerPool(ctx, oneServerOneTargetConfig, tlsConfig, logger, "aa"+string(rune(5)))
+		require.NoError(t, err)
+
+		workerPool.Start()
+
+		time.Sleep(1 * time.Second)
+		cancel()
+		workerPool.Wait()
+	})
 }
