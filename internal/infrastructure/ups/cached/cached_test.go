@@ -100,7 +100,7 @@ func TestCachedRepository_GetJSON(t *testing.T) {
 		assert.Equal(t, int32(2), inner.calls.Load(), "different servers should each call inner")
 	})
 
-	t.Run("errors cached", func(t *testing.T) {
+	t.Run("errors skip cache", func(t *testing.T) {
 		expectedErr := errors.New("connection refused")
 		inner := &countingRepo{err: expectedErr}
 		cached := NewCachedRepository(inner, 5*time.Second)
@@ -112,7 +112,7 @@ func TestCachedRepository_GetJSON(t *testing.T) {
 
 		assert.ErrorIs(t, err1, expectedErr)
 		assert.ErrorIs(t, err2, expectedErr)
-		assert.Equal(t, int32(1), inner.calls.Load(), "error should be cached too")
+		assert.Equal(t, int32(2), inner.calls.Load(), "error should not be saved to cache")
 	})
 
 	t.Run("reset clears cache", func(t *testing.T) {

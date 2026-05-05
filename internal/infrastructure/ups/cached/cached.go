@@ -44,11 +44,13 @@ func (r *CachedRepository) GetJSON(server *entity.NutServer) (string, error) {
 	}
 
 	json, err := r.inner.GetJSON(server)
-	r.cache[key] = cachedResult{
-		json:     json,
-		err:      err,
-		cachedAt: time.Now(),
+	if err == nil { // Save to cache if there was no error
+		r.cache[key] = cachedResult{
+			json:     json,
+			cachedAt: time.Now(),
+		}
 	}
+
 	return json, err
 }
 
