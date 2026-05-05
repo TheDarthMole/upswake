@@ -37,7 +37,7 @@ func NewWorkerPool(ctx context.Context, config *entity.Config, tlsConfig *tls.Co
 		for _, target := range mapping.Targets {
 			worker, err := newWorker(ctx, target, client, wg, logger, url)
 			if err != nil {
-				return &Pool{}, err
+				return nil, err
 			}
 			workers = append(workers, worker)
 		}
@@ -78,12 +78,12 @@ func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *h
 	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC})
 	if err != nil {
 		jobLogger.Error("Error marshalling JSON", slog.Any("error", err))
-		return &Worker{}, err
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		return &Worker{}, fmt.Errorf("%w: %w", ErrFailedCreatingRequest, err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedCreatingRequest, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 

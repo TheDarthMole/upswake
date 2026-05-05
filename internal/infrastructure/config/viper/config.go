@@ -42,20 +42,20 @@ func NewConfigLoader(fs afero.Fs, cfgPath string) *ConfigLoader {
 func (c *ConfigLoader) Load() (*entity.Config, error) {
 	if err := c.ReadInConfig(); err != nil {
 		// Return on any read error (including file not found or decode errors)
-		return &entity.Config{}, fmt.Errorf("%w: %w", ErrReadingConfigFile, err)
+		return nil, fmt.Errorf("%w: %w", ErrReadingConfigFile, err)
 	}
 
 	loadConfig := &Config{}
 	if err := c.Unmarshal(loadConfig); err != nil {
-		return &entity.Config{}, fmt.Errorf("%w: %w", ErrUnmarshallingConfig, err)
+		return nil, fmt.Errorf("%w: %w", ErrUnmarshallingConfig, err)
 	}
 	entityConfig, err := FromFileConfig(loadConfig)
 	if err != nil {
-		return &entity.Config{}, err
+		return nil, err
 	}
 
 	if err := entityConfig.Validate(); err != nil {
-		return &entity.Config{}, err
+		return nil, err
 	}
 	return entityConfig, nil
 }

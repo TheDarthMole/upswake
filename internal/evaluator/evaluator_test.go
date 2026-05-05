@@ -230,7 +230,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	}
 
 	tests := []struct {
-		want    EvaluationResult
+		want    *EvaluationResult
 		wantErr error
 		fields  fields
 		name    string
@@ -264,7 +264,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				upsRepo: validNUTUPSRepository,
 				mac:     "00:11:22:33:44:55",
 			},
-			want: EvaluationResult{
+			want: &EvaluationResult{
 				Allowed: true,
 				Found:   true,
 				Target: &entity.TargetServer{
@@ -309,7 +309,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				upsRepo: validNUTUPSRepository,
 				mac:     "00:11:22:33:44:55",
 			},
-			want: EvaluationResult{
+			want: &EvaluationResult{
 				Allowed: false,
 				Found:   false,
 				Target:  nil,
@@ -345,7 +345,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				upsRepo: invalidNUTOutputRepository,
 				mac:     "00:11:22:33:44:55",
 			},
-			want:    EvaluationResult{},
+			want:    nil,
 			wantErr: ErrFailedEvaluateExpression,
 		},
 	}

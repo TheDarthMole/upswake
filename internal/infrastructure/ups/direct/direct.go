@@ -7,7 +7,6 @@ import (
 	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	nut "github.com/robbiet480/go.nut"
 )
 
@@ -17,7 +16,7 @@ type DirectRepository struct{}
 
 // NewDirectRepository constructs a DirectRepository that implements repository.UPSRepository.
 // The returned repository opens a fresh connection to the NUT server for each method call.
-func NewDirectRepository() repository.UPSRepository {
+func NewDirectRepository() *DirectRepository {
 	return &DirectRepository{}
 }
 
@@ -36,16 +35,16 @@ var (
 func connect(host string, port int, username, password string) (*nut.Client, error) {
 	client, err := nut.Connect(host, port)
 	if err != nil {
-		return &nut.Client{}, fmt.Errorf("%w: %w", ErrConnectionFailed, err)
+		return nil, fmt.Errorf("%w: %w", ErrConnectionFailed, err)
 	}
 
 	authenticate, err := client.Authenticate(username, password)
 	if err != nil {
-		return &nut.Client{}, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
+		return nil, fmt.Errorf("%w: %w", ErrFailureAuthenticating, err)
 	}
 	if !authenticate {
 		disconnect(&client, host)
-		return &nut.Client{}, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
+		return nil, fmt.Errorf("%w: could not authenticate to NUT server at %s:%d", ErrAuthenticationFailed, host, port)
 	}
 	return &client, nil
 }
