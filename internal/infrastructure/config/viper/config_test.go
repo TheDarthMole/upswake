@@ -80,7 +80,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_hostname.yaml",
 			},
 			wantErr: entity.ErrInvalidHost,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "port number greater than 65535",
@@ -89,7 +89,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_port_too_large.yaml",
 			},
 			wantErr: entity.ErrInvalidPort,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "port number less than 1",
@@ -98,7 +98,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_port_too_small.yaml",
 			},
 			wantErr: entity.ErrInvalidPort,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "invalid target mac",
@@ -107,7 +107,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_target_mac.yaml",
 			},
 			wantErr: entity.ErrInvalidMac,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "config file does not exist",
@@ -116,7 +116,7 @@ func Test_Load(t *testing.T) {
 				filePath: "does_not_exist.yaml",
 			},
 			wantErr: ErrReadingConfigFile,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "config file username is array",
@@ -125,7 +125,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_type.yaml",
 			},
 			wantErr: ErrUnmarshallingConfig,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 		{
 			name: "invalid interval",
@@ -134,7 +134,7 @@ func Test_Load(t *testing.T) {
 				filePath: "invalid_interval.yaml",
 			},
 			wantErr: ErrFailedParsingInterval,
-			want:    &entity.Config{},
+			want:    nil,
 		},
 	}
 	for _, tt := range tests {

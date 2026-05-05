@@ -39,9 +39,9 @@ func NewRegoEvaluator(config *entity.Config, mac string, upsRepo repository.UPSR
 	}
 }
 
-func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
+func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 	// For each NUT server
-	evaluationResult := EvaluationResult{
+	evaluationResult := &EvaluationResult{
 		Allowed: false,
 		Found:   false,
 		Target:  nil,
@@ -50,11 +50,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 	for _, nutServer := range r.config.NutServers {
 		inputJSON, err := r.upsRepo.GetJSON(nutServer)
 		if err != nil {
-			return EvaluationResult{
-				Allowed: false,
-				Found:   false,
-				Target:  nil,
-			}, err
+			return nil, err
 		}
 
 		// For each target
@@ -64,7 +60,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (EvaluationResult, error) {
 			}
 			allowed, err := r.evaluateExpression(target, inputJSON)
 			if err != nil {
-				return EvaluationResult{}, err
+				return nil, err
 			}
 
 			evaluationResult.Found = true
