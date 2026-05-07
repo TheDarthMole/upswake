@@ -55,7 +55,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 
 		// For each target
 		for _, target := range nutServer.Targets {
-			if target.MAC != r.mac {
+			if target.MAC.String() != r.mac {
 				continue
 			}
 			allowed, err := r.evaluateExpression(target, inputJSON)

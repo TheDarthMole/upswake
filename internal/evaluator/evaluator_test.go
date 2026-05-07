@@ -249,7 +249,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       "00:11:22:33:44:55",
+									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,
@@ -269,7 +269,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				Found:   true,
 				Target: &entity.TargetServer{
 					Name:      "test server",
-					MAC:       "00:11:22:33:44:55",
+					MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 					Broadcast: "192.168.1.255",
 					Port:      entity.DefaultWoLPort,
 					Interval:  15 * time.Minute,
@@ -294,7 +294,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       "00:00:00:00:00:00",
+									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,
@@ -330,7 +330,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       "00:11:22:33:44:55",
+									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,

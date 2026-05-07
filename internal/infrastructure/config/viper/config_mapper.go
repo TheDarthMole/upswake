@@ -77,9 +77,14 @@ func FromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, err
 		return nil, fmt.Errorf("%w: %w", ErrFailedParsingInterval, err)
 	}
 
+	mac := entity.NewMacAddress(targetServer.MAC)
+	if err := mac.Validate(); err != nil {
+		return nil, err
+	}
+
 	return &entity.TargetServer{
 		Name:      targetServer.Name,
-		MAC:       targetServer.MAC,
+		MAC:       mac,
 		Broadcast: targetServer.Broadcast,
 		Port:      targetServer.Port,
 		Interval:  interval,
@@ -90,7 +95,7 @@ func FromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, err
 func ToFileTargetServer(targetServer *entity.TargetServer) *TargetServer {
 	return &TargetServer{
 		Name:      targetServer.Name,
-		MAC:       targetServer.MAC,
+		MAC:       targetServer.MAC.String(),
 		Broadcast: targetServer.Broadcast,
 		Port:      targetServer.Port,
 		Interval:  targetServer.Interval.String(),

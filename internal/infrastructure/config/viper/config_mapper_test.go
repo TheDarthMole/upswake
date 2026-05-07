@@ -57,7 +57,7 @@ func TestFromFileConfig(t *testing.T) {
 						Targets: []*entity.TargetServer{
 							{
 								Name: "TestTarget",
-								MAC:  "00:11:22:33:44:55",
+								MAC:  entity.NewMacAddress("00:11:22:33:44:55"),
 								Rules: []string{
 									"rule1",
 									"rule2",
@@ -169,7 +169,7 @@ func TestToFileConfig(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "TestTarget",
-									MAC:       "00:11:22:33:44:55",
+									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 									Rules:     []string{"rule1", "rule2"},
 									Interval:  15 * time.Minute,
 									Port:      9,

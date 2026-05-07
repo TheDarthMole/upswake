@@ -57,7 +57,7 @@ default wake := false`),
 				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
-						MAC:       "00:11:22:33:44:55",
+						MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 						Broadcast: "127.0.0.255",
 						Port:      9,
 						Interval:  15 * time.Minute,
@@ -78,7 +78,7 @@ default wake := false`),
 				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
-						MAC:       "00:11:22:33:44:55",
+						MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 						Broadcast: "777.666.555.444",
 						Port:      9,
 						Interval:  15 * time.Minute,

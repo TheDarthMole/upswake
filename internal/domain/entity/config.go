@@ -104,9 +104,31 @@ func (ns *NutServer) Validate() error {
 	return nil
 }
 
+func NewMacAddress(mac string) *MacAddress {
+	return &MacAddress{string: mac}
+}
+
+type MacAddress struct {
+	string
+}
+
+func (m *MacAddress) String() string {
+	return m.string
+}
+
+func (m *MacAddress) Validate() error {
+	if m.String() == "" {
+		return ErrMACRequired
+	}
+	if validate.Var(m.String(), "mac") != nil {
+		return ErrInvalidMac
+	}
+	return nil
+}
+
 type TargetServer struct {
 	Name      string        `json:"name"`
-	MAC       string        `json:"mac"`
+	MAC       *MacAddress   `json:"mac"`
 	Broadcast string        `json:"broadcast"`
 	Rules     []string      `json:"rules"`
 	Interval  time.Duration `json:"interval" default:"900000000000"`
@@ -117,11 +139,11 @@ func (ts *TargetServer) Validate() error {
 	if ts.Name == "" {
 		return ErrNameRequired
 	}
-	if ts.MAC == "" {
+	if ts.MAC == nil {
 		return ErrMACRequired
 	}
-	if validate.Var(ts.MAC, "mac") != nil {
-		return ErrInvalidMac
+	if err := ts.MAC.Validate(); err != nil {
+		return err
 	}
 	if ts.Broadcast == "" {
 		return ErrBroadcastRequired
@@ -145,7 +167,7 @@ func (ts *TargetServer) Validate() error {
 func NewTargetServer(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*TargetServer, error) {
 	ts := &TargetServer{
 		Name:      name,
-		MAC:       mac,
+		MAC:       &MacAddress{mac},
 		Broadcast: broadcast,
 		Port:      port,
 		Interval:  interval,
@@ -175,7 +197,7 @@ func CreateDefaultConfig() *Config {
 				Targets: []*TargetServer{
 					{
 						Name:      "NAS 1",
-						MAC:       "00:00:00:00:00:00",
+						MAC:       &MacAddress{"00:00:00:00:00:00"},
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,

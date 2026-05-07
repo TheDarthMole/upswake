@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/afero"
@@ -66,9 +66,9 @@ func TestCustomValidator_Validate(t *testing.T) {
 		{
 			name:   "Test with valid TargetServer struct",
 			fields: fields{validator: validator.New()},
-			args: args{i: config.TargetServer{
+			args: args{i: entity.TargetServer{
 				Name:      "test",
-				MAC:       "00:1A:2B:3C:4D:5E",
+				MAC:       entity.NewMacAddress("00:1A:2B:3C:4D:5E"),
 				Broadcast: "127.0.0.1",
 				Port:      9,
 				Interval:  15 * time.Minute,

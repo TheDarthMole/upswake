@@ -108,7 +108,7 @@ func TestNewTargetServer(t *testing.T) {
 			},
 			want: &TargetServer{
 				Name:      "test",
-				MAC:       "11:22:33:44:55:66",
+				MAC:       NewMacAddress("11:22:33:44:55:66"),
 				Broadcast: "192.168.1.255",
 				Port:      DefaultWoLPort,
 				Interval:  15 * time.Minute,
@@ -219,7 +219,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets: []*TargetServer{
 					{
 						Name:      "test1",
-						MAC:       "00:11:22:33:44:55",
+						MAC:       NewMacAddress("00:11:22:33:44:55"),
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,
@@ -242,7 +242,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets: []*TargetServer{
 					{
 						Name:      "test1",
-						MAC:       "00:11:22:33:44:55",
+						MAC:       NewMacAddress("00:11:22:33:44:55"),
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,
@@ -252,7 +252,7 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 					{
 						Name:      "test2",
-						MAC:       "11:22:33:44:55:66",
+						MAC:       NewMacAddress("11:22:33:44:55:66"),
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,
@@ -275,7 +275,7 @@ func TestNutServer_Validate(t *testing.T) {
 				Targets: []*TargetServer{
 					{
 						Name:      "test1",
-						MAC:       "00:11:22:33:44:55",
+						MAC:       NewMacAddress("00:11:22:33:44:55"),
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,
@@ -285,7 +285,7 @@ func TestNutServer_Validate(t *testing.T) {
 					},
 					{
 						Name:      "test2",
-						MAC:       "xx:22:33:44:55:yy", // invalid mac address for target server
+						MAC:       NewMacAddress("xx:22:33:44:55:yy"), // invalid mac address for target server
 						Broadcast: "192.168.1.255",
 						Port:      DefaultWoLPort,
 						Interval:  15 * time.Minute,
@@ -365,7 +365,7 @@ func TestNutServer_Validate(t *testing.T) {
 func TestTargetServer_Validate(t *testing.T) {
 	type fields struct {
 		Name      string
-		MAC       string
+		MAC       *MacAddress
 		Broadcast string
 		Rules     []string
 		Interval  time.Duration
@@ -380,7 +380,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "valid TargetServer",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -392,7 +392,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "valid TargetServer multiple rules",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -407,7 +407,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "invalid mac",
 			fields: fields{
 				Name:      "test",
-				MAC:       "xx:11:22:33:44:zz",
+				MAC:       NewMacAddress("xx:11:22:33:44:zz"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -419,7 +419,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "invalid broadcast",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.555",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -431,7 +431,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "invalid port too high",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      1234567890,
 				Interval:  15 * time.Minute,
@@ -443,7 +443,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "invalid port too low",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      -1,
 				Interval:  15 * time.Minute,
@@ -455,7 +455,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "invalid interval",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  -1 * time.Minute,
@@ -467,7 +467,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "TargetServer no name",
 			fields: fields{
 				Name:      "",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -479,7 +479,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "TargetServer no mac",
 			fields: fields{
 				Name:      "test",
-				MAC:       "",
+				MAC:       NewMacAddress(""),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -491,7 +491,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "TargetServer no broadcast",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "",
 				Port:      9,
 				Interval:  15 * time.Minute,
@@ -503,7 +503,7 @@ func TestTargetServer_Validate(t *testing.T) {
 			name: "TargetServer no interval",
 			fields: fields{
 				Name:      "test",
-				MAC:       "00:11:22:33:44:55",
+				MAC:       NewMacAddress("00:11:22:33:44:55"),
 				Broadcast: "192.168.1.255",
 				Port:      9,
 				Interval:  0,
