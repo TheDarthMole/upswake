@@ -140,7 +140,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		})
 	}
 
-	c.Logger().Debug("Wake on LAN sent", slog.String("mac", sanitizeString(mac.Mac)))
+	c.Logger().Debug("Wake on LAN sent", slog.String("mac", mac.Mac))
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,
