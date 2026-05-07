@@ -20,7 +20,7 @@ type UPSWakeHandler struct {
 	ruleRepo repository.RuleRepository
 }
 
-type macAddress struct {
+type wakeEvaluationRequest struct {
 	Mac string `json:"mac" example:"00:11:22:33:44:55"`
 }
 
@@ -80,15 +80,24 @@ func (h *UPSWakeHandler) ListNutServerMappings(c *echo.Context) error {
 //	@Failure		500				{object}	Response	"Internal server error"
 //	@Router			/api/upswake	[post]
 func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
-	mac := &macAddress{}
-	if err := c.Bind(mac); err != nil {
+	request := &wakeEvaluationRequest{}
+	if err := c.Bind(request); err != nil {
 		c.Logger().Error("failed to bind mac address", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, upsWakeResponse{
 			Message: ErrorBindingRequest.Error(),
 			Woken:   false,
 		})
 	}
-	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.upsRepo, h.ruleRepo)
+	mac := entity.NewMacAddress(request.Mac)
+	if err := mac.Validate(); err != nil {
+		c.Logger().Error("failed to validate mac address", slog.Any("error", err))
+		return c.JSON(http.StatusBadRequest, upsWakeResponse{
+			Message: err.Error(),
+			Woken:   false,
+		})
+	}
+
+	eval := evaluator.NewRegoEvaluator(h.cfg, mac, h.upsRepo, h.ruleRepo)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
 		c.Logger().Error("Failed to evaluate expressions", slog.Any("error", err))
@@ -99,7 +108,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	if !result.Found {
-		c.Logger().Error("mac address not found in the config", slog.String("mac", sanitizeString(mac.Mac)))
+		c.Logger().Error("mac address not found in the config", slog.String("mac", mac.String()))
 		return c.JSON(http.StatusConflict, upsWakeResponse{
 			Message: "MAC address not found in the config",
 			Woken:   false,
@@ -107,7 +116,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	if !result.Allowed {
-		c.Logger().Debug("no rule evaluated to true", slog.String("mac", sanitizeString(mac.Mac)))
+		c.Logger().Debug("no rule evaluated to true", slog.String("mac", mac.String()))
 		return c.JSON(http.StatusOK, upsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
@@ -140,7 +149,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		})
 	}
 
-	c.Logger().Debug("Wake on LAN sent", slog.String("mac", sanitizeString(mac.Mac)))
+	c.Logger().Debug("Wake on LAN sent", slog.String("mac", mac.String()))
 	return c.JSON(http.StatusOK, upsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,

@@ -61,7 +61,7 @@ func TestNewRegoEvaluator(t *testing.T) {
 		config   *entity.Config
 		upsRepo  repository.UPSRepository
 		ruleRepo repository.RuleRepository
-		mac      string
+		mac      *entity.MacAddress
 	}
 
 	tests := []struct {
@@ -73,22 +73,22 @@ func TestNewRegoEvaluator(t *testing.T) {
 			name: "valid config 1",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    "00:00:00:00:00:00",
+				mac:    entity.NewMacAddress("00:00:00:00:00:00"),
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    "00:00:00:00:00:00",
+				mac:    entity.NewMacAddress("00:00:00:00:00:00"),
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    "00:00:00:00:00:55",
+				mac:    entity.NewMacAddress("00:00:00:00:00:55"),
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    "00:00:00:00:00:55",
+				mac:    entity.NewMacAddress("00:00:00:00:00:55"),
 			},
 		},
 		//	TODO: Add more test cases
@@ -226,7 +226,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	type fields struct {
 		config  *entity.Config
 		upsRepo repository.UPSRepository
-		mac     string
+		mac     *entity.MacAddress
 	}
 
 	tests := []struct {
@@ -262,7 +262,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: validNUTUPSRepository,
-				mac:     "00:11:22:33:44:55",
+				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
 			},
 			want: &EvaluationResult{
 				Allowed: true,
@@ -307,7 +307,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: validNUTUPSRepository,
-				mac:     "00:11:22:33:44:55",
+				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
 			},
 			want: &EvaluationResult{
 				Allowed: false,
@@ -343,7 +343,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: invalidNUTOutputRepository,
-				mac:     "00:11:22:33:44:55",
+				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
 			},
 			want:    nil,
 			wantErr: ErrFailedEvaluateExpression,

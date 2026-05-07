@@ -109,7 +109,7 @@ func NewMacAddress(mac string) *MacAddress {
 }
 
 type MacAddress struct {
-	string
+	string `json:"mac" example:"00:11:22:33:44:55"`
 }
 
 func (m *MacAddress) String() string {
