@@ -186,7 +186,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid MAC wrong format",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress("01:02:03:04:05"),
+				mac: entity.NewMacAddress("01:02:03:04:05:gg"),
 			},
 			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
