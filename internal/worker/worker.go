@@ -55,6 +55,7 @@ type Worker struct {
 	logger      *slog.Logger
 	client      *http.Client
 	baseRequest *http.Request
+	body        []byte
 	interval    time.Duration
 }
 
@@ -92,6 +93,7 @@ func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *h
 		client:      client,
 		wg:          wg,
 		logger:      jobLogger,
+		body:        body,
 		interval:    targetServer.Interval,
 		baseRequest: req,
 	}, nil
@@ -123,6 +125,7 @@ func (w *Worker) run() {
 
 func (w *Worker) sendWakeRequest() {
 	req := w.baseRequest.Clone(w.ctx)
+	req.Body = io.NopCloser(bytes.NewReader(w.body))
 
 	resp, err := w.client.Do(req)
 
