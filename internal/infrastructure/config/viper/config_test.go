@@ -40,7 +40,7 @@ func Test_Load(t *testing.T) {
 						Targets: []*entity.TargetServer{
 							{
 								Name:      "nas_1",
-								MAC:       "00:11:22:33:44:55",
+								MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
 								Broadcast: "192.168.1.255",
 								Port:      9,
 								Interval:  5 * time.Minute,

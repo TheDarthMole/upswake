@@ -48,8 +48,8 @@ func (tgt *WakeOnLan) Wake() error {
 	return wakeInternal(conn, tgt.MAC)
 }
 
-func wakeInternal(dst io.ReadWriteCloser, mac string) error {
-	mp, err := newMagicPacket(mac)
+func wakeInternal(dst io.ReadWriteCloser, mac *entity.MacAddress) error {
+	mp, err := newMagicPacket(mac.String())
 	if err != nil {
 		return err
 	}

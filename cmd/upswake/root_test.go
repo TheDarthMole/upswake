@@ -180,7 +180,7 @@ func Test_Execute(t *testing.T) {
 		{
 			name: "serve command no arguments basic config",
 			args: args{
-				args: []string{"upswake", "serve"},
+				args: []string{"upswake", "serve", "--port", "61337"},
 				filesystem: func() afero.Fs {
 					fs := afero.NewMemMapFs()
 					const configYaml = `

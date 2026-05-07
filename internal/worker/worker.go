@@ -76,7 +76,7 @@ func newWorker(ctx context.Context, targetServer *entity.TargetServer, client *h
 		slog.String("worker_name", targetServer.Name),
 	)
 
-	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC})
+	body, err := json.Marshal(map[string]string{"mac": targetServer.MAC.String()})
 	if err != nil {
 		jobLogger.Error("Error marshalling JSON", slog.Any("error", err))
 		return nil, err

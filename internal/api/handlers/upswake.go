@@ -116,7 +116,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 
 	ts, err := entity.NewTargetServer(
 		"API Request",
-		result.Target.MAC,
+		result.Target.MAC.String(),
 		result.Target.Broadcast,
 		15*time.Minute,
 		result.Target.Port,

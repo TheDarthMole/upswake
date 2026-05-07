@@ -40,7 +40,7 @@ func TestNewWorkerPool(t *testing.T) {
 						{
 							Name: "Test Server",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target"},
+								{Name: "Test Target", MAC: entity.NewMacAddress("00:11:22:33:44:55")},
 							},
 						},
 					},
@@ -58,17 +58,17 @@ func TestNewWorkerPool(t *testing.T) {
 						{
 							Name: "Test Server 1",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1"},
-								{Name: "Test Target 2"},
-								{Name: "Test Target 3"},
-								{Name: "Test Target 4"},
+								{Name: "Test Target 1", MAC: entity.NewMacAddress("00:11:22:33:44:55")},
+								{Name: "Test Target 2", MAC: entity.NewMacAddress("11:11:22:33:44:55")},
+								{Name: "Test Target 3", MAC: entity.NewMacAddress("22:11:22:33:44:55")},
+								{Name: "Test Target 4", MAC: entity.NewMacAddress("33:11:22:33:44:55")},
 							},
 						},
 						{
 							Name: "Test Server 2",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1"},
-								{Name: "Test Target 2"},
+								{Name: "Test Target 1", MAC: entity.NewMacAddress("44:11:22:33:44:55")},
+								{Name: "Test Target 2", MAC: entity.NewMacAddress("55:11:22:33:44:55")},
 							},
 						},
 					},
@@ -173,7 +173,7 @@ func TestPool_Start(t *testing.T) {
 				Targets: []*entity.TargetServer{
 					{
 						Name:     "Test Target",
-						MAC:      "00:11:22:33:44:55",
+						MAC:      entity.NewMacAddress("00:11:22:33:44:55"),
 						Interval: 100 * time.Millisecond,
 					},
 				},
@@ -217,17 +217,17 @@ func TestPool_Start(t *testing.T) {
 						{
 							Name: "Test Server 1",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1", MAC: "00:11:22:33:44:55", Interval: 100 * time.Millisecond},
-								{Name: "Test Target 2", MAC: "11:11:22:33:44:55", Interval: 100 * time.Millisecond},
-								{Name: "Test Target 3", MAC: "22:11:22:33:44:55", Interval: 100 * time.Millisecond},
-								{Name: "Test Target 4", MAC: "33:11:22:33:44:55", Interval: 100 * time.Millisecond},
+								{Name: "Test Target 1", MAC: entity.NewMacAddress("00:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 2", MAC: entity.NewMacAddress("11:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 3", MAC: entity.NewMacAddress("22:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 4", MAC: entity.NewMacAddress("33:11:22:33:44:55"), Interval: 100 * time.Millisecond},
 							},
 						},
 						{
 							Name: "Test Server 2",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 5", MAC: "44:11:22:33:44:55", Interval: 100 * time.Millisecond},
-								{Name: "Test Target 6", MAC: "55:11:22:33:44:55", Interval: 100 * time.Millisecond},
+								{Name: "Test Target 5", MAC: entity.NewMacAddress("44:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 6", MAC: entity.NewMacAddress("55:11:22:33:44:55"), Interval: 100 * time.Millisecond},
 							},
 						},
 					},

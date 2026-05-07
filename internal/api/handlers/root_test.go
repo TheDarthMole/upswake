@@ -39,7 +39,7 @@ var cfg = &entity.Config{
 			Targets: []*entity.TargetServer{
 				{
 					Name:      "testTarget",
-					MAC:       "00:00:00:00:00:00",
+					MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
 					Broadcast: "192.168.1.255",
 					Port:      9,
 					Interval:  15 * time.Second,
@@ -159,7 +159,7 @@ func TestRootHandler_Health(t *testing.T) {
 						Targets: []*entity.TargetServer{
 							{
 								Name:      "testTarget",
-								MAC:       "00:00:00:00:00:00",
+								MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
 								Broadcast: "127.0.0.255",
 								Port:      9,
 								Interval:  15 * time.Second,
@@ -276,7 +276,7 @@ default wake := true`),
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "testTarget",
-									MAC:       "00:00:00:00:00:00",
+									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
 									Broadcast: "192.168.1.255",
 									Port:      9,
 									Interval:  15 * time.Second,
@@ -300,7 +300,7 @@ default wake := true`),
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "testTarget",
-									MAC:       "00:00:00:00:00:00",
+									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
 									Broadcast: "192.168.1.255",
 									Port:      9,
 									Interval:  15 * time.Second,

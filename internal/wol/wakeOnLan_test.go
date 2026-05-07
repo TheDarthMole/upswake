@@ -61,7 +61,7 @@ func (*readWriteCloserError) Write(_ []byte) (int, error) {
 func newValidTestWoLTarget() *entity.TargetServer {
 	return &entity.TargetServer{
 		Name:      "test",
-		MAC:       "01:02:03:04:05:06",
+		MAC:       entity.NewMacAddress("01:02:03:04:05:06"),
 		Broadcast: "127.0.0.255",
 		Port:      9,
 		Interval:  15 * time.Minute,
@@ -147,7 +147,7 @@ func Test_newMagicPacket(t *testing.T) {
 func Test_wakeInternal(t *testing.T) {
 	type args struct {
 		dst io.ReadWriteCloser
-		mac string
+		mac *entity.MacAddress
 	}
 	tests := []struct {
 		name     string
@@ -159,7 +159,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid MAC",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: "invalid",
+				mac: entity.NewMacAddress("invalid"),
 			},
 			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
@@ -168,7 +168,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid MAC too long",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: "01:02:03:04:05:06:07",
+				mac: entity.NewMacAddress("01:02:03:04:05:06:07"),
 			},
 			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
@@ -177,7 +177,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid MAC too short",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: "01:02:03:04:05",
+				mac: entity.NewMacAddress("01:02:03:04:05"),
 			},
 			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
@@ -186,7 +186,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid MAC wrong format",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: "01:02:03:04:gg",
+				mac: entity.NewMacAddress("01:02:03:04:05"),
 			},
 			wantErr:  ErrFailedCreateMagicPacket,
 			wantSent: nil,
@@ -195,7 +195,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "valid MAC",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: validMagicPacketMAC,
+				mac: entity.NewMacAddress(validMagicPacketMAC),
 			},
 			wantErr:  nil,
 			wantSent: validMagicPacket,
@@ -204,7 +204,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid write length",
 			args: args{
 				dst: newReadWriteCloserError(),
-				mac: validMagicPacketMAC,
+				mac: entity.NewMacAddress(validMagicPacketMAC),
 			},
 			wantErr:  ErrExpectedPacketSize,
 			wantSent: validMagicPacket,
