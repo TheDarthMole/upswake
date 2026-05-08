@@ -9,6 +9,9 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 )
 
+// compile time interface checks
+var _ repository.UPSRepository = new(CachedRepository)
+
 // CachedRepository wraps another UPSRepository and caches results
 // keyed by host:port. Call Reset() between evaluation cycles to
 // force fresh data on the next tick.

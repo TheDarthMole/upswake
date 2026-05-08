@@ -21,6 +21,9 @@ var (
 	ErrCompileError    = errors.New("failed to compile rego rule")
 	ErrInvalidRegoRule = errors.New("invalid rego rule")
 	ErrPackageName     = errors.New("rego rule must be in package 'upswake'")
+
+	// compile time interface checks
+	_ repository.RuleRepository = new(PreparedRepository)
 )
 
 // PreparedRepository loads and pre-compiles all Rego rules from the

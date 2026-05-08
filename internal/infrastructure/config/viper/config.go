@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -16,6 +17,9 @@ const (
 var (
 	ErrReadingConfigFile   = errors.New("error reading config file")
 	ErrUnmarshallingConfig = errors.New("error unmarshalling config")
+
+	// compile time interface checks
+	_ repository.ConfigRepository = new(ConfigLoader)
 )
 
 type ConfigLoader struct {
