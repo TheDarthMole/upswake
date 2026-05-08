@@ -7,12 +7,8 @@ import (
 	"log/slog"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	nut "github.com/robbiet480/go.nut"
 )
-
-// compile time interface checks
-var _ repository.UPSRepository = new(DirectRepository)
 
 // DirectRepository connects to the NUT server on every call.
 // Satisfies repository.UPSRepository.
