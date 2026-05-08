@@ -88,8 +88,8 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			Woken:   false,
 		})
 	}
-	mac := entity.NewMacAddress(request.Mac)
-	if err := mac.Validate(); err != nil {
+	mac, err := entity.NewMacAddress(request.Mac)
+	if err != nil {
 		c.Logger().Error("failed to validate mac address", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, upsWakeResponse{
 			Message: err.Error(),

@@ -77,8 +77,8 @@ func FromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, err
 		return nil, fmt.Errorf("%w: %w", ErrFailedParsingInterval, err)
 	}
 
-	mac := entity.NewMacAddress(targetServer.MAC)
-	if err := mac.Validate(); err != nil {
+	mac, err := entity.NewMacAddress(targetServer.MAC)
+	if err != nil {
 		return nil, err
 	}
 
