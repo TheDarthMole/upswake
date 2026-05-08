@@ -57,6 +57,12 @@ func newRuleRepo(t *testing.T, files map[string][]byte) *rules.PreparedRepositor
 }
 
 func TestNewRegoEvaluator(t *testing.T) {
+	validMac1, err := entity.NewMacAddress("00:00:00:00:00:00")
+	require.NoError(t, err)
+
+	validMac2, err := entity.NewMacAddress("00:00:00:00:00:55")
+	require.NoError(t, err)
+
 	type args struct {
 		config   *entity.Config
 		upsRepo  repository.UPSRepository
@@ -73,22 +79,22 @@ func TestNewRegoEvaluator(t *testing.T) {
 			name: "valid config 1",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    entity.NewMacAddress("00:00:00:00:00:00"),
+				mac:    validMac1,
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    entity.NewMacAddress("00:00:00:00:00:00"),
+				mac:    validMac1,
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    entity.NewMacAddress("00:00:00:00:00:55"),
+				mac:    validMac2,
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    entity.NewMacAddress("00:00:00:00:00:55"),
+				mac:    validMac2,
 			},
 		},
 		//	TODO: Add more test cases
@@ -223,6 +229,12 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		err:  nil,
 	}
 
+	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
+	require.NoError(t, err)
+
+	notFoundMac, err := entity.NewMacAddress("00:00:00:00:00:00")
+	require.NoError(t, err)
+
 	type fields struct {
 		config  *entity.Config
 		upsRepo repository.UPSRepository
@@ -249,7 +261,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+									MAC:       validMac,
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,
@@ -262,14 +274,14 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: validNUTUPSRepository,
-				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
+				mac:     validMac,
 			},
 			want: &EvaluationResult{
 				Allowed: true,
 				Found:   true,
 				Target: &entity.TargetServer{
 					Name:      "test server",
-					MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+					MAC:       validMac,
 					Broadcast: "192.168.1.255",
 					Port:      entity.DefaultWoLPort,
 					Interval:  15 * time.Minute,
@@ -294,7 +306,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
+									MAC:       validMac,
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,
@@ -307,7 +319,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: validNUTUPSRepository,
-				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
+				mac:     notFoundMac,
 			},
 			want: &EvaluationResult{
 				Allowed: false,
@@ -330,7 +342,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "test server",
-									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+									MAC:       validMac,
 									Broadcast: "192.168.1.255",
 									Port:      entity.DefaultWoLPort,
 									Interval:  15 * time.Minute,
@@ -343,7 +355,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					},
 				},
 				upsRepo: invalidNUTOutputRepository,
-				mac:     entity.NewMacAddress("00:11:22:33:44:55"),
+				mac:     validMac,
 			},
 			want:    nil,
 			wantErr: ErrFailedEvaluateExpression,

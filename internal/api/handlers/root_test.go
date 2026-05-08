@@ -28,26 +28,31 @@ func (r *countingUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
 	return r.json, r.err
 }
 
-var cfg = &entity.Config{
-	NutServers: []*entity.NutServer{
-		{
-			Name:     "testNUTServer",
-			Host:     "127.0.0.1",
-			Port:     1234,
-			Username: "test-user",
-			Password: "test-password",
-			Targets: []*entity.TargetServer{
-				{
-					Name:      "testTarget",
-					MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
-					Broadcast: "192.168.1.255",
-					Port:      9,
-					Interval:  15 * time.Second,
-					Rules:     nil,
+func testConfig(t *testing.T) *entity.Config {
+	validMac, err := entity.NewMacAddress("00:00:00:00:00:00")
+	require.NoError(t, err)
+
+	return &entity.Config{
+		NutServers: []*entity.NutServer{
+			{
+				Name:     "testNUTServer",
+				Host:     "127.0.0.1",
+				Port:     1234,
+				Username: "test-user",
+				Password: "test-password",
+				Targets: []*entity.TargetServer{
+					{
+						Name:      "testTarget",
+						MAC:       validMac,
+						Broadcast: "192.168.1.255",
+						Port:      9,
+						Interval:  15 * time.Second,
+						Rules:     nil,
+					},
 				},
 			},
 		},
-	},
+	}
 }
 
 func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
@@ -69,7 +74,7 @@ func TestRootHandlerRoot(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(cfg, rulesFS, &countingUPSRepo{})
+	h := NewRootHandler(testConfig(t), rulesFS, &countingUPSRepo{})
 
 	if assert.NoError(t, h.Root(c)) {
 		assert.Equal(t, http.StatusMovedPermanently, rec.Code)
@@ -78,6 +83,9 @@ func TestRootHandlerRoot(t *testing.T) {
 }
 
 func TestRootHandler_Health(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:00:00:00:00:00")
+	require.NoError(t, err)
+
 	type fields struct {
 		cfg     *entity.Config
 		rulesFS afero.Fs
@@ -159,7 +167,7 @@ func TestRootHandler_Health(t *testing.T) {
 						Targets: []*entity.TargetServer{
 							{
 								Name:      "testTarget",
-								MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
+								MAC:       validMac,
 								Broadcast: "127.0.0.255",
 								Port:      9,
 								Interval:  15 * time.Second,
@@ -202,7 +210,7 @@ func TestRootHandler_Register(t *testing.T) {
 	e := echo.New()
 	e.Validator = api.NewCustomValidator(t.Context())
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(cfg, rulesFS, &countingUPSRepo{})
+	h := NewRootHandler(testConfig(t), rulesFS, &countingUPSRepo{})
 
 	g := e.Group("")
 	h.Register(g)
@@ -230,6 +238,9 @@ func TestRootHandler_Register(t *testing.T) {
 }
 
 func TestNewRootHandler(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:00:00:00:00:00")
+	require.NoError(t, err)
+
 	type args struct {
 		cfg     *entity.Config
 		rulesFS afero.Fs
@@ -248,14 +259,14 @@ default wake := true`),
 		{
 			name: "empty rules filesystem",
 			args: args{
-				cfg:     cfg,
+				cfg:     testConfig(t),
 				rulesFS: emptyFS,
 				upsRepo: &countingUPSRepo{
 					json: `[{"Name":"ups1"}]`,
 				},
 			},
 			want: &RootHandler{
-				cfg:     cfg,
+				cfg:     testConfig(t),
 				rulesFS: emptyFS,
 				upsRepo: &countingUPSRepo{
 					json: `[{"Name":"ups1"}]`,
@@ -276,7 +287,7 @@ default wake := true`),
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "testTarget",
-									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
+									MAC:       validMac,
 									Broadcast: "192.168.1.255",
 									Port:      9,
 									Interval:  15 * time.Second,
@@ -300,7 +311,7 @@ default wake := true`),
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "testTarget",
-									MAC:       entity.NewMacAddress("00:00:00:00:00:00"),
+									MAC:       validMac,
 									Broadcast: "192.168.1.255",
 									Port:      9,
 									Interval:  15 * time.Second,
