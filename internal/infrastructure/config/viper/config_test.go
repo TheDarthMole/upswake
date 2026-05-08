@@ -10,10 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	// compile time interface checks
-	_ repository.ConfigRepository = new(ConfigLoader)
-)
+// compile time interface checks
+var _ repository.ConfigRepository = new(ConfigLoader)
 
 func Test_Load(t *testing.T) {
 	type args struct {
