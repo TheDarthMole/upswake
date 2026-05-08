@@ -13,6 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// compile time interface checks
+var _ repository.UPSRepository = new(CachedRepository)
+
 type countingRepo struct {
 	err   error
 	json  string

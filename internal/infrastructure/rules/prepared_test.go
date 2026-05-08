@@ -3,12 +3,16 @@ package rules
 import (
 	"testing"
 
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const validJSON = `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
+
+// compile time interface checks
+var _ repository.RuleRepository = new(PreparedRepository)
 
 func newTestFS(t *testing.T, files map[string][]byte) afero.Fs {
 	t.Helper()

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/google/uuid"
 	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	"github.com/stretchr/testify/assert"
@@ -12,6 +13,9 @@ import (
 var (
 	randomUsername = uuid.New().String()
 	randomPassword = uuid.New().String()
+
+	// compile time interface checks
+	_ repository.UPSRepository = new(DirectRepository)
 )
 
 func TestNewDirectRepository(t *testing.T) {

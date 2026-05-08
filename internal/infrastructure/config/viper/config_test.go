@@ -5,9 +5,13 @@ import (
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
+
+// compile time interface checks
+var _ repository.ConfigRepository = new(ConfigLoader)
 
 func Test_Load(t *testing.T) {
 	type args struct {
