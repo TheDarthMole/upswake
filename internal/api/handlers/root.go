@@ -27,6 +27,10 @@ type Response struct {
 
 // NewRootHandler constructs a RootHandler with the provided configuration, rules filesystem and UPS repository.
 // The returned handler holds the dependencies used by the package's HTTP handlers, including the repository for querying UPS/NUT servers.
+//
+// @Title UPSWake
+// @Version 1.0
+// @Description UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers
 func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,

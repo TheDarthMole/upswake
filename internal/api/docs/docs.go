@@ -366,12 +366,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "UPSWake",
+	Description:      "UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
