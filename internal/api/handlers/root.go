@@ -30,7 +30,7 @@ type Response struct {
 //
 //	@Title			UPSWake
 //	@Version		1.0
-//	@Description	UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers
+//	@Description	UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers
 func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,

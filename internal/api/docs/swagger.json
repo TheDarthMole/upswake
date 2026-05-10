@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers",
+        "description": "UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers",
         "title": "UPSWake",
         "contact": {},
         "version": "1.0"

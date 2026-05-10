@@ -88,8 +88,7 @@ definitions:
 info:
   contact: {}
   description: UPSWake reads data from a UPS Nut Server and uses it to dynamically
-    send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and
-    uses it to dynamically send Wake on Lan packets to servers
+    send Wake on Lan packets to servers
   title: UPSWake
   version: "1.0"
 paths:

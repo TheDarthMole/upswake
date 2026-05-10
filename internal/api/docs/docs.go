@@ -371,7 +371,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "UPSWake",
-	Description:      "UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to serversUPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers",
+	Description:      "UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
