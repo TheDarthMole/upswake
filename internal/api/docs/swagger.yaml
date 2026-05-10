@@ -17,6 +17,21 @@ definitions:
       message:
         type: string
     type: object
+  handlers.UpsWakeResponse:
+    properties:
+      message:
+        example: Wake on LAN sent
+        type: string
+      woken:
+        example: true
+        type: boolean
+    type: object
+  handlers.WakeEvaluationRequest:
+    properties:
+      mac:
+        example: "00:11:22:33:44:55"
+        type: string
+    type: object
   handlers.WakeServerRequest:
     properties:
       broadcast:
@@ -33,12 +48,6 @@ definitions:
     required:
     - broadcast
     - mac
-    type: object
-  handlers.macAddress:
-    properties:
-      mac:
-        example: "00:11:22:33:44:55"
-        type: string
     type: object
   viper.NutServer:
     properties:
@@ -175,35 +184,35 @@ paths:
       - application/json
       description: Run wake evaluation using the config and rules stored in the server
       parameters:
-      - description: MAC address
+      - description: the mac address of the target to wake
         in: body
-        name: macAddress
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.macAddress'
+          $ref: '#/definitions/handlers.WakeEvaluationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Wake on LAN sent
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/handlers.UpsWakeResponse'
         "304":
           description: No rule evaluated to true
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/handlers.UpsWakeResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/handlers.UpsWakeResponse'
         "404":
           description: MAC address not found in the config
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/handlers.UpsWakeResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/handlers.UpsWakeResponse'
       summary: Run wake evaluation
       tags:
       - UPSWake

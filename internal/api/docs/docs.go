@@ -162,12 +162,12 @@ const docTemplate = `{
                 "summary": "Run wake evaluation",
                 "parameters": [
                     {
-                        "description": "MAC address",
-                        "name": "macAddress",
+                        "description": "the mac address of the target to wake",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.macAddress"
+                            "$ref": "#/definitions/handlers.WakeEvaluationRequest"
                         }
                     }
                 ],
@@ -175,31 +175,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Wake on LAN sent",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     },
                     "304": {
                         "description": "No rule evaluated to true",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     },
                     "404": {
                         "description": "MAC address not found in the config",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     }
                 }
@@ -262,6 +262,28 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpsWakeResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Wake on LAN sent"
+                },
+                "woken": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "handlers.WakeEvaluationRequest": {
+            "type": "object",
+            "properties": {
+                "mac": {
+                    "type": "string",
+                    "example": "00:11:22:33:44:55"
+                }
+            }
+        },
         "handlers.WakeServerRequest": {
             "type": "object",
             "required": [
@@ -282,15 +304,6 @@ const docTemplate = `{
                     "maximum": 65535,
                     "minimum": 1,
                     "example": 9
-                }
-            }
-        },
-        "handlers.macAddress": {
-            "type": "object",
-            "properties": {
-                "mac": {
-                    "type": "string",
-                    "example": "00:11:22:33:44:55"
                 }
             }
         },
