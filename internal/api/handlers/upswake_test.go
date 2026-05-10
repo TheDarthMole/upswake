@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -170,6 +171,33 @@ default wake := false`),
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Failed to create target server: broadcast is invalid, must be an IP address","woken":false}`,
 				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "failing_rule_repo",
+			fields: fields{
+				cfg: validConfig,
+				upsRepo: &mockUPSRepo{
+					json: "",
+					err:  errors.New("failing rule"),
+				},
+				body: `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"failing rule","woken":false}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "invalid_mac_address",
+			fields: fields{
+				cfg:     validConfig,
+				upsRepo: upsRepo,
+				body:    `{"mac":"invalid mac address"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"MAC address is invalid","woken":false}`,
+				statusCode: http.StatusBadRequest,
 			},
 		},
 	}
