@@ -174,7 +174,7 @@ default wake := false`),
 			},
 		},
 		{
-			name: "failing_rule_repo",
+			name: "failing_ups_repo",
 			fields: fields{
 				cfg: validConfig,
 				upsRepo: &mockUPSRepo{
