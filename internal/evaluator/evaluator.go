@@ -8,10 +8,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 )
 
-var (
-	ErrFailedReadRegoFile       = errors.New("failed to read rego file")
-	ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
-)
+var ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
 
 type RegoEvaluator struct {
 	config   *entity.Config
@@ -56,7 +53,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 		// For each target
 		for _, target := range nutServer.Targets {
 			if target.MAC == nil || r.mac == nil {
-				return nil, fmt.Errorf("error comparing mac addresses :%w", entity.ErrInvalidMac)
+				return nil, fmt.Errorf("error comparing mac addresses :%w", entity.ErrMACRequired)
 			}
 			if target.MAC.String() != r.mac.String() {
 				continue
