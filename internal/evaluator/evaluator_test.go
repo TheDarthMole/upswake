@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -229,6 +230,12 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 		err:  nil,
 	}
 
+	failingNUTOutputError := errors.New("failed to get NUT output")
+	failingNUTOutputRepository := &mockUPSRepo{
+		json: "",
+		err:  failingNUTOutputError,
+	}
+
 	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
 	require.NoError(t, err)
 
@@ -293,7 +300,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "missing mac in config",
+			name: "mismatched mac in config",
 			fields: fields{
 				config: &entity.Config{
 					NutServers: []*entity.NutServer{
@@ -329,6 +336,38 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name: "no mac in config",
+			fields: fields{
+				config: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "test",
+							Host:     "",
+							Port:     entity.DefaultNUTServerPort,
+							Username: "",
+							Password: "",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "test server",
+									MAC:       nil,
+									Broadcast: "192.168.1.255",
+									Port:      entity.DefaultWoLPort,
+									Interval:  15 * time.Minute,
+									Rules: []string{
+										"test.rego",
+									},
+								},
+							},
+						},
+					},
+				},
+				upsRepo: validNUTUPSRepository,
+				mac:     validMac,
+			},
+			want:    nil,
+			wantErr: entity.ErrMACRequired,
+		},
+		{
 			name: "invalid nutserver output",
 			fields: fields{
 				config: &entity.Config{
@@ -359,6 +398,38 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			},
 			want:    nil,
 			wantErr: ErrFailedEvaluateExpression,
+		},
+		{
+			name: "failing nutserver output",
+			fields: fields{
+				config: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "test",
+							Host:     "",
+							Port:     entity.DefaultNUTServerPort,
+							Username: "",
+							Password: "",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "test server",
+									MAC:       validMac,
+									Broadcast: "192.168.1.255",
+									Port:      entity.DefaultWoLPort,
+									Interval:  15 * time.Minute,
+									Rules: []string{
+										"test.rego",
+									},
+								},
+							},
+						},
+					},
+				},
+				upsRepo: failingNUTOutputRepository,
+				mac:     validMac,
+			},
+			want:    nil,
+			wantErr: failingNUTOutputError,
 		},
 	}
 	for _, tt := range tests {
