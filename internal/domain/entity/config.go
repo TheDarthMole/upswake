@@ -104,12 +104,18 @@ func (ns *NutServer) Validate() error {
 	return nil
 }
 
-func NewMacAddress(mac string) *MacAddress {
-	return &MacAddress{string: mac}
+func NewMacAddress(mac string) (*MacAddress, error) {
+	macAddress := &MacAddress{mac}
+
+	if err := macAddress.Validate(); err != nil {
+		return nil, err
+	}
+
+	return macAddress, nil
 }
 
 type MacAddress struct {
-	string
+	string `json:"mac" example:"00:11:22:33:44:55"`
 }
 
 func (m *MacAddress) String() string {
@@ -177,12 +183,6 @@ func NewTargetServer(name, mac, broadcast string, interval time.Duration, port i
 		return nil, err
 	}
 	return ts, nil
-}
-
-type NutServerInterface interface {
-	Validate() error
-	GetJSON() (string, error)
-	NutServer
 }
 
 func CreateDefaultConfig() *Config {

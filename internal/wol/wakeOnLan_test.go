@@ -58,10 +58,13 @@ func (*readWriteCloserError) Write(_ []byte) (int, error) {
 	return 15, nil
 }
 
-func newValidTestWoLTarget() *entity.TargetServer {
+func newValidTestWoLTarget(t *testing.T) *entity.TargetServer {
+	validMac, err := entity.NewMacAddress("01:02:03:04:05:06")
+	require.NoError(t, err)
+
 	return &entity.TargetServer{
 		Name:      "test",
-		MAC:       entity.NewMacAddress("01:02:03:04:05:06"),
+		MAC:       validMac,
 		Broadcast: "127.0.0.255",
 		Port:      9,
 		Interval:  15 * time.Minute,
@@ -145,6 +148,9 @@ func Test_newMagicPacket(t *testing.T) {
 }
 
 func Test_wakeInternal(t *testing.T) {
+	validMac, err := entity.NewMacAddress(validMagicPacketMAC)
+	require.NoError(t, err)
+
 	type args struct {
 		dst io.ReadWriteCloser
 		mac *entity.MacAddress
@@ -156,46 +162,10 @@ func Test_wakeInternal(t *testing.T) {
 		wantSent []byte
 	}{
 		{
-			name: "invalid MAC",
-			args: args{
-				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress("invalid"),
-			},
-			wantErr:  ErrFailedCreateMagicPacket,
-			wantSent: nil,
-		},
-		{
-			name: "invalid MAC too long",
-			args: args{
-				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress("01:02:03:04:05:06:07"),
-			},
-			wantErr:  ErrFailedCreateMagicPacket,
-			wantSent: nil,
-		},
-		{
-			name: "invalid MAC too short",
-			args: args{
-				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress("01:02:03:04:05"),
-			},
-			wantErr:  ErrFailedCreateMagicPacket,
-			wantSent: nil,
-		},
-		{
-			name: "invalid MAC wrong format",
-			args: args{
-				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress("01:02:03:04:05"),
-			},
-			wantErr:  ErrFailedCreateMagicPacket,
-			wantSent: nil,
-		},
-		{
 			name: "valid MAC",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: entity.NewMacAddress(validMagicPacketMAC),
+				mac: validMac,
 			},
 			wantErr:  nil,
 			wantSent: validMagicPacket,
@@ -204,7 +174,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid write length",
 			args: args{
 				dst: newReadWriteCloserError(),
-				mac: entity.NewMacAddress(validMagicPacketMAC),
+				mac: validMac,
 			},
 			wantErr:  ErrExpectedPacketSize,
 			wantSent: validMagicPacket,
@@ -240,9 +210,9 @@ func TestNewWoLClient(t *testing.T) {
 		{
 			name: "valid target",
 			args: args{
-				newValidTestWoLTarget(),
+				newValidTestWoLTarget(t),
 			},
-			want: &WakeOnLan{newValidTestWoLTarget()},
+			want: &WakeOnLan{newValidTestWoLTarget(t)},
 		},
 	}
 
@@ -266,7 +236,7 @@ func TestWakeOnLan_Wake(t *testing.T) {
 		{
 			name: "valid",
 			fields: fields{
-				newValidTestWoLTarget(),
+				newValidTestWoLTarget(t),
 			},
 			wantErr: nil,
 		},

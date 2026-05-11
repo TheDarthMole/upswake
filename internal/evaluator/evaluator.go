@@ -8,16 +8,13 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 )
 
-var (
-	ErrFailedReadRegoFile       = errors.New("failed to read rego file")
-	ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
-)
+var ErrFailedEvaluateExpression = errors.New("could not evaluate expression")
 
 type RegoEvaluator struct {
 	config   *entity.Config
 	ruleRepo repository.RuleRepository
 	upsRepo  repository.UPSRepository
-	mac      string
+	mac      *entity.MacAddress
 }
 
 type EvaluationResult struct {
@@ -30,7 +27,7 @@ type EvaluationResult struct {
 // UPS repository and rule repository.
 // The returned evaluator uses the MAC to select matching targets, upsRepo to fetch per-server JSON
 // input and ruleRepo to evaluate rules against that input.
-func NewRegoEvaluator(config *entity.Config, mac string, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *RegoEvaluator {
+func NewRegoEvaluator(config *entity.Config, mac *entity.MacAddress, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *RegoEvaluator {
 	return &RegoEvaluator{
 		config:   config,
 		mac:      mac,
@@ -55,7 +52,10 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 
 		// For each target
 		for _, target := range nutServer.Targets {
-			if target.MAC.String() != r.mac {
+			if target.MAC == nil || r.mac == nil {
+				return nil, fmt.Errorf("error comparing mac addresses :%w", entity.ErrMACRequired)
+			}
+			if target.MAC.String() != r.mac.String() {
 				continue
 			}
 			allowed, err := r.evaluateExpression(target, inputJSON)

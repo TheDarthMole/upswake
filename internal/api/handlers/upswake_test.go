@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,6 +27,9 @@ func (m *mockUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
 }
 
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
+	require.NoError(t, err)
+
 	regoAlwaysTrue := newMemFS(t, map[string][]byte{
 		"always_true.rego": []byte(`package upswake
 default wake := true`),
@@ -57,7 +61,7 @@ default wake := false`),
 				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
-						MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+						MAC:       validMac,
 						Broadcast: "127.0.0.255",
 						Port:      9,
 						Interval:  15 * time.Minute,
@@ -78,7 +82,7 @@ default wake := false`),
 				Targets: []*entity.TargetServer{
 					{
 						Name:      "test-target",
-						MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+						MAC:       validMac,
 						Broadcast: "777.666.555.444",
 						Port:      9,
 						Interval:  15 * time.Minute,
@@ -167,6 +171,33 @@ default wake := false`),
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Failed to create target server: broadcast is invalid, must be an IP address","woken":false}`,
 				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "failing_ups_repo",
+			fields: fields{
+				cfg: validConfig,
+				upsRepo: &mockUPSRepo{
+					json: "",
+					err:  errors.New("failing rule"),
+				},
+				body: `{"mac":"00:11:22:33:44:55"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"failing rule","woken":false}`,
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "invalid_mac_address",
+			fields: fields{
+				cfg:     validConfig,
+				upsRepo: upsRepo,
+				body:    `{"mac":"invalid mac address"}`,
+			},
+			wantedResponse: wantedResponse{
+				body:       `{"message":"MAC address is invalid","woken":false}`,
+				statusCode: http.StatusBadRequest,
 			},
 		},
 	}

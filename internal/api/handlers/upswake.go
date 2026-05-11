@@ -20,11 +20,11 @@ type UPSWakeHandler struct {
 	ruleRepo repository.RuleRepository
 }
 
-type macAddress struct {
+type WakeEvaluationRequest struct {
 	Mac string `json:"mac" example:"00:11:22:33:44:55"`
 }
 
-type upsWakeResponse struct {
+type UpsWakeResponse struct {
 	Message string `json:"message" example:"Wake on LAN sent"`
 	Woken   bool   `json:"woken" example:"true"`
 }
@@ -72,43 +72,52 @@ func (h *UPSWakeHandler) ListNutServerMappings(c *echo.Context) error {
 //	@Tags			UPSWake
 //	@Accept			json
 //	@Produce		json
-//	@Param			macAddress		body		macAddress	true	"MAC address"
-//	@Success		200				{object}	Response	"Wake on LAN sent"
-//	@Success		304				{object}	Response	"No rule evaluated to true"
-//	@Failure		400				{object}	Response	"Bad request"
-//	@Failure		404				{object}	Response	"MAC address not found in the config"
-//	@Failure		500				{object}	Response	"Internal server error"
+//	@Param			request			body		WakeEvaluationRequest	true	"the mac address of the target to wake"
+//	@Success		200				{object}	UpsWakeResponse			"Wake on LAN sent"
+//	@Success		304				{object}	UpsWakeResponse			"No rule evaluated to true"
+//	@Failure		400				{object}	UpsWakeResponse			"Bad request"
+//	@Failure		404				{object}	UpsWakeResponse			"MAC address not found in the config"
+//	@Failure		500				{object}	UpsWakeResponse			"Internal server error"
 //	@Router			/api/upswake	[post]
 func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
-	mac := &macAddress{}
-	if err := c.Bind(mac); err != nil {
+	request := &WakeEvaluationRequest{}
+	if err := c.Bind(request); err != nil {
 		c.Logger().Error("failed to bind mac address", slog.Any("error", err))
-		return c.JSON(http.StatusBadRequest, upsWakeResponse{
+		return c.JSON(http.StatusBadRequest, UpsWakeResponse{
 			Message: ErrorBindingRequest.Error(),
 			Woken:   false,
 		})
 	}
-	eval := evaluator.NewRegoEvaluator(h.cfg, mac.Mac, h.upsRepo, h.ruleRepo)
+	mac, err := entity.NewMacAddress(request.Mac)
+	if err != nil {
+		c.Logger().Error("failed to validate mac address", slog.Any("error", err))
+		return c.JSON(http.StatusBadRequest, UpsWakeResponse{
+			Message: err.Error(),
+			Woken:   false,
+		})
+	}
+
+	eval := evaluator.NewRegoEvaluator(h.cfg, mac, h.upsRepo, h.ruleRepo)
 	result, err := eval.EvaluateExpressions()
 	if err != nil {
 		c.Logger().Error("Failed to evaluate expressions", slog.Any("error", err))
-		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+		return c.JSON(http.StatusInternalServerError, UpsWakeResponse{
 			Message: err.Error(),
 			Woken:   false,
 		})
 	}
 
 	if !result.Found {
-		c.Logger().Error("mac address not found in the config", slog.String("mac", sanitizeString(mac.Mac)))
-		return c.JSON(http.StatusConflict, upsWakeResponse{
+		c.Logger().Error("mac address not found in the config", slog.String("mac", mac.String()))
+		return c.JSON(http.StatusConflict, UpsWakeResponse{
 			Message: "MAC address not found in the config",
 			Woken:   false,
 		})
 	}
 
 	if !result.Allowed {
-		c.Logger().Debug("no rule evaluated to true", slog.String("mac", sanitizeString(mac.Mac)))
-		return c.JSON(http.StatusOK, upsWakeResponse{
+		c.Logger().Debug("no rule evaluated to true", slog.String("mac", mac.String()))
+		return c.JSON(http.StatusOK, UpsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
 		})
@@ -124,7 +133,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	)
 	if err != nil {
 		c.Logger().Error("Failed to create target server", slog.Any("error", err))
-		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+		return c.JSON(http.StatusInternalServerError, UpsWakeResponse{
 			Message: fmt.Sprintf("Failed to create target server: %s", err),
 			Woken:   false,
 		})
@@ -134,14 +143,14 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 
 	if err = wolClient.Wake(); err != nil {
 		c.Logger().Error("Failed to send wake on lan", slog.Any("error", err))
-		return c.JSON(http.StatusInternalServerError, upsWakeResponse{
+		return c.JSON(http.StatusInternalServerError, UpsWakeResponse{
 			Message: fmt.Sprintf("Failed to send wake on LAN: %s", err),
 			Woken:   false,
 		})
 	}
 
-	c.Logger().Debug("Wake on LAN sent", slog.String("mac", sanitizeString(mac.Mac)))
-	return c.JSON(http.StatusOK, upsWakeResponse{
+	c.Logger().Debug("Wake on LAN sent", slog.String("mac", mac.String()))
+	return c.JSON(http.StatusOK, UpsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,
 	})

@@ -6,9 +6,13 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFromFileConfig(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
+	require.NoError(t, err)
+
 	type args struct {
 		config *Config
 	}
@@ -57,7 +61,7 @@ func TestFromFileConfig(t *testing.T) {
 						Targets: []*entity.TargetServer{
 							{
 								Name: "TestTarget",
-								MAC:  entity.NewMacAddress("00:11:22:33:44:55"),
+								MAC:  validMac,
 								Rules: []string{
 									"rule1",
 									"rule2",
@@ -147,6 +151,9 @@ func TestFromFileConfig(t *testing.T) {
 }
 
 func TestToFileConfig(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
+	require.NoError(t, err)
+
 	type args struct {
 		entityConfig *entity.Config
 	}
@@ -169,7 +176,7 @@ func TestToFileConfig(t *testing.T) {
 							Targets: []*entity.TargetServer{
 								{
 									Name:      "TestTarget",
-									MAC:       entity.NewMacAddress("00:11:22:33:44:55"),
+									MAC:       validMac,
 									Rules:     []string{"rule1", "rule2"},
 									Interval:  15 * time.Minute,
 									Port:      9,
