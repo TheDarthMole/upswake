@@ -54,6 +54,8 @@ func (h *UPSWakeHandler) Register(g *echo.Group) {
 //	@Success		200	{object}	[]viper.NutServer
 //	@Router			/api/upswake [get]
 func (h *UPSWakeHandler) ListNutServerMappings(c *echo.Context) error {
+	// Using viper config here as the 'interval' is displayed as a string instead of an integer, e.g. 10s instead of 10000000
+	// TODO: This can be fixed via https://biscuit.ninja/posts/go-unmarshalling-json-into-time-duration/
 	nutServers := make([]*viper.NutServer, len(h.cfg.NutServers))
 
 	for i, nutServer := range h.cfg.NutServers {
