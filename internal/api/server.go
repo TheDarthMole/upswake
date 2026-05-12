@@ -46,27 +46,27 @@ func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 		LogStatus: true,
 		LogURI:    true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Error == nil {
-				logger.Info(
-					"REQUEST",
+			if v.Error != nil {
+				c.Logger().LogAttrs(
+					context.Background(), slog.LevelError, "REQUEST_ERROR",
 					slog.String("remote_ip", c.RealIP()),
 					slog.String("host", c.Request().Host),
 					slog.String("method", c.Request().Method),
 					slog.String("uri", v.URI),
 					slog.String("user_agent", c.Request().UserAgent()),
 					slog.Int("status", v.Status),
+					slog.Any("error", v.Error),
 				)
 				return nil
 			}
-			logger.Error(
-				"REQUEST_ERROR",
+			c.Logger().LogAttrs(
+				context.Background(), slog.LevelInfo, "REQUEST",
 				slog.String("remote_ip", c.RealIP()),
 				slog.String("host", c.Request().Host),
 				slog.String("method", c.Request().Method),
 				slog.String("uri", v.URI),
 				slog.String("user_agent", c.Request().UserAgent()),
 				slog.Int("status", v.Status),
-				slog.Any("error", v.Error),
 			)
 			return nil
 		},
