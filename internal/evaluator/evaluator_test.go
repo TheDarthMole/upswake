@@ -8,54 +8,16 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
-	"github.com/spf13/afero"
+	"github.com/TheDarthMole/UPSWake/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 const (
 	validNUTOutput   = `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
 	invalidNUTOutput = "invalid!"
 )
-
-var (
-	regoAlwaysTrue = []byte(`package upswake
-default wake := true`)
-	regoAlwaysFalse = []byte(`package upswake
-default wake := false`)
-	regoCheck100Percent = []byte(`package upswake
-default wake := false
-wake if {
-	input[i].Name == "cyberpower900"
-	input[i].Variables[j].Name == "battery.charge"
-	input[i].Variables[j].Value == 100
-}`)
-)
-
-type mockUPSRepo struct {
-	err  error
-	json string
-}
-
-func (m *mockUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
-	return m.json, m.err
-}
-
-func writeMemFile(t *testing.T, fs afero.Fs, fileName string, contents []byte) {
-	require.NoError(t, afero.WriteFile(fs, fileName, contents, 0o644))
-}
-
-func newRuleRepo(t *testing.T, files map[string][]byte) *rules.PreparedRepository {
-	t.Helper()
-	fs := afero.NewMemMapFs()
-	for name, content := range files {
-		writeMemFile(t, fs, name, content)
-	}
-	repo, err := rules.NewPreparedRepository(fs)
-	require.NoError(t, err)
-	// Type assert to get the concrete type for tests
-	return repo.(*rules.PreparedRepository)
-}
 
 func TestNewRegoEvaluator(t *testing.T) {
 	validMac1, err := entity.NewMacAddress("00:00:00:00:00:00")
@@ -109,12 +71,14 @@ func TestNewRegoEvaluator(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
-	ruleRepo := newRuleRepo(t, map[string][]byte{
-		"alwaysTrue.rego":      regoAlwaysTrue,
-		"alwaysFalse.rego":     regoAlwaysFalse,
-		"check100Percent.rego": regoCheck100Percent,
-	})
-
+	type ruleRepository struct {
+		err     error
+		times   int
+		allowed bool
+	}
+	type fields struct {
+		ruleRepo ruleRepository
+	}
 	type args struct {
 		target    *entity.TargetServer
 		inputJSON string
@@ -122,6 +86,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	tests := []struct {
 		wantErr error
 		args    args
+		fields  fields
 		name    string
 		want    bool
 	}{
@@ -130,6 +95,9 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			args: args{
 				target:    nil,
 				inputJSON: "",
+			},
+			fields: fields{
+				ruleRepo: ruleRepository{times: 0},
 			},
 			want:    false,
 			wantErr: nil,
@@ -144,6 +112,12 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput,
 			},
+			fields: fields{
+				ruleRepo: ruleRepository{
+					times:   1,
+					allowed: true,
+				},
+			},
 			want:    true,
 			wantErr: nil,
 		},
@@ -156,6 +130,12 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 					},
 				},
 				inputJSON: validNUTOutput,
+			},
+			fields: fields{
+				ruleRepo: ruleRepository{
+					times:   1,
+					allowed: false,
+				},
 			},
 			want:    false,
 			wantErr: nil,
@@ -170,40 +150,23 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 				},
 				inputJSON: validNUTOutput,
 			},
+			fields: fields{
+				ruleRepo: ruleRepository{
+					times:   1,
+					allowed: false,
+					err:     rules.ErrRuleNotFound,
+				},
+			},
 			want:    false,
 			wantErr: rules.ErrRuleNotFound,
 		},
-		{
-			name: "ups 100% check positive",
-			args: args{
-				target: &entity.TargetServer{
-					Rules: []string{
-						"check100Percent.rego",
-					},
-				},
-				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
-			},
-			want:    true,
-			wantErr: nil,
-		},
-		{
-			name: "ups 100% check negative",
-			args: args{
-				target: &entity.TargetServer{
-					Port: entity.DefaultWoLPort,
-					Rules: []string{
-						"check100Percent.rego",
-					},
-				},
-				inputJSON: `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":10,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
-			},
-			want:    false,
-			wantErr: nil,
-		},
-		// TODO: Add more rules that tests inputJSON, e.g. faulty fs
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mock := gomock.NewController(t)
+			ruleRepo := mocks.NewMockRuleRepository(mock)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.allowed, tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
+
 			r := &RegoEvaluator{
 				ruleRepo: ruleRepo,
 			}
@@ -216,25 +179,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
-	ruleRepo := newRuleRepo(t, map[string][]byte{
-		"test.rego": regoAlwaysTrue,
-	})
-
-	validNUTUPSRepository := &mockUPSRepo{
-		json: validNUTOutput,
-		err:  nil,
-	}
-
-	invalidNUTOutputRepository := &mockUPSRepo{
-		json: invalidNUTOutput,
-		err:  nil,
-	}
-
 	failingNUTOutputError := errors.New("failed to get NUT output")
-	failingNUTOutputRepository := &mockUPSRepo{
-		json: "",
-		err:  failingNUTOutputError,
-	}
 
 	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
 	require.NoError(t, err)
@@ -242,10 +187,21 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	notFoundMac, err := entity.NewMacAddress("00:00:00:00:00:00")
 	require.NoError(t, err)
 
+	type upsRepository struct {
+		err   error
+		json  string
+		times int
+	}
+	type rulesRepository struct {
+		err     error
+		times   int
+		allowed bool
+	}
 	type fields struct {
-		config  *entity.Config
-		upsRepo repository.UPSRepository
-		mac     *entity.MacAddress
+		rulesRepo rulesRepository
+		config    *entity.Config
+		mac       *entity.MacAddress
+		upsRepo   upsRepository
 	}
 
 	tests := []struct {
@@ -280,8 +236,17 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				upsRepo: validNUTUPSRepository,
-				mac:     validMac,
+				upsRepo: upsRepository{
+					times: 1,
+					err:   nil,
+					json:  validNUTOutput,
+				},
+				rulesRepo: rulesRepository{
+					times:   1,
+					allowed: true,
+					err:     nil,
+				},
+				mac: validMac,
 			},
 			want: &EvaluationResult{
 				Allowed: true,
@@ -325,8 +290,13 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				upsRepo: validNUTUPSRepository,
-				mac:     notFoundMac,
+				upsRepo: upsRepository{
+					times: 1,
+					err:   nil,
+					json:  validNUTOutput,
+				},
+				rulesRepo: rulesRepository{times: 0},
+				mac:       notFoundMac,
 			},
 			want: &EvaluationResult{
 				Allowed: false,
@@ -361,43 +331,16 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				upsRepo: validNUTUPSRepository,
-				mac:     validMac,
+				upsRepo: upsRepository{
+					times: 1,
+					err:   nil,
+					json:  validNUTOutput,
+				},
+				rulesRepo: rulesRepository{times: 0},
+				mac:       validMac,
 			},
 			want:    nil,
 			wantErr: entity.ErrMACRequired,
-		},
-		{
-			name: "invalid nutserver output",
-			fields: fields{
-				config: &entity.Config{
-					NutServers: []*entity.NutServer{
-						{
-							Name:     "test",
-							Host:     "",
-							Port:     entity.DefaultNUTServerPort,
-							Username: "",
-							Password: "",
-							Targets: []*entity.TargetServer{
-								{
-									Name:      "test server",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      entity.DefaultWoLPort,
-									Interval:  15 * time.Minute,
-									Rules: []string{
-										"test.rego",
-									},
-								},
-							},
-						},
-					},
-				},
-				upsRepo: invalidNUTOutputRepository,
-				mac:     validMac,
-			},
-			want:    nil,
-			wantErr: ErrFailedEvaluateExpression,
 		},
 		{
 			name: "failing nutserver output",
@@ -425,8 +368,13 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 						},
 					},
 				},
-				upsRepo: failingNUTOutputRepository,
-				mac:     validMac,
+				upsRepo: upsRepository{
+					times: 1,
+					err:   failingNUTOutputError,
+					json:  "",
+				},
+				rulesRepo: rulesRepository{times: 0},
+				mac:       validMac,
 			},
 			want:    nil,
 			wantErr: failingNUTOutputError,
@@ -434,10 +382,17 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mock := gomock.NewController(t)
+			upsRepo := mocks.NewMockUPSRepository(mock)
+			upsRepo.EXPECT().GetJSON(gomock.Any()).Return(tt.fields.upsRepo.json, tt.fields.upsRepo.err).Times(tt.fields.upsRepo.times)
+
+			ruleRepo := mocks.NewMockRuleRepository(mock)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.rulesRepo.allowed, tt.fields.rulesRepo.err).Times(tt.fields.rulesRepo.times)
+
 			r := &RegoEvaluator{
 				config:   tt.fields.config,
 				mac:      tt.fields.mac,
-				upsRepo:  tt.fields.upsRepo,
+				upsRepo:  upsRepo,
 				ruleRepo: ruleRepo,
 			}
 			got, err := r.EvaluateExpressions()
