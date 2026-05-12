@@ -147,6 +147,14 @@ func TestNewCustomValidator(t *testing.T) {
 	}
 }
 
+func mockLoggerInfoHandler(c *echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{"message": "Hello World"})
+}
+
+func mockLoggerErrorHandler(_ *echo.Context) error {
+	return errors.New("error")
+}
+
 func TestNewServer(t *testing.T) {
 	type args struct {
 		ctx    context.Context
@@ -194,6 +202,46 @@ func TestNewServer(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("new server with info logging handler", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		log, buf := newTestLoggerWithBuffer()
+
+		got := NewServer(context.Background(), log)
+		assert.NotEmpty(t, got)
+
+		got.echo.GET("/", mockLoggerInfoHandler)
+
+		got.echo.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+
+		assert.Contains(t, buf.String(), "REQUEST")
+		assertLoggingOutput(t, buf.String())
+	})
+
+	t.Run("new server with error logging handler", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		log, buf := newTestLoggerWithBuffer()
+
+		got := NewServer(context.Background(), log)
+		assert.NotEmpty(t, got)
+
+		got.echo.GET("/", mockLoggerErrorHandler)
+
+		got.echo.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+
+		assert.Contains(t, buf.String(), "REQUEST_ERROR")
+		assertLoggingOutput(t, buf.String())
+		assert.Contains(t, buf.String(), "error")
+	})
+}
+
+func assertLoggingOutput(t *testing.T, bufContents string) {
+	assert.Contains(t, bufContents, "remote_ip")
+	assert.Contains(t, bufContents, "host")
+	assert.Contains(t, bufContents, "method")
+	assert.Contains(t, bufContents, "uri")
+	assert.Contains(t, bufContents, "user_agent")
+	assert.Contains(t, bufContents, "status")
 }
 
 func TestServer_API(t *testing.T) {
