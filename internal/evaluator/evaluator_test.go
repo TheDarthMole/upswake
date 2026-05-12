@@ -86,8 +86,8 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 	tests := []struct {
 		wantErr error
 		args    args
-		fields  fields
 		name    string
+		fields  fields
 		want    bool
 	}{
 		{
@@ -205,10 +205,10 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	}
 
 	tests := []struct {
-		want    *EvaluationResult
 		wantErr error
-		fields  fields
+		want    *EvaluationResult
 		name    string
+		fields  fields
 	}{
 		{
 			name: "valid eval",
