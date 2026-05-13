@@ -7,8 +7,8 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository/mocks"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
-	"github.com/TheDarthMole/UPSWake/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

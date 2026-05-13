@@ -10,7 +10,7 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/mocks"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository/mocks"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
