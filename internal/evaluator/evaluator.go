@@ -68,9 +68,11 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 				return nil, err
 			}
 
-			evaluationResult.Found = true
-			evaluationResult.Allowed = true
-			evaluationResult.Target = target
+			return &EvaluationResult{
+				Target:  target,
+				Allowed: true,
+				Found:   true,
+			}, nil
 		}
 	}
 
