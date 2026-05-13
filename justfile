@@ -16,7 +16,7 @@ test-local: generate-certs start-nut-server test && stop-nut-server
 # Run all Go tests, assuming the NUT server is already running and certs are generated
 test:
     go clean -testcache
-    go test -coverpkg=$(go list ./... | grep -v 'internal/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
+    go test -coverpkg=$(go list ./... | grep -v 'internal/domain/repository/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
 
 # Runs all linters
 lint:
