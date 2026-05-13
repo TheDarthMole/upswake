@@ -23,9 +23,8 @@ type upsRepository struct {
 	times int
 }
 type ruleRepository struct {
-	err     error
-	times   int
-	allowed bool
+	err   error
+	times int
 }
 
 func TestNewRegoEvaluator(t *testing.T) {
@@ -101,10 +100,9 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		args    args
 		name    string
 		fields  fields
-		want    bool
 	}{
 		{
-			name: "nothing to evaluate",
+			name: "nil target server",
 			args: args{
 				target:    nil,
 				inputJSON: "",
@@ -112,8 +110,7 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			fields: fields{
 				ruleRepo: ruleRepository{times: 0},
 			},
-			want:    false,
-			wantErr: nil,
+			wantErr: ErrFailedEvaluateExpression, // because the target is nil
 		},
 		{
 			name: "evaluate with always true rule",
@@ -127,11 +124,10 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			},
 			fields: fields{
 				ruleRepo: ruleRepository{
-					times:   1,
-					allowed: true,
+					times: 1,
+					err:   nil,
 				},
 			},
-			want:    true,
 			wantErr: nil,
 		},
 		{
@@ -146,12 +142,11 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			},
 			fields: fields{
 				ruleRepo: ruleRepository{
-					times:   1,
-					allowed: false,
+					times: 1,
+					err:   entity.ErrEvaluationFalse,
 				},
 			},
-			want:    false,
-			wantErr: nil,
+			wantErr: entity.ErrEvaluationFalse,
 		},
 		{
 			name: "file not found",
@@ -165,12 +160,10 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 			},
 			fields: fields{
 				ruleRepo: ruleRepository{
-					times:   1,
-					allowed: false,
-					err:     rules.ErrRuleNotFound,
+					times: 1,
+					err:   rules.ErrRuleNotFound,
 				},
 			},
-			want:    false,
 			wantErr: rules.ErrRuleNotFound,
 		},
 	}
@@ -178,15 +171,14 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := gomock.NewController(t)
 			ruleRepo := mocks.NewMockRuleRepository(mock)
-			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.allowed, tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
 
 			r := &RegoEvaluator{
 				ruleRepo: ruleRepo,
 			}
-			got, err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
+			err := r.evaluateExpression(tt.args.target, tt.args.inputJSON)
 
 			assert.ErrorIs(t, err, tt.wantErr)
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -238,8 +230,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					json:  validNUTOutput,
 				},
 				rulesRepo: ruleRepository{
-					times:   1,
-					allowed: true,
+					times: 1,
+					err:   nil,
 				},
 				mac: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
 			},
@@ -380,7 +372,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 			upsRepo.EXPECT().GetJSON(gomock.Any()).Return(tt.fields.upsRepo.json, tt.fields.upsRepo.err).Times(tt.fields.upsRepo.times)
 
 			ruleRepo := mocks.NewMockRuleRepository(mock)
-			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.rulesRepo.allowed, tt.fields.rulesRepo.err).Times(tt.fields.rulesRepo.times)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.rulesRepo.err).Times(tt.fields.rulesRepo.times)
 
 			r := &RegoEvaluator{
 				config:   tt.fields.config,

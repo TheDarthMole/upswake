@@ -3,6 +3,7 @@ package rules
 import (
 	"testing"
 
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -69,47 +70,43 @@ wake if {
 		name     string
 		ruleName string
 		json     string
-		want     bool
 	}{
 		{
 			name:     "always true",
 			ruleName: "alwaysTrue.rego",
 			json:     validJSON,
-			want:     true,
+			wantErr:  nil,
 		},
 		{
 			name:     "always false",
 			ruleName: "alwaysFalse.rego",
 			json:     validJSON,
-			want:     false,
+			wantErr:  entity.ErrEvaluationFalse,
 		},
 		{
 			name:     "check 100 percent positive",
 			ruleName: "check100.rego",
 			json:     validJSON,
-			want:     true,
+			wantErr:  nil,
 		},
 		{
 			name:     "rule not found",
 			ruleName: "nonexistent.rego",
 			json:     validJSON,
-			want:     false,
 			wantErr:  ErrRuleNotFound,
 		},
 		{
 			name:     "invalid json",
 			ruleName: "alwaysTrue.rego",
 			json:     "not json",
-			want:     false,
 			wantErr:  ErrDecodeFailed,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := repo.Evaluate(tt.ruleName, tt.json)
+			err := repo.Evaluate(tt.ruleName, tt.json)
 			assert.ErrorIs(t, err, tt.wantErr)
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }

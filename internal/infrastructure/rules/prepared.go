@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/rego"
@@ -74,10 +75,10 @@ func prepareRule(name, raw string) (rego.PreparedEvalQuery, error) {
 	return r.PrepareForEval(context.Background())
 }
 
-func (r *PreparedRepository) Evaluate(ruleName, inputJSON string) (bool, error) {
+func (r *PreparedRepository) Evaluate(ruleName, inputJSON string) error {
 	prepared, ok := r.rules[ruleName]
 	if !ok {
-		return false, fmt.Errorf("%w: %s", ErrRuleNotFound, ruleName)
+		return fmt.Errorf("%w: %s", ErrRuleNotFound, ruleName)
 	}
 
 	var input any
@@ -86,15 +87,18 @@ func (r *PreparedRepository) Evaluate(ruleName, inputJSON string) (bool, error) 
 	d.DisallowUnknownFields()
 
 	if err := d.Decode(&input); err != nil {
-		return false, fmt.Errorf("%w: %w", ErrDecodeFailed, err)
+		return fmt.Errorf("%w: %w", ErrDecodeFailed, err)
 	}
 
 	rs, err := prepared.Eval(context.Background(), rego.EvalInput(input))
 	if err != nil {
-		return false, fmt.Errorf("%w: %w", ErrEvaluationError, err)
+		return fmt.Errorf("%w: %s: %w", ErrEvaluationError, ruleName, err)
 	}
 
-	return rs.Allowed(), nil
+	if !rs.Allowed() {
+		return fmt.Errorf("%w: %s", entity.ErrEvaluationFalse, ruleName)
+	}
+	return nil
 }
 
 func (r *PreparedRepository) RuleNames() []string {

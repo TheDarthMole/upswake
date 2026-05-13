@@ -69,9 +69,8 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 	}
 
 	type ruleRepository struct {
-		err     error
-		times   int
-		allowed bool
+		err   error
+		times int
 	}
 
 	type fields struct {
@@ -111,8 +110,8 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
-					allowed: true,
-					times:   1,
+					times: 1,
+					err:   nil,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -130,8 +129,8 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
-					allowed: false,
-					times:   1,
+					times: 1,
+					err:   entity.ErrEvaluationFalse,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -165,8 +164,8 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
-					allowed: true,
-					times:   1,
+					times: 1,
+					err:   nil,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
@@ -214,7 +213,7 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 			upsRepo.EXPECT().GetJSON(gomock.Any()).Return(tt.fields.upsRepo.json, tt.fields.upsRepo.err).Times(tt.fields.upsRepo.times)
 
 			ruleRepo := mocks.NewMockRuleRepository(mock)
-			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.allowed, tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
 
 			req := httptest.NewRequest(http.MethodPost, "/upswake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

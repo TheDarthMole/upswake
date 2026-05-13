@@ -8,7 +8,7 @@ package repository
 type RuleRepository interface {
 	// Evaluate evaluates a named rule against the provided JSON input.
 	// The rule should already be compiled; this only runs the evaluation.
-	Evaluate(ruleName, inputJSON string) (bool, error)
+	Evaluate(ruleName, inputJSON string) error
 
 	// RuleNames returns all available rule names.
 	RuleNames() []string

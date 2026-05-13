@@ -58,13 +58,18 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 			if target.MAC != r.mac.MAC {
 				continue
 			}
-			allowed, err := r.evaluateExpression(target, inputJSON)
+			err := r.evaluateExpression(target, inputJSON)
+			if errors.Is(err, entity.ErrEvaluationFalse) {
+				evaluationResult.Target = target
+				evaluationResult.Found = true
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}
 
 			evaluationResult.Found = true
-			evaluationResult.Allowed = evaluationResult.Allowed || allowed
+			evaluationResult.Allowed = true
 			evaluationResult.Target = target
 		}
 	}
@@ -72,20 +77,20 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 	return evaluationResult, nil
 }
 
-func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSON string) (bool, error) {
+func (r *RegoEvaluator) evaluateExpression(target *entity.TargetServer, inputJSON string) error {
 	if target == nil {
-		return false, nil
+		return fmt.Errorf("%w: target is nil", ErrFailedEvaluateExpression)
 	}
 
 	for _, ruleName := range target.Rules {
-		allowed, err := r.ruleRepo.Evaluate(ruleName, inputJSON)
+		err := r.ruleRepo.Evaluate(ruleName, inputJSON)
+		if errors.Is(err, entity.ErrEvaluationFalse) {
+			continue
+		}
 		if err != nil {
-			return false, fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
+			return fmt.Errorf("%w: %w", ErrFailedEvaluateExpression, err)
 		}
-
-		if allowed {
-			return true, nil
-		}
+		return nil
 	}
-	return false, nil
+	return entity.ErrEvaluationFalse
 }
