@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -package mocks -source rules.go -destination mocks/rules_mock.go RuleRepository
+
 // RuleRepository provides access to pre-loaded and pre-compiled Rego rules.
 // Implementations should load and compile rules once at startup to avoid
 // repeated filesystem reads and OPA compilation on every evaluation cycle.

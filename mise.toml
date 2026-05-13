@@ -3,6 +3,7 @@ lockfile = true
 
 [tools]
 go = "1.26.3"
+"go:go.uber.org/mock/mockgen" = "0.6.0"
 golangci-lint = "2.12.2"
 hadolint = "2.14.0"
 hk = "1.45.0"

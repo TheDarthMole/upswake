@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -package mocks -source ups.go -destination mocks/ups_mock.go UPSRepository
+
 import "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 
 // UPSRepository provides access to UPS status data from NUT servers.

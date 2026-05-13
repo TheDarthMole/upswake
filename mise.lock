@@ -32,6 +32,10 @@ url = "https://dl.google.com/go/go1.26.3.darwin-amd64.tar.gz"
 checksum = "sha256:20d2ceafb4ed41b96b879010927b28bc92a5be57a7c1801ce365a9ca51d3224a"
 url = "https://dl.google.com/go/go1.26.3.windows-amd64.zip"
 
+[[tools."go:go.uber.org/mock/mockgen"]]
+version = "0.6.0"
+backend = "go:go.uber.org/mock/mockgen"
+
 [[tools.golangci-lint]]
 version = "2.12.2"
 backend = "aqua:golangci/golangci-lint"

@@ -10,45 +10,18 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/api"
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
-	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
-	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
+	"github.com/TheDarthMole/UPSWake/internal/domain/repository/mocks"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
-
-type mockUPSRepo struct {
-	err  error
-	json string
-}
-
-func (m *mockUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
-	return m.json, m.err
-}
 
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
 	require.NoError(t, err)
 
-	regoAlwaysTrue := newMemFS(t, map[string][]byte{
-		"always_true.rego": []byte(`package upswake
-default wake := true`),
-	})
-	regoAlwaysFalse := newMemFS(t, map[string][]byte{
-		"always_true.rego": []byte(`package upswake
-default wake := false`),
-	})
-
-	alwaysTrueRuleRepo, err := rules.NewPreparedRepository(regoAlwaysTrue)
-	require.NoError(t, err)
-
-	alwaysFalseRuleRepo, err := rules.NewPreparedRepository(regoAlwaysFalse)
-	require.NoError(t, err)
-
-	upsRepo := &mockUPSRepo{
-		json: `[{"Name":"test-ups","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`,
-		err:  nil,
-	}
+	const validJSON = `[{"Name":"test-ups","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
 
 	validConfig := &entity.Config{
 		NutServers: []*entity.NutServer{
@@ -93,11 +66,23 @@ default wake := false`),
 		},
 	}
 
+	type upsRepository struct {
+		err   error
+		json  string
+		times int
+	}
+
+	type ruleRepository struct {
+		err     error
+		times   int
+		allowed bool
+	}
+
 	type fields struct {
 		cfg      *entity.Config
-		upsRepo  repository.UPSRepository
-		ruleRepo repository.RuleRepository
+		ruleRepo ruleRepository
 		body     string
+		upsRepo  upsRepository
 	}
 	type wantedResponse struct {
 		body       string
@@ -112,8 +97,8 @@ default wake := false`),
 			name: "invalid_request_body",
 			fields: fields{
 				cfg:      validConfig,
-				upsRepo:  upsRepo,
-				ruleRepo: alwaysTrueRuleRepo,
+				upsRepo:  upsRepository{times: 0},
+				ruleRepo: ruleRepository{times: 0},
 				body:     `invalid json`,
 			},
 			wantedResponse: wantedResponse{
@@ -124,10 +109,16 @@ default wake := false`),
 		{
 			name: "valid_request",
 			fields: fields{
-				cfg:      validConfig,
-				upsRepo:  upsRepo,
-				ruleRepo: alwaysTrueRuleRepo,
-				body:     `{"mac":"00:11:22:33:44:55"}`,
+				cfg: validConfig,
+				upsRepo: upsRepository{
+					json:  validJSON,
+					times: 1,
+				},
+				ruleRepo: ruleRepository{
+					allowed: true,
+					times:   1,
+				},
+				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Wake on LAN sent","woken":true}`,
@@ -137,10 +128,16 @@ default wake := false`),
 		{
 			name: "rule_evaluates_to_false",
 			fields: fields{
-				cfg:      validConfig,
-				upsRepo:  upsRepo,
-				ruleRepo: alwaysFalseRuleRepo,
-				body:     `{"mac":"00:11:22:33:44:55"}`,
+				cfg: validConfig,
+				upsRepo: upsRepository{
+					json:  validJSON,
+					times: 1,
+				},
+				ruleRepo: ruleRepository{
+					allowed: false,
+					times:   1,
+				},
+				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"No rule evaluated to true","woken":false}`,
@@ -150,9 +147,12 @@ default wake := false`),
 		{
 			name: "mac_not_in_config",
 			fields: fields{
-				cfg:      validConfig,
-				upsRepo:  upsRepo,
-				ruleRepo: alwaysTrueRuleRepo,
+				cfg: validConfig,
+				upsRepo: upsRepository{
+					json:  validJSON,
+					times: 1,
+				},
+				ruleRepo: ruleRepository{times: 0},
 				body:     `{"mac":"99:11:22:33:44:44"}`,
 			},
 			wantedResponse: wantedResponse{
@@ -163,10 +163,16 @@ default wake := false`),
 		{
 			name: "invalid_broadcast_address",
 			fields: fields{
-				cfg:      invalidConfig,
-				upsRepo:  upsRepo,
-				ruleRepo: alwaysTrueRuleRepo,
-				body:     `{"mac":"00:11:22:33:44:55"}`,
+				cfg: invalidConfig,
+				upsRepo: upsRepository{
+					json:  validJSON,
+					times: 1,
+				},
+				ruleRepo: ruleRepository{
+					allowed: true,
+					times:   1,
+				},
+				body: `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"Failed to create target server: broadcast is invalid, must be an IP address","woken":false}`,
@@ -177,11 +183,12 @@ default wake := false`),
 			name: "failing_ups_repo",
 			fields: fields{
 				cfg: validConfig,
-				upsRepo: &mockUPSRepo{
-					json: "",
-					err:  errors.New("failing rule"),
+				upsRepo: upsRepository{
+					err:   errors.New("failing rule"),
+					times: 1,
 				},
-				body: `{"mac":"00:11:22:33:44:55"}`,
+				ruleRepo: ruleRepository{times: 0},
+				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"failing rule","woken":false}`,
@@ -192,7 +199,7 @@ default wake := false`),
 			name: "invalid_mac_address",
 			fields: fields{
 				cfg:     validConfig,
-				upsRepo: upsRepo,
+				upsRepo: upsRepository{times: 0},
 				body:    `{"mac":"invalid mac address"}`,
 			},
 			wantedResponse: wantedResponse{
@@ -205,14 +212,190 @@ default wake := false`),
 	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mock := gomock.NewController(t)
+
+			upsRepo := mocks.NewMockUPSRepository(mock)
+			upsRepo.EXPECT().GetJSON(gomock.Any()).Return(tt.fields.upsRepo.json, tt.fields.upsRepo.err).Times(tt.fields.upsRepo.times)
+
+			ruleRepo := mocks.NewMockRuleRepository(mock)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Return(tt.fields.ruleRepo.allowed, tt.fields.ruleRepo.err).Times(tt.fields.ruleRepo.times)
+
 			req := httptest.NewRequest(http.MethodPost, "/upswake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewUPSWakeHandler(tt.fields.cfg, tt.fields.upsRepo, tt.fields.ruleRepo)
+			h := NewUPSWakeHandler(tt.fields.cfg, upsRepo, ruleRepo)
 
 			if assert.NoError(t, h.RunWakeEvaluation(c)) {
+				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
+				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
+			}
+		})
+	}
+}
+
+func TestUPSWakeHandler_Register(t *testing.T) {
+	config := &entity.Config{}
+
+	e := echo.New()
+
+	mock := gomock.NewController(t)
+
+	upsRepo := mocks.NewMockUPSRepository(mock)
+	ruleRepo := mocks.NewMockRuleRepository(mock)
+
+	h := NewUPSWakeHandler(config, upsRepo, ruleRepo)
+	h.Register(e.Group("/"))
+
+	expectedRoutes := echo.Routes{
+		{
+			Name:   "GET:/",
+			Path:   "/",
+			Method: "GET",
+		},
+		{
+			Name:   "POST:/",
+			Path:   "/",
+			Method: "POST",
+		},
+	}
+
+	assert.Equal(t, expectedRoutes, e.Router().Routes())
+}
+
+func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
+	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
+	require.NoError(t, err)
+	type fields struct {
+		cfg *entity.Config
+	}
+	type wantedResponse struct {
+		body       string
+		statusCode int
+	}
+	tests := []struct {
+		name           string
+		fields         fields
+		wantedResponse wantedResponse
+	}{
+		{
+			name: "default config",
+			fields: fields{
+				cfg: entity.CreateDefaultConfig(),
+			},
+			wantedResponse: wantedResponse{
+				body:       `[{"name":"NUT Server 1","host":"192.168.1.13","username":"username","password":"********","targets":[{"name":"NAS 1","mac":"00:00:00:00:00:00","broadcast":"192.168.1.255","rules":["80percentOn.rego"],"interval":"15m0s","port":9}],"port":3493}]`,
+				statusCode: http.StatusOK,
+			},
+		},
+		{
+			name: "nut server with no targets",
+			fields: fields{
+				cfg: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "NUT Server 1",
+							Host:     "127.0.0.1",
+							Username: "test",
+							Password: "",
+							Targets:  nil,
+							Port:     1337,
+						},
+					},
+				},
+			},
+			wantedResponse: wantedResponse{
+				body:       `[{"name":"NUT Server 1","host":"127.0.0.1","username":"test","password":"********","targets":[],"port":1337}]`,
+				statusCode: http.StatusOK,
+			},
+		},
+		{
+			name: "nut server with one target",
+			fields: fields{
+				cfg: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "NUT Server 1",
+							Host:     "127.0.0.1",
+							Username: "test",
+							Password: "",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "NAS 1",
+									MAC:       validMac,
+									Broadcast: "127.0.0.255",
+									Rules:     []string{"test.rego"},
+									Interval:  15 * time.Minute,
+									Port:      1337,
+								},
+							},
+							Port: 1337,
+						},
+					},
+				},
+			},
+			wantedResponse: wantedResponse{
+				body:       `[{"name":"NUT Server 1","host":"127.0.0.1","username":"test","password":"********","targets":[{"name":"NAS 1","mac":"00:11:22:33:44:55","broadcast":"127.0.0.255","rules":["test.rego"],"interval":"15m0s","port":1337}],"port":1337}]`,
+				statusCode: http.StatusOK,
+			},
+		},
+		{
+			name: "nut server with two targets",
+			fields: fields{
+				cfg: &entity.Config{
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "NUT Server 1",
+							Host:     "127.0.0.1",
+							Username: "test",
+							Password: "",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "NAS 1",
+									MAC:       validMac,
+									Broadcast: "127.0.0.255",
+									Rules:     []string{"test.rego"},
+									Interval:  15 * time.Minute,
+									Port:      1337,
+								},
+								{
+									Name:      "NAS 2",
+									MAC:       validMac,
+									Broadcast: "127.0.1.255",
+									Rules:     []string{"test1.rego"},
+									Interval:  10 * time.Minute,
+									Port:      1338,
+								},
+							},
+							Port: 1337,
+						},
+					},
+				},
+			},
+			wantedResponse: wantedResponse{
+				body:       `[{"name":"NUT Server 1","host":"127.0.0.1","username":"test","password":"********","targets":[{"name":"NAS 1","mac":"00:11:22:33:44:55","broadcast":"127.0.0.255","rules":["test.rego"],"interval":"15m0s","port":1337},{"name":"NAS 2","mac":"00:11:22:33:44:55","broadcast":"127.0.1.255","rules":["test1.rego"],"interval":"10m0s","port":1338}],"port":1337}]`,
+				statusCode: http.StatusOK,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := gomock.NewController(t)
+
+			upsRepo := mocks.NewMockUPSRepository(mock)
+			upsRepo.EXPECT().GetJSON(gomock.Any()).Times(0)
+			ruleRepo := mocks.NewMockRuleRepository(mock)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Times(0)
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+
+			h := NewUPSWakeHandler(tt.fields.cfg, upsRepo, ruleRepo)
+
+			if assert.NoError(t, h.ListNutServerMappings(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
 			}
