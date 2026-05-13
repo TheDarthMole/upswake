@@ -11,14 +11,22 @@ local linters = new Mapping<String, Step> {
     ["check-merge-conflict"] = Builtins.check_merge_conflict
     ["fix-smart-quotes"] = Builtins.fix_smart_quotes
 
+    ["zizmor"] = Builtins.zizmor
+    ["mise"] = Builtins.mise
+    ["hadolint"] = (Builtins.hadolint) {
+        glob = List("**/Dockerfile*","**/Containerfile*")
+    }
+
+    ["go-mod-tidy"] = Builtins.gomod_tidy
     ["golangci-lint"] = Builtins.golangci_lint
     ["golangci-lint-config-verify"] {
         workspace_indicator = ".golangci.yml"
         check = "cd {{workspace}} && golangci-lint config verify"
     }
+    ["go-generate"] {
+        fix = "go generate ./..."
+    }
 
-    ["go-mod-tidy"] = Builtins.gomod_tidy
-    ["mise"] = Builtins.mise
     ["just-format"] {
         glob = List("**/justfile")
         check = "for f in {{ files }}; do just --fmt --check --unstable --justfile ${f}; done"
@@ -32,12 +40,6 @@ local linters = new Mapping<String, Step> {
         //glob = List("**/*.go")
         fix = "swag init --parseDependency --parseInternal --parseDepth=1 --dir=./internal/api/handlers --generalInfo=./root.go --output=./internal/api/docs"
     }
-
-    ["hadolint"] = (Builtins.hadolint) {
-        glob = List("**/Dockerfile*","**/Containerfile*")
-    }
-
-    ["zizmor"] = Builtins.zizmor
 }
 
 hooks {
