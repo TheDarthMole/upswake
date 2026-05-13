@@ -19,7 +19,7 @@ func NewProfilerHandler(profiler *entity.Profiler) *ProfilerHandler {
 }
 
 // Register middleware for net/http/pprof
-// Inspired by https://github.com/labstack/echo-contrib/blob/master/pprof/pprof_test.go
+// Inspired by https://github.com/labstack/echo-contrib/blob/master/pprof/pprof.go
 func (*ProfilerHandler) Register(group *echo.Group) {
 	group.GET("/", handler(pprof.Index))
 	group.GET("/allocs", handler(pprof.Handler("allocs").ServeHTTP))
