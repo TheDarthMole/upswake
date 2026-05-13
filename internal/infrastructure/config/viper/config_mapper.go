@@ -22,6 +22,7 @@ func FromFileConfig(config *Config) (*entity.Config, error) {
 
 	return &entity.Config{
 		NutServers: nutServers,
+		Profiler:   FromFileProfiler(config.Profiler),
 	}, nil
 }
 
@@ -101,4 +102,18 @@ func ToFileTargetServer(targetServer *entity.TargetServer) *TargetServer {
 		Interval:  targetServer.Interval.String(),
 		Rules:     targetServer.Rules,
 	}
+}
+
+func FromFileProfiler(profiler *Profiler) *entity.Profiler {
+	if profiler == nil {
+		return &entity.Profiler{Enabled: false}
+	}
+	return &entity.Profiler{Enabled: profiler.Enabled}
+}
+
+func ToFileProfiler(entityConfig *entity.Config) *Profiler {
+	if entityConfig == nil {
+		return &Profiler{Enabled: false}
+	}
+	return &Profiler{Enabled: entityConfig.Profiler.Enabled}
 }

@@ -26,6 +26,9 @@ func TestFromFileConfig(t *testing.T) {
 			name: "full file config with one nut server and one target server",
 			args: args{
 				config: &Config{
+					Profiler: &Profiler{
+						Enabled: true,
+					},
 					NutServers: []*NutServer{
 						{
 							Name:     "TestServer",
@@ -51,6 +54,9 @@ func TestFromFileConfig(t *testing.T) {
 				},
 			},
 			want: &entity.Config{
+				Profiler: &entity.Profiler{
+					Enabled: true,
+				},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -81,6 +87,7 @@ func TestFromFileConfig(t *testing.T) {
 				config: &Config{},
 			},
 			want: &entity.Config{
+				Profiler:   &entity.Profiler{},
 				NutServers: []*entity.NutServer{},
 			},
 		},
@@ -101,6 +108,7 @@ func TestFromFileConfig(t *testing.T) {
 				},
 			},
 			want: &entity.Config{
+				Profiler: &entity.Profiler{},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",

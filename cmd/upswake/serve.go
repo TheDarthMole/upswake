@@ -104,6 +104,12 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	server := api.NewServer(cmd.Context(), j.logger)
 
+	if cfg.Profiler.Enabled {
+		j.logger.Warn("Profiler enabled")
+		profilerHandler := handlers.NewProfilerHandler(cfg.Profiler)
+		profilerHandler.Register(server.Root().Group("/debug/pprof"))
+	}
+
 	rootHandler := handlers.NewRootHandler(cfg, j.regoFs, cachedUpsRepo)
 	rootHandler.Register(server.Root())
 
