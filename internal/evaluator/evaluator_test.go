@@ -15,9 +15,19 @@ import (
 )
 
 const (
-	validNUTOutput   = `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
-	invalidNUTOutput = "invalid!"
+	validNUTOutput = `[{"Name":"cyberpower900","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
 )
+
+type upsRepository struct {
+	err   error
+	json  string
+	times int
+}
+type ruleRepository struct {
+	err     error
+	times   int
+	allowed bool
+}
 
 func TestNewRegoEvaluator(t *testing.T) {
 	validMac1, err := entity.NewMacAddress("00:00:00:00:00:00")
@@ -60,6 +70,21 @@ func TestNewRegoEvaluator(t *testing.T) {
 				mac:    validMac2,
 			},
 		},
+		{
+			name: "valid config 3",
+			args: args{
+				config:   entity.CreateDefaultConfig(),
+				mac:      validMac1,
+				upsRepo:  &mocks.MockUPSRepository{},
+				ruleRepo: &mocks.MockRuleRepository{},
+			},
+			want: &RegoEvaluator{
+				config:   entity.CreateDefaultConfig(),
+				mac:      validMac1,
+				upsRepo:  &mocks.MockUPSRepository{},
+				ruleRepo: &mocks.MockRuleRepository{},
+			},
+		},
 		//	TODO: Add more test cases
 	}
 	for _, tt := range tests {
@@ -71,11 +96,6 @@ func TestNewRegoEvaluator(t *testing.T) {
 }
 
 func TestRegoEvaluator_evaluateExpression(t *testing.T) {
-	type ruleRepository struct {
-		err     error
-		times   int
-		allowed bool
-	}
 	type fields struct {
 		ruleRepo ruleRepository
 	}
@@ -187,18 +207,8 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	notFoundMac, err := entity.NewMacAddress("00:00:00:00:00:00")
 	require.NoError(t, err)
 
-	type upsRepository struct {
-		err   error
-		json  string
-		times int
-	}
-	type rulesRepository struct {
-		err     error
-		times   int
-		allowed bool
-	}
 	type fields struct {
-		rulesRepo rulesRepository
+		rulesRepo ruleRepository
 		config    *entity.Config
 		mac       *entity.MacAddress
 		upsRepo   upsRepository
@@ -238,13 +248,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				},
 				upsRepo: upsRepository{
 					times: 1,
-					err:   nil,
 					json:  validNUTOutput,
 				},
-				rulesRepo: rulesRepository{
+				rulesRepo: ruleRepository{
 					times:   1,
 					allowed: true,
-					err:     nil,
 				},
 				mac: validMac,
 			},
@@ -292,10 +300,9 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				},
 				upsRepo: upsRepository{
 					times: 1,
-					err:   nil,
 					json:  validNUTOutput,
 				},
-				rulesRepo: rulesRepository{times: 0},
+				rulesRepo: ruleRepository{times: 0},
 				mac:       notFoundMac,
 			},
 			want: &EvaluationResult{
@@ -333,10 +340,9 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 				},
 				upsRepo: upsRepository{
 					times: 1,
-					err:   nil,
 					json:  validNUTOutput,
 				},
-				rulesRepo: rulesRepository{times: 0},
+				rulesRepo: ruleRepository{times: 0},
 				mac:       validMac,
 			},
 			want:    nil,
@@ -373,7 +379,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					err:   failingNUTOutputError,
 					json:  "",
 				},
-				rulesRepo: rulesRepository{times: 0},
+				rulesRepo: ruleRepository{times: 0},
 				mac:       validMac,
 			},
 			want:    nil,

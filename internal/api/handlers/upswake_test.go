@@ -96,18 +96,10 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 		{
 			name: "invalid_request_body",
 			fields: fields{
-				cfg: validConfig,
-				upsRepo: upsRepository{
-					err:   nil,
-					json:  validJSON,
-					times: 0,
-				},
-				ruleRepo: ruleRepository{
-					allowed: true,
-					err:     nil,
-					times:   0,
-				},
-				body: `invalid json`,
+				cfg:      validConfig,
+				upsRepo:  upsRepository{times: 0},
+				ruleRepo: ruleRepository{times: 0},
+				body:     `invalid json`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"failed to parse request body","woken":false}`,
@@ -119,13 +111,11 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 			fields: fields{
 				cfg: validConfig,
 				upsRepo: upsRepository{
-					err:   nil,
 					json:  validJSON,
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
 					allowed: true,
-					err:     nil,
 					times:   1,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
@@ -140,13 +130,11 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 			fields: fields{
 				cfg: validConfig,
 				upsRepo: upsRepository{
-					err:   nil,
 					json:  validJSON,
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
 					allowed: false,
-					err:     nil,
 					times:   1,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
@@ -161,16 +149,11 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 			fields: fields{
 				cfg: validConfig,
 				upsRepo: upsRepository{
-					err:   nil,
 					json:  validJSON,
 					times: 1,
 				},
-				ruleRepo: ruleRepository{
-					allowed: false,
-					err:     nil,
-					times:   0,
-				},
-				body: `{"mac":"99:11:22:33:44:44"}`,
+				ruleRepo: ruleRepository{times: 0},
+				body:     `{"mac":"99:11:22:33:44:44"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"MAC address not found in the config","woken":false}`,
@@ -182,13 +165,11 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 			fields: fields{
 				cfg: invalidConfig,
 				upsRepo: upsRepository{
-					err:   nil,
 					json:  validJSON,
 					times: 1,
 				},
 				ruleRepo: ruleRepository{
 					allowed: true,
-					err:     nil,
 					times:   1,
 				},
 				body: `{"mac":"00:11:22:33:44:55"}`,
@@ -204,13 +185,10 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 				cfg: validConfig,
 				upsRepo: upsRepository{
 					err:   errors.New("failing rule"),
-					json:  "",
 					times: 1,
 				},
-				ruleRepo: ruleRepository{
-					times: 0,
-				},
-				body: `{"mac":"00:11:22:33:44:55"}`,
+				ruleRepo: ruleRepository{times: 0},
+				body:     `{"mac":"00:11:22:33:44:55"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"failing rule","woken":false}`,
@@ -220,13 +198,9 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 		{
 			name: "invalid_mac_address",
 			fields: fields{
-				cfg: validConfig,
-				upsRepo: upsRepository{
-					err:   nil,
-					json:  validJSON,
-					times: 0,
-				},
-				body: `{"mac":"invalid mac address"}`,
+				cfg:     validConfig,
+				upsRepo: upsRepository{times: 0},
+				body:    `{"mac":"invalid mac address"}`,
 			},
 			wantedResponse: wantedResponse{
 				body:       `{"message":"MAC address is invalid","woken":false}`,
@@ -410,7 +384,9 @@ func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
 			mock := gomock.NewController(t)
 
 			upsRepo := mocks.NewMockUPSRepository(mock)
+			upsRepo.EXPECT().GetJSON(gomock.Any()).Times(0)
 			ruleRepo := mocks.NewMockRuleRepository(mock)
+			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Times(0)
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
