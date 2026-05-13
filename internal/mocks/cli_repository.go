@@ -10,7 +10,6 @@
 package mocks
 
 import (
-	tls "crypto/tls"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -54,6 +53,34 @@ func (mr *MockCLIArgsRepositoryMockRecorder) Address() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Address", reflect.TypeOf((*MockCLIArgsRepository)(nil).Address))
 }
 
+// ListenAddress mocks base method.
+func (m *MockCLIArgsRepository) ListenAddress() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListenAddress")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// ListenAddress indicates an expected call of ListenAddress.
+func (mr *MockCLIArgsRepositoryMockRecorder) ListenAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListenAddress", reflect.TypeOf((*MockCLIArgsRepository)(nil).ListenAddress))
+}
+
+// URL mocks base method.
+func (m *MockCLIArgsRepository) URL() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "URL")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// URL indicates an expected call of URL.
+func (mr *MockCLIArgsRepositoryMockRecorder) URL() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "URL", reflect.TypeOf((*MockCLIArgsRepository)(nil).URL))
+}
+
 // URLPrefix mocks base method.
 func (m *MockCLIArgsRepository) URLPrefix() string {
 	m.ctrl.T.Helper()
@@ -80,19 +107,4 @@ func (m *MockCLIArgsRepository) Validate() error {
 func (mr *MockCLIArgsRepositoryMockRecorder) Validate() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockCLIArgsRepository)(nil).Validate))
-}
-
-// x509Cert mocks base method.
-func (m *MockCLIArgsRepository) x509Cert() (*tls.Config, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "x509Cert")
-	ret0, _ := ret[0].(*tls.Config)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// x509Cert indicates an expected call of x509Cert.
-func (mr *MockCLIArgsRepositoryMockRecorder) x509Cert() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "x509Cert", reflect.TypeOf((*MockCLIArgsRepository)(nil).x509Cert))
 }
