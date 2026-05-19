@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPProfRegisterDefaualtPrefix(t *testing.T) {
+func TestPProfRegisterDefaultPrefix(t *testing.T) {
 	pprofPaths := []struct {
 		path string
 	}{
