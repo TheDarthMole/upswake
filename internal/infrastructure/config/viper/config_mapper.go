@@ -34,6 +34,7 @@ func ToFileConfig(entityConfig *entity.Config) *Config {
 
 	return &Config{
 		NutServers: nutServers,
+		Profiler:   ToFileProfiler(entityConfig.Profiler),
 	}
 }
 
@@ -111,9 +112,9 @@ func FromFileProfiler(profiler *Profiler) *entity.Profiler {
 	return &entity.Profiler{Enabled: profiler.Enabled}
 }
 
-func ToFileProfiler(entityConfig *entity.Config) *Profiler {
-	if entityConfig == nil {
+func ToFileProfiler(entityProfiler *entity.Profiler) *Profiler {
+	if entityProfiler == nil {
 		return &Profiler{Enabled: false}
 	}
-	return &Profiler{Enabled: entityConfig.Profiler.Enabled}
+	return &Profiler{Enabled: entityProfiler.Enabled}
 }
