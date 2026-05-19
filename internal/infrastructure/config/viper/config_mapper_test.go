@@ -174,6 +174,7 @@ func TestToFileConfig(t *testing.T) {
 			name: "full entity config with one nut server and one target server",
 			args: args{
 				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
 					NutServers: []*entity.NutServer{
 						{
 							Name:     "TestServer",
@@ -196,6 +197,56 @@ func TestToFileConfig(t *testing.T) {
 				},
 			},
 			want: &Config{
+				Profiler: &Profiler{},
+				NutServers: []*NutServer{
+					{
+						Name:     "TestServer",
+						Host:     "localhost",
+						Port:     1234,
+						Username: "user",
+						Password: "pass",
+						Targets: []*TargetServer{
+							{
+								Name:      "TestTarget",
+								MAC:       "00:11:22:33:44:55",
+								Rules:     []string{"rule1", "rule2"},
+								Interval:  "15m0s", // Trailing zero values are included in the string representation of durations. Annoying I know, but this is how time.Duration.String() works in Go.
+								Port:      9,
+								Broadcast: "127.0.0.255",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "full entity config with nil profiler",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: nil,
+					NutServers: []*entity.NutServer{
+						{
+							Name:     "TestServer",
+							Host:     "localhost",
+							Port:     1234,
+							Username: "user",
+							Password: "pass",
+							Targets: []*entity.TargetServer{
+								{
+									Name:      "TestTarget",
+									MAC:       validMac,
+									Rules:     []string{"rule1", "rule2"},
+									Interval:  15 * time.Minute,
+									Port:      9,
+									Broadcast: "127.0.0.255",
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
 				NutServers: []*NutServer{
 					{
 						Name:     "TestServer",
