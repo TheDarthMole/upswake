@@ -106,7 +106,7 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	if cfg.Profiler.Enabled {
 		j.logger.Warn("Profiler enabled")
-		profilerHandler := handlers.NewProfilerHandler(cfg.Profiler)
+		profilerHandler := handlers.NewProfilerHandler()
 		profilerHandler.Register(server.Root().Group("/debug/pprof"))
 	}
 

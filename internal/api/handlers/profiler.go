@@ -4,18 +4,13 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/labstack/echo/v5"
 )
 
-type ProfilerHandler struct {
-	profiler *entity.Profiler
-}
+type ProfilerHandler struct{}
 
-func NewProfilerHandler(profiler *entity.Profiler) *ProfilerHandler {
-	return &ProfilerHandler{
-		profiler: profiler,
-	}
+func NewProfilerHandler() *ProfilerHandler {
+	return &ProfilerHandler{}
 }
 
 // Register middleware for net/http/pprof
