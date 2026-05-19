@@ -118,9 +118,55 @@ nut_servers:
 				`"status":4`, // http 4xx errors
 			},
 		},
+		{
+			name: "valid config no rules and profiler enabled",
+			args: args{
+				cmdFunc: func(logger *slog.Logger) *cobra.Command {
+					fs := afero.NewMemMapFs()
+					cfgYaml := `
+profiler:
+  enabled: true
+nut_servers:
+  - name: test-nut-server
+    host: 127.0.0.1
+    port: 3493
+    username: username
+    password: password
+    targets:
+      - name: test-target-server
+        mac: "00:00:00:00:00:00"
+        broadcast: 127.0.0.255
+        port: 9
+        interval: 400ms
+        rules: []
+`
+					err := afero.WriteFile(fs, "upswake.yml", []byte(cfgYaml), 0o644)
+					require.NoError(t, err)
+
+					regoFs := afero.NewMemMapFs()
+
+					return NewServeCommand(t.Context(), logger, fs, regoFs)
+				},
+				args: []string{"serve", "--config", "upswake.yml", "--port", "8083"},
+			},
+			timeout: 5 * time.Second,
+			err:     ErrTimeout, // expect a timeout error, as the command will run indefinitely otherwise
+			wantOutputs: []string{
+				`"status":200`,
+				`Profiler enabled`,
+			},
+			notWantOutputs: []string{
+				`"level":"ERROR"`,
+				`"level":"error"`,
+				`"level":"Error"`,
+				`"status":5`, // http 5xx errors
+				`"status":4`, // http 4xx errors
+			},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			gotOutput, err := executeCommandWithContext(t, test.args.cmdFunc, test.timeout, test.args.args)
 
 			assert.ErrorIs(t, err, test.err)

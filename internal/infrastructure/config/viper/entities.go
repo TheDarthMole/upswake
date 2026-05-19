@@ -1,7 +1,12 @@
 package viper
 
 type Config struct {
+	Profiler   *Profiler    `mapstructure:"profiler"`
 	NutServers []*NutServer `mapstructure:"nut_servers"`
+}
+
+type Profiler struct {
+	Enabled bool `mapstructure:"enabled" json:"enabled"`
 }
 
 type NutServer struct {

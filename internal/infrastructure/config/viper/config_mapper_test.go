@@ -26,6 +26,9 @@ func TestFromFileConfig(t *testing.T) {
 			name: "full file config with one nut server and one target server",
 			args: args{
 				config: &Config{
+					Profiler: &Profiler{
+						Enabled: true,
+					},
 					NutServers: []*NutServer{
 						{
 							Name:     "TestServer",
@@ -51,6 +54,9 @@ func TestFromFileConfig(t *testing.T) {
 				},
 			},
 			want: &entity.Config{
+				Profiler: &entity.Profiler{
+					Enabled: true,
+				},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -81,6 +87,7 @@ func TestFromFileConfig(t *testing.T) {
 				config: &Config{},
 			},
 			want: &entity.Config{
+				Profiler:   &entity.Profiler{},
 				NutServers: []*entity.NutServer{},
 			},
 		},
@@ -101,6 +108,7 @@ func TestFromFileConfig(t *testing.T) {
 				},
 			},
 			want: &entity.Config{
+				Profiler: &entity.Profiler{},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -166,6 +174,7 @@ func TestToFileConfig(t *testing.T) {
 			name: "full entity config with one nut server and one target server",
 			args: args{
 				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
 					NutServers: []*entity.NutServer{
 						{
 							Name:     "TestServer",
@@ -188,6 +197,7 @@ func TestToFileConfig(t *testing.T) {
 				},
 			},
 			want: &Config{
+				Profiler: &Profiler{},
 				NutServers: []*NutServer{
 					{
 						Name:     "TestServer",
@@ -207,6 +217,49 @@ func TestToFileConfig(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		{
+			name: "nil profiler",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler:   nil,
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler:   &Profiler{},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "empty profiler",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler:   &entity.Profiler{},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler:   &Profiler{},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "profiler enabled",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{
+						Enabled: true,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{
+					Enabled: true,
+				},
+				NutServers: []*NutServer{},
 			},
 		},
 	}

@@ -56,6 +56,7 @@ func duration(fl validator.FieldLevel) bool {
 }
 
 type Config struct {
+	Profiler   *Profiler
 	NutServers []*NutServer
 }
 
@@ -66,6 +67,10 @@ func (c *Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+type Profiler struct {
+	Enabled bool `json:"enabled" default:"false"`
 }
 
 type NutServer struct {
@@ -187,6 +192,9 @@ func NewTargetServer(name, mac, broadcast string, interval time.Duration, port i
 
 func CreateDefaultConfig() *Config {
 	return &Config{
+		Profiler: &Profiler{
+			Enabled: false,
+		},
 		NutServers: []*NutServer{
 			{
 				Name:     "NUT Server 1",
