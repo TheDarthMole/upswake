@@ -81,7 +81,7 @@
     // Separate buildkit-cache-dance due to issues with breaking change in update requiring sudo
     {
       "matchPackageNames": ["reproducible-containers/buildkit-cache-dance"],
-      "groupName": "buildkit-cache-dance",
+      "groupName": null,
     }
   ],
 }
