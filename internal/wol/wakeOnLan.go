@@ -39,11 +39,11 @@ func (tgt *WakeOnLan) Wake() error {
 		return err
 	}
 	defer conn.Close()
-	return wakeInternal(conn, tgt.MAC)
+	return wakeInternal(conn, tgt.MacAddress)
 }
 
 func wakeInternal(dst io.ReadWriteCloser, mac *entity.MacAddress) error {
-	mp, err := newMagicPacket(mac.String())
+	mp, err := newMagicPacket(mac.MAC)
 	if err != nil {
 		return err
 	}

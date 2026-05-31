@@ -110,7 +110,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	if !result.Found {
-		c.Logger().Error("mac address not found in the config", slog.String("mac", mac.String()))
+		c.Logger().Error("mac address not found in the config", slog.String("mac", mac.MAC))
 		return c.JSON(http.StatusConflict, UpsWakeResponse{
 			Message: "MAC address not found in the config",
 			Woken:   false,
@@ -118,7 +118,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	if !result.Allowed {
-		c.Logger().Debug("no rule evaluated to true", slog.String("mac", mac.String()))
+		c.Logger().Debug("no rule evaluated to true", slog.String("mac", mac.MAC))
 		return c.JSON(http.StatusOK, UpsWakeResponse{
 			Message: "No rule evaluated to true",
 			Woken:   false,
@@ -127,7 +127,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 
 	ts, err := entity.NewTargetServer(
 		"API Request",
-		result.Target.MAC.String(),
+		result.Target.MAC,
 		result.Target.Broadcast,
 		15*time.Minute,
 		result.Target.Port,
@@ -151,7 +151,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		})
 	}
 
-	c.Logger().Debug("Wake on LAN sent", slog.String("mac", mac.String()))
+	c.Logger().Debug("Wake on LAN sent", slog.String("mac", mac.MAC))
 	return c.JSON(http.StatusOK, UpsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,

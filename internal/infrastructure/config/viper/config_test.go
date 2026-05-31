@@ -8,7 +8,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // compile time interface checks
@@ -20,8 +19,6 @@ func Test_Load(t *testing.T) {
 		filePath string
 	}
 	testFS := afero.NewBasePathFs(afero.NewOsFs(), "./testing/")
-	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
-	require.NoError(t, err)
 
 	tests := []struct {
 		wantErr error
@@ -49,11 +46,11 @@ func Test_Load(t *testing.T) {
 						Password: "password",
 						Targets: []*entity.TargetServer{
 							{
-								Name:      "nas_1",
-								MAC:       validMac,
-								Broadcast: "192.168.1.255",
-								Port:      9,
-								Interval:  5 * time.Minute,
+								Name:       "nas_1",
+								MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+								Broadcast:  "192.168.1.255",
+								Port:       9,
+								Interval:   5 * time.Minute,
 								Rules: []string{
 									"80percentOn.rego",
 								},

@@ -28,10 +28,7 @@ func (r *countingUPSRepo) GetJSON(_ *entity.NutServer) (string, error) {
 	return r.json, r.err
 }
 
-func testConfig(t *testing.T) *entity.Config {
-	validMac, err := entity.NewMacAddress("00:00:00:00:00:00")
-	require.NoError(t, err)
-
+func testConfig(_ *testing.T) *entity.Config {
 	return &entity.Config{
 		NutServers: []*entity.NutServer{
 			{
@@ -42,12 +39,12 @@ func testConfig(t *testing.T) *entity.Config {
 				Password: "test-password",
 				Targets: []*entity.TargetServer{
 					{
-						Name:      "testTarget",
-						MAC:       validMac,
-						Broadcast: "192.168.1.255",
-						Port:      9,
-						Interval:  15 * time.Second,
-						Rules:     nil,
+						Name:       "testTarget",
+						MacAddress: &entity.MacAddress{MAC: "00:00:00:00:00:00"},
+						Broadcast:  "192.168.1.255",
+						Port:       9,
+						Interval:   15 * time.Second,
+						Rules:      nil,
 					},
 				},
 			},
@@ -166,12 +163,12 @@ func TestRootHandler_Health(t *testing.T) {
 						Password: "test-password",
 						Targets: []*entity.TargetServer{
 							{
-								Name:      "testTarget",
-								MAC:       validMac,
-								Broadcast: "127.0.0.255",
-								Port:      9,
-								Interval:  15 * time.Second,
-								Rules:     nil,
+								Name:       "testTarget",
+								MacAddress: validMac,
+								Broadcast:  "127.0.0.255",
+								Port:       9,
+								Interval:   15 * time.Second,
+								Rules:      nil,
 							},
 						},
 					},
@@ -238,9 +235,6 @@ func TestRootHandler_Register(t *testing.T) {
 }
 
 func TestNewRootHandler(t *testing.T) {
-	validMac, err := entity.NewMacAddress("00:00:00:00:00:00")
-	require.NoError(t, err)
-
 	type args struct {
 		cfg     *entity.Config
 		rulesFS afero.Fs
@@ -286,12 +280,12 @@ default wake := true`),
 							Password: "test-password",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "testTarget",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      9,
-									Interval:  15 * time.Second,
-									Rules:     []string{"rule1.rego"},
+									Name:       "testTarget",
+									MacAddress: &entity.MacAddress{MAC: "00:00:00:00:00:00"},
+									Broadcast:  "192.168.1.255",
+									Port:       9,
+									Interval:   15 * time.Second,
+									Rules:      []string{"rule1.rego"},
 								},
 							},
 						},
@@ -310,12 +304,12 @@ default wake := true`),
 							Password: "test-password",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "testTarget",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      9,
-									Interval:  15 * time.Second,
-									Rules:     []string{"rule1.rego"},
+									Name:       "testTarget",
+									MacAddress: &entity.MacAddress{MAC: "00:00:00:00:00:00"},
+									Broadcast:  "192.168.1.255",
+									Port:       9,
+									Interval:   15 * time.Second,
+									Rules:      []string{"rule1.rego"},
 								},
 							},
 						},

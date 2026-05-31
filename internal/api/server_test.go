@@ -45,9 +45,6 @@ func pingHandler(c *echo.Context) error {
 }
 
 func TestCustomValidator_Validate(t *testing.T) {
-	validMac, err := entity.NewMacAddress("00:1A:2B:3C:4D:5E")
-	require.NoError(t, err)
-
 	type fields struct {
 		validator *validator.Validate
 	}
@@ -70,12 +67,12 @@ func TestCustomValidator_Validate(t *testing.T) {
 			name:   "Test with valid TargetServer struct",
 			fields: fields{validator: validator.New()},
 			args: args{i: entity.TargetServer{
-				Name:      "test",
-				MAC:       validMac,
-				Broadcast: "127.0.0.1",
-				Port:      9,
-				Interval:  15 * time.Minute,
-				Rules:     []string{"test"},
+				Name:       "test",
+				MacAddress: &entity.MacAddress{MAC: "00:1A:2B:3C:4D:5E"},
+				Broadcast:  "127.0.0.1",
+				Port:       9,
+				Interval:   15 * time.Minute,
+				Rules:      []string{"test"},
 			}},
 			error: false,
 		},
