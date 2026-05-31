@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommitTypeAll(build)",
+    ":pinDevDependencies",
+    ":semanticCommits"
+  ],
+
+  // Wait 7 days after publish before creating PRs to avoid compromised packages
+  minimumReleaseAge: "7 days",
+
+  "postUpdateOptions": ["gomodTidy"],
+
+  "docker-compose": {
+    "managerFilePatterns": [
+      "/(^|/).*(?:docker-)?compose[^/]*\\.ya?ml$/"
+    ]
+  },
+
+  "packageRules": [
+    // Semantic commit scope per manager
+    {
+      "matchManagers": ["gomod"],
+      "semanticCommitScope": "go"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitScope": "github-actions"
+    },
+    {
+      "matchManagers": ["docker-compose"],
+      "semanticCommitScope": "docker-compose"
+    },
+    {
+      matchManagers: ["mise"],
+      semanticCommitScope: "mise",
+    },
+
+    // Group all non-major dependency updates
+    {
+      matchManagers: ["gomod"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "gomod dependencies (non-major)",
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "github-actions dependencies (non-major)",
+    },
+    {
+      matchManagers: ["docker-compose"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "docker-compose dependencies (non-major)",
+    },
+    {
+      matchManagers: ["mise"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "mise dependencies (non-major)",
+    },
+
+    // Major updates get individual PRs for careful review
+    {
+      matchManagers: ["gomod"],
+      matchUpdateTypes: ["major"],
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["major"],
+    },
+    {
+      matchManagers: ["docker-compose"],
+      matchUpdateTypes: ["major"],
+    },
+    {
+      matchManagers: ["mise"],
+      matchUpdateTypes: ["major"],
+    },
+
+    // Separate buildkit-cache-dance due to issues with breaking change in update requiring sudo
+    {
+      "matchPackageNames": ["reproducible-containers/buildkit-cache-dance"],
+      "groupName": null,
+    }
+  ],
+}
