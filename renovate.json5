@@ -13,6 +13,10 @@
 
   "postUpdateOptions": ["gomodTidy"],
 
+  lockFileMaintenance: {
+    enabled: true,
+  },
+
   "docker-compose": {
     "managerFilePatterns": [
       "/(^|/).*(?:docker-)?compose[^/]*\\.ya?ml$/"
