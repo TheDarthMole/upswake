@@ -120,26 +120,22 @@ func NewMacAddress(mac string) (*MacAddress, error) {
 }
 
 type MacAddress struct {
-	string `json:"mac" example:"00:11:22:33:44:55"`
-}
-
-func (m *MacAddress) String() string {
-	return m.string
+	MAC string `json:"mac" example:"00:11:22:33:44:55"`
 }
 
 func (m *MacAddress) Validate() error {
-	if m.String() == "" {
+	if m.MAC == "" {
 		return ErrMACRequired
 	}
-	if validate.Var(m.String(), "mac") != nil {
+	if validate.Var(m.MAC, "mac") != nil {
 		return ErrInvalidMac
 	}
 	return nil
 }
 
 type TargetServer struct {
+	*MacAddress
 	Name      string        `json:"name"`
-	MAC       *MacAddress   `json:"mac"`
 	Broadcast string        `json:"broadcast"`
 	Rules     []string      `json:"rules"`
 	Interval  time.Duration `json:"interval" default:"900000000000"`
@@ -150,10 +146,10 @@ func (ts *TargetServer) Validate() error {
 	if ts.Name == "" {
 		return ErrNameRequired
 	}
-	if ts.MAC == nil {
+	if ts.MacAddress == nil {
 		return ErrMACRequired
 	}
-	if err := ts.MAC.Validate(); err != nil {
+	if err := ts.MacAddress.Validate(); err != nil {
 		return err
 	}
 	if ts.Broadcast == "" {
@@ -177,12 +173,12 @@ func (ts *TargetServer) Validate() error {
 
 func NewTargetServer(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*TargetServer, error) {
 	ts := &TargetServer{
-		Name:      name,
-		MAC:       &MacAddress{mac},
-		Broadcast: broadcast,
-		Port:      port,
-		Interval:  interval,
-		Rules:     rules,
+		Name:       name,
+		MacAddress: &MacAddress{mac},
+		Broadcast:  broadcast,
+		Port:       port,
+		Interval:   interval,
+		Rules:      rules,
 	}
 	if err := ts.Validate(); err != nil {
 		return nil, err
@@ -204,11 +200,11 @@ func CreateDefaultConfig() *Config {
 				Password: "password",
 				Targets: []*TargetServer{
 					{
-						Name:      "NAS 1",
-						MAC:       &MacAddress{"00:00:00:00:00:00"},
-						Broadcast: "192.168.1.255",
-						Port:      DefaultWoLPort,
-						Interval:  15 * time.Minute,
+						Name:       "NAS 1",
+						MacAddress: &MacAddress{"00:00:00:00:00:00"},
+						Broadcast:  "192.168.1.255",
+						Port:       DefaultWoLPort,
+						Interval:   15 * time.Minute,
 						Rules: []string{
 							"80percentOn.rego",
 						},

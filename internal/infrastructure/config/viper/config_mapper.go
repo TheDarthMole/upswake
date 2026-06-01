@@ -85,19 +85,19 @@ func FromFileTargetServer(targetServer *TargetServer) (*entity.TargetServer, err
 	}
 
 	return &entity.TargetServer{
-		Name:      targetServer.Name,
-		MAC:       mac,
-		Broadcast: targetServer.Broadcast,
-		Port:      targetServer.Port,
-		Interval:  interval,
-		Rules:     targetServer.Rules,
+		Name:       targetServer.Name,
+		MacAddress: mac,
+		Broadcast:  targetServer.Broadcast,
+		Port:       targetServer.Port,
+		Interval:   interval,
+		Rules:      targetServer.Rules,
 	}, nil
 }
 
 func ToFileTargetServer(targetServer *entity.TargetServer) *TargetServer {
 	return &TargetServer{
 		Name:      targetServer.Name,
-		MAC:       targetServer.MAC.String(),
+		MAC:       targetServer.MAC,
 		Broadcast: targetServer.Broadcast,
 		Port:      targetServer.Port,
 		Interval:  targetServer.Interval.String(),

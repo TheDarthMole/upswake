@@ -10,7 +10,6 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository/mocks"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -30,12 +29,6 @@ type ruleRepository struct {
 }
 
 func TestNewRegoEvaluator(t *testing.T) {
-	validMac1, err := entity.NewMacAddress("00:00:00:00:00:00")
-	require.NoError(t, err)
-
-	validMac2, err := entity.NewMacAddress("00:00:00:00:00:55")
-	require.NoError(t, err)
-
 	type args struct {
 		config   *entity.Config
 		upsRepo  repository.UPSRepository
@@ -52,35 +45,35 @@ func TestNewRegoEvaluator(t *testing.T) {
 			name: "valid config 1",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    validMac1,
+				mac:    &entity.MacAddress{MAC: "00:00:00:00:00:00"},
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    validMac1,
+				mac:    &entity.MacAddress{MAC: "00:00:00:00:00:00"},
 			},
 		},
 		{
 			name: "valid config 2",
 			args: args{
 				config: entity.CreateDefaultConfig(),
-				mac:    validMac2,
+				mac:    &entity.MacAddress{MAC: "22:00:00:00:00:00"},
 			},
 			want: &RegoEvaluator{
 				config: entity.CreateDefaultConfig(),
-				mac:    validMac2,
+				mac:    &entity.MacAddress{MAC: "22:00:00:00:00:00"},
 			},
 		},
 		{
 			name: "valid config 3",
 			args: args{
 				config:   entity.CreateDefaultConfig(),
-				mac:      validMac1,
+				mac:      &entity.MacAddress{MAC: "00:00:00:00:00:00"},
 				upsRepo:  &mocks.MockUPSRepository{},
 				ruleRepo: &mocks.MockRuleRepository{},
 			},
 			want: &RegoEvaluator{
 				config:   entity.CreateDefaultConfig(),
-				mac:      validMac1,
+				mac:      &entity.MacAddress{MAC: "00:00:00:00:00:00"},
 				upsRepo:  &mocks.MockUPSRepository{},
 				ruleRepo: &mocks.MockRuleRepository{},
 			},
@@ -201,12 +194,6 @@ func TestRegoEvaluator_evaluateExpression(t *testing.T) {
 func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 	failingNUTOutputError := errors.New("failed to get NUT output")
 
-	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
-	require.NoError(t, err)
-
-	notFoundMac, err := entity.NewMacAddress("00:00:00:00:00:00")
-	require.NoError(t, err)
-
 	type fields struct {
 		rulesRepo ruleRepository
 		config    *entity.Config
@@ -233,11 +220,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "test server",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      entity.DefaultWoLPort,
-									Interval:  15 * time.Minute,
+									Name:       "test server",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "192.168.1.255",
+									Port:       entity.DefaultWoLPort,
+									Interval:   15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -254,17 +241,17 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					times:   1,
 					allowed: true,
 				},
-				mac: validMac,
+				mac: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
 			},
 			want: &EvaluationResult{
 				Allowed: true,
 				Found:   true,
 				Target: &entity.TargetServer{
-					Name:      "test server",
-					MAC:       validMac,
-					Broadcast: "192.168.1.255",
-					Port:      entity.DefaultWoLPort,
-					Interval:  15 * time.Minute,
+					Name:       "test server",
+					MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+					Broadcast:  "192.168.1.255",
+					Port:       entity.DefaultWoLPort,
+					Interval:   15 * time.Minute,
 					Rules: []string{
 						"test.rego",
 					},
@@ -285,11 +272,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "test server",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      entity.DefaultWoLPort,
-									Interval:  15 * time.Minute,
+									Name:       "test server",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "192.168.1.255",
+									Port:       entity.DefaultWoLPort,
+									Interval:   15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -303,7 +290,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					json:  validNUTOutput,
 				},
 				rulesRepo: ruleRepository{times: 0},
-				mac:       notFoundMac,
+				mac:       &entity.MacAddress{MAC: "00:00:00:00:00:00"},
 			},
 			want: &EvaluationResult{
 				Allowed: false,
@@ -325,11 +312,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "test server",
-									MAC:       nil,
-									Broadcast: "192.168.1.255",
-									Port:      entity.DefaultWoLPort,
-									Interval:  15 * time.Minute,
+									Name:       "test server",
+									MacAddress: nil,
+									Broadcast:  "192.168.1.255",
+									Port:       entity.DefaultWoLPort,
+									Interval:   15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -343,7 +330,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					json:  validNUTOutput,
 				},
 				rulesRepo: ruleRepository{times: 0},
-				mac:       validMac,
+				mac:       &entity.MacAddress{MAC: "00:11:22:33:44:55"},
 			},
 			want:    nil,
 			wantErr: entity.ErrMACRequired,
@@ -361,11 +348,11 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "test server",
-									MAC:       validMac,
-									Broadcast: "192.168.1.255",
-									Port:      entity.DefaultWoLPort,
-									Interval:  15 * time.Minute,
+									Name:       "test server",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "192.168.1.255",
+									Port:       entity.DefaultWoLPort,
+									Interval:   15 * time.Minute,
 									Rules: []string{
 										"test.rego",
 									},
@@ -380,7 +367,7 @@ func TestRegoEvaluator_evaluateExpressions(t *testing.T) {
 					json:  "",
 				},
 				rulesRepo: ruleRepository{times: 0},
-				mac:       validMac,
+				mac:       &entity.MacAddress{MAC: "00:11:22:33:44:55"},
 			},
 			want:    nil,
 			wantErr: failingNUTOutputError,

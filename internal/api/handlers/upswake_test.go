@@ -13,14 +13,10 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository/mocks"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
 func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
-	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
-	require.NoError(t, err)
-
 	const validJSON = `[{"Name":"test-ups","Description":"Unavailable","Master":false,"NumberOfLogins":0,"Clients":[],"Variables":[{"Name":"battery.charge","Value":100,"Type":"INTEGER","Description":"Battery charge (percent of full)","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"},{"Name":"ups.status","Value":"OL","Type":"STRING","Description":"UPS status","Writeable":false,"MaximumLength":0,"OriginalType":"NUMBER"}]}]`
 
 	validConfig := &entity.Config{
@@ -33,12 +29,12 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 				Password: "upsmon",
 				Targets: []*entity.TargetServer{
 					{
-						Name:      "test-target",
-						MAC:       validMac,
-						Broadcast: "127.0.0.255",
-						Port:      9,
-						Interval:  15 * time.Minute,
-						Rules:     []string{"always_true.rego"},
+						Name:       "test-target",
+						MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+						Broadcast:  "127.0.0.255",
+						Port:       9,
+						Interval:   15 * time.Minute,
+						Rules:      []string{"always_true.rego"},
 					},
 				},
 			},
@@ -54,12 +50,12 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 				Password: "upsmon",
 				Targets: []*entity.TargetServer{
 					{
-						Name:      "test-target",
-						MAC:       validMac,
-						Broadcast: "777.666.555.444",
-						Port:      9,
-						Interval:  15 * time.Minute,
-						Rules:     []string{"always_true.rego"},
+						Name:       "test-target",
+						MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+						Broadcast:  "777.666.555.444",
+						Port:       9,
+						Interval:   15 * time.Minute,
+						Rules:      []string{"always_true.rego"},
 					},
 				},
 			},
@@ -265,8 +261,6 @@ func TestUPSWakeHandler_Register(t *testing.T) {
 }
 
 func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
-	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
-	require.NoError(t, err)
 	type fields struct {
 		cfg *entity.Config
 	}
@@ -322,12 +316,12 @@ func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "NAS 1",
-									MAC:       validMac,
-									Broadcast: "127.0.0.255",
-									Rules:     []string{"test.rego"},
-									Interval:  15 * time.Minute,
-									Port:      1337,
+									Name:       "NAS 1",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "127.0.0.255",
+									Rules:      []string{"test.rego"},
+									Interval:   15 * time.Minute,
+									Port:       1337,
 								},
 							},
 							Port: 1337,
@@ -352,20 +346,20 @@ func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
 							Password: "",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "NAS 1",
-									MAC:       validMac,
-									Broadcast: "127.0.0.255",
-									Rules:     []string{"test.rego"},
-									Interval:  15 * time.Minute,
-									Port:      1337,
+									Name:       "NAS 1",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "127.0.0.255",
+									Rules:      []string{"test.rego"},
+									Interval:   15 * time.Minute,
+									Port:       1337,
 								},
 								{
-									Name:      "NAS 2",
-									MAC:       validMac,
-									Broadcast: "127.0.1.255",
-									Rules:     []string{"test1.rego"},
-									Interval:  10 * time.Minute,
-									Port:      1338,
+									Name:       "NAS 2",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Broadcast:  "127.0.1.255",
+									Rules:      []string{"test1.rego"},
+									Interval:   10 * time.Minute,
+									Port:       1338,
 								},
 							},
 							Port: 1337,

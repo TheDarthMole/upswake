@@ -66,8 +66,8 @@ func TestFromFileConfig(t *testing.T) {
 						Password: "pass",
 						Targets: []*entity.TargetServer{
 							{
-								Name: "TestTarget",
-								MAC:  validMac,
+								Name:       "TestTarget",
+								MacAddress: validMac,
 								Rules: []string{
 									"rule1",
 									"rule2",
@@ -159,9 +159,6 @@ func TestFromFileConfig(t *testing.T) {
 }
 
 func TestToFileConfig(t *testing.T) {
-	validMac, err := entity.NewMacAddress("00:11:22:33:44:55")
-	require.NoError(t, err)
-
 	type args struct {
 		entityConfig *entity.Config
 	}
@@ -184,12 +181,12 @@ func TestToFileConfig(t *testing.T) {
 							Password: "pass",
 							Targets: []*entity.TargetServer{
 								{
-									Name:      "TestTarget",
-									MAC:       validMac,
-									Rules:     []string{"rule1", "rule2"},
-									Interval:  15 * time.Minute,
-									Port:      9,
-									Broadcast: "127.0.0.255",
+									Name:       "TestTarget",
+									MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+									Rules:      []string{"rule1", "rule2"},
+									Interval:   15 * time.Minute,
+									Port:       9,
+									Broadcast:  "127.0.0.255",
 								},
 							},
 						},

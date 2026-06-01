@@ -18,12 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newMacAddress(t *testing.T, mac string) *entity.MacAddress {
-	macObj, err := entity.NewMacAddress(mac)
-	require.NoError(t, err)
-	return macObj
-}
-
 func TestNewWorkerPool(t *testing.T) {
 	type args struct {
 		ctx       context.Context
@@ -46,7 +40,7 @@ func TestNewWorkerPool(t *testing.T) {
 						{
 							Name: "Test Server",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target", MAC: newMacAddress(t, "00:11:22:33:44:55")},
+								{Name: "Test Target", MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"}},
 							},
 						},
 					},
@@ -64,17 +58,17 @@ func TestNewWorkerPool(t *testing.T) {
 						{
 							Name: "Test Server 1",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1", MAC: newMacAddress(t, "00:11:22:33:44:55")},
-								{Name: "Test Target 2", MAC: newMacAddress(t, "11:11:22:33:44:55")},
-								{Name: "Test Target 3", MAC: newMacAddress(t, "22:11:22:33:44:55")},
-								{Name: "Test Target 4", MAC: newMacAddress(t, "33:11:22:33:44:55")},
+								{Name: "Test Target 1", MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"}},
+								{Name: "Test Target 2", MacAddress: &entity.MacAddress{MAC: "11:11:22:33:44:55"}},
+								{Name: "Test Target 3", MacAddress: &entity.MacAddress{MAC: "22:11:22:33:44:55"}},
+								{Name: "Test Target 4", MacAddress: &entity.MacAddress{MAC: "33:11:22:33:44:55"}},
 							},
 						},
 						{
 							Name: "Test Server 2",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1", MAC: newMacAddress(t, "44:11:22:33:44:55")},
-								{Name: "Test Target 2", MAC: newMacAddress(t, "55:11:22:33:44:55")},
+								{Name: "Test Target 1", MacAddress: &entity.MacAddress{MAC: "44:11:22:33:44:55"}},
+								{Name: "Test Target 2", MacAddress: &entity.MacAddress{MAC: "55:11:22:33:44:55"}},
 							},
 						},
 					},
@@ -178,9 +172,9 @@ func TestPool_Start(t *testing.T) {
 				Name: "Test Server",
 				Targets: []*entity.TargetServer{
 					{
-						Name:     "Test Target",
-						MAC:      newMacAddress(t, "00:11:22:33:44:55"),
-						Interval: 100 * time.Millisecond,
+						Name:       "Test Target",
+						MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"},
+						Interval:   100 * time.Millisecond,
 					},
 				},
 			},
@@ -223,17 +217,17 @@ func TestPool_Start(t *testing.T) {
 						{
 							Name: "Test Server 1",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 1", MAC: newMacAddress(t, "00:11:22:33:44:55"), Interval: 100 * time.Millisecond},
-								{Name: "Test Target 2", MAC: newMacAddress(t, "11:11:22:33:44:55"), Interval: 100 * time.Millisecond},
-								{Name: "Test Target 3", MAC: newMacAddress(t, "22:11:22:33:44:55"), Interval: 100 * time.Millisecond},
-								{Name: "Test Target 4", MAC: newMacAddress(t, "33:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 1", MacAddress: &entity.MacAddress{MAC: "00:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
+								{Name: "Test Target 2", MacAddress: &entity.MacAddress{MAC: "11:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
+								{Name: "Test Target 3", MacAddress: &entity.MacAddress{MAC: "22:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
+								{Name: "Test Target 4", MacAddress: &entity.MacAddress{MAC: "33:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
 							},
 						},
 						{
 							Name: "Test Server 2",
 							Targets: []*entity.TargetServer{
-								{Name: "Test Target 5", MAC: newMacAddress(t, "44:11:22:33:44:55"), Interval: 100 * time.Millisecond},
-								{Name: "Test Target 6", MAC: newMacAddress(t, "55:11:22:33:44:55"), Interval: 100 * time.Millisecond},
+								{Name: "Test Target 5", MacAddress: &entity.MacAddress{MAC: "44:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
+								{Name: "Test Target 6", MacAddress: &entity.MacAddress{MAC: "55:11:22:33:44:55"}, Interval: 100 * time.Millisecond},
 							},
 						},
 					},

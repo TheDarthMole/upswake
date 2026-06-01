@@ -63,12 +63,12 @@ func newValidTestWoLTarget(t *testing.T) *entity.TargetServer {
 	require.NoError(t, err)
 
 	return &entity.TargetServer{
-		Name:      "test",
-		MAC:       validMac,
-		Broadcast: "127.0.0.255",
-		Port:      9,
-		Interval:  15 * time.Minute,
-		Rules:     []string{},
+		Name:       "test",
+		MacAddress: validMac,
+		Broadcast:  "127.0.0.255",
+		Port:       9,
+		Interval:   15 * time.Minute,
+		Rules:      []string{},
 	}
 }
 
@@ -148,9 +148,6 @@ func Test_newMagicPacket(t *testing.T) {
 }
 
 func Test_wakeInternal(t *testing.T) {
-	validMac, err := entity.NewMacAddress(validMagicPacketMAC)
-	require.NoError(t, err)
-
 	type args struct {
 		dst io.ReadWriteCloser
 		mac *entity.MacAddress
@@ -165,7 +162,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "valid MAC",
 			args: args{
 				dst: newReadWriteCloser(),
-				mac: validMac,
+				mac: &entity.MacAddress{MAC: validMagicPacketMAC},
 			},
 			wantErr:  nil,
 			wantSent: validMagicPacket,
@@ -174,7 +171,7 @@ func Test_wakeInternal(t *testing.T) {
 			name: "invalid write length",
 			args: args{
 				dst: newReadWriteCloserError(),
-				mac: validMac,
+				mac: &entity.MacAddress{MAC: validMagicPacketMAC},
 			},
 			wantErr:  ErrExpectedPacketSize,
 			wantSent: validMagicPacket,
