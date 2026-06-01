@@ -100,7 +100,7 @@ func (h *RootHandler) Health(c *echo.Context) error {
 	}
 
 	if err := g.Wait(); err != nil {
-		c.Logger().Debug("Health check failed", slog.Any("error", err))
+		c.Logger().Error("Health check failed", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
