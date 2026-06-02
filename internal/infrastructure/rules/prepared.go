@@ -75,6 +75,10 @@ func prepareRule(name, raw string) (rego.PreparedEvalQuery, error) {
 	return r.PrepareForEval(context.Background())
 }
 
+// Evaluate evaluates rego rules against a NUT server json file.
+// Returns an entity.ErrEvaluationFalse if all rules evaluate false
+// Returns nil if no errors occurred and at least one rule evaluated true
+// Can additionally throw ErrDecodeFailed, ErrEvaluationError, ErrRuleNotFound
 func (r *PreparedRepository) Evaluate(ruleName, inputJSON string) error {
 	prepared, ok := r.rules[ruleName]
 	if !ok {
@@ -92,7 +96,7 @@ func (r *PreparedRepository) Evaluate(ruleName, inputJSON string) error {
 
 	rs, err := prepared.Eval(context.Background(), rego.EvalInput(input))
 	if err != nil {
-		return fmt.Errorf("%w: %s: %w", ErrEvaluationError, ruleName, err)
+		return fmt.Errorf("%w: rule name %s: %w", ErrEvaluationError, ruleName, err)
 	}
 
 	if !rs.Allowed() {

@@ -53,7 +53,7 @@ func (r *RegoEvaluator) EvaluateExpressions() (*EvaluationResult, error) {
 		// For each target
 		for _, target := range nutServer.Targets {
 			if target.MacAddress == nil || r.mac == nil {
-				return nil, fmt.Errorf("error comparing mac addresses :%w", entity.ErrMACRequired)
+				return nil, fmt.Errorf("error comparing mac addresses: %w", entity.ErrMACRequired)
 			}
 			if target.MAC != r.mac.MAC {
 				continue
