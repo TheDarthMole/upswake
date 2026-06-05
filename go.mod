@@ -1,9 +1,9 @@
 module github.com/TheDarthMole/UPSWake
 
-go 1.26.2
+go 1.26.4
 
 require (
-	github.com/go-playground/validator/v10 v10.30.2
+	github.com/go-playground/validator/v10 v10.30.3
 	github.com/google/uuid v1.6.0
 	github.com/ka-weihe/fast-levenshtein v0.0.0-20201227151214-4c99ee36a1ba
 	github.com/labstack/echo/v5 v5.1.1
@@ -18,7 +18,7 @@ require (
 	github.com/swaggo/echo-swagger/v2 v2.0.1
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/mock v0.6.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260528171630-4c4d20b72c2f
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260604135805-d37c95e27de6
 	golang.org/x/sync v0.20.0
 )
 
