@@ -2,12 +2,12 @@
 lockfile = true
 
 [tools]
-go = "1.26.3"
+go = "1.26.4"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
 golangci-lint = "2.12.2"
 hadolint = "2.14.0"
-hk = "1.45.0"
-just = "1.51.0"
+hk = "1.47.0"
+just = "1.52.0"
 pkl = "0.31.1"
 swag = "v1.16.6"
 zizmor = "1.25.2"
