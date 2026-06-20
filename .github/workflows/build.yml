@@ -119,7 +119,7 @@ jobs:
               "go-build-cache/build/linuxriscv64": {
                 "target": "/root/.cache/go-build",
                 "id": "linuxriscv64"
-              },
+              }
             }
 
       - name: 🚀 Build and deploy minimal Docker images
