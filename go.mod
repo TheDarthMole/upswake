@@ -18,7 +18,7 @@ require (
 	github.com/swaggo/echo-swagger/v2 v2.0.1
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/mock v0.6.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260604135805-d37c95e27de6
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260626155920-5b7f84159940
 	golang.org/x/sync v0.21.0
 )
 
