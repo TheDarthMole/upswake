@@ -4,7 +4,7 @@ on:
   pull_request:
 
 env:
-  platforms: "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
+  platforms: "linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/riscv64" # legacy/enterprise-only technology linux/s390x,linux/ppc64le,linux/386
 
 permissions:
   contents: read
@@ -97,12 +97,12 @@ jobs:
           dockerfile: Containerfile
           skip-extraction: true # Skip extraction to avoid cache poisoning attacks, but do populate the cache for release builds
           # Cache only the go builds, the module download is cached via the docker layer caching
-          # "linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64,linux/ppc64le,linux/riscv64,linux/s390x"
+          # see env.platforms at top of file
           cache-map: |
             {
-              "go-build-cache/build/linux386": {
+              "go-build-cache/build/linuxamd64": {
                 "target": "/root/.cache/go-build",
-                "id": "linux386"
+                "id": "linuxamd64"
               },
               "go-build-cache/build/linuxarmv6": {
                 "target": "/root/.cache/go-build",
@@ -116,21 +116,9 @@ jobs:
                 "target": "/root/.cache/go-build",
                 "id": "linuxarm64"
               },
-              "go-build-cache/build/linuxamd64": {
-                "target": "/root/.cache/go-build",
-                "id": "linuxamd64"
-              },
-              "go-build-cache/build/linuxppc64le": {
-                "target": "/root/.cache/go-build",
-                "id": "linuxppc64le"
-              },
               "go-build-cache/build/linuxriscv64": {
                 "target": "/root/.cache/go-build",
                 "id": "linuxriscv64"
-              },
-              "go-build-cache/build/linuxs390x": {
-                "target": "/root/.cache/go-build",
-                "id": "linuxs390x"
               }
             }
 
