@@ -58,9 +58,9 @@ cosign verify ghcr.io/thedarthmole/upswake:latest \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-
 > [!NOTE]
-> This only proves that the Docker image is from this repository, assuming that no one hacks into GitHub or the repository. It does not prove that the code itself is secure.
+> This only proves that the Docker image is from this repository, assuming that no one hacks into GitHub or the
+> repository. It does not prove that the code itself is secure.
 
 </details>
 
@@ -152,7 +152,7 @@ services:
       - "./rules/:/rules/:ro"
 ```
 
-#### 🚀 Start the application
+#### 🚀 Start the Application
 
 ```bash
 docker compose up --detach --pull always --force-recreate
@@ -171,7 +171,8 @@ docker run \
   thedarthmole/upswake:latest
 ```
 
-> Note: The `--network host` flag is required to allow the container to access the host's network interface to send Wake-on-LAN packets.
+> Note: The `--network host` flag is required to allow the container to access the host's network interface to send
+> Wake-on-LAN packets.
 
 </details>
 
@@ -215,10 +216,12 @@ Flags:
 
 Use "upswake [command] --help" for more information about a command.
 ```
+
 ## Development
 
 For information about contributing to UPSWake, please read the [CONTRIBUTING.md](docs/CONTRIBUTING.md) and
 [MAINTAINERS.md](docs/MAINTAINERS.md) docs.
 
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTheDarthMole%2Fupswake?ref=badge_large)
