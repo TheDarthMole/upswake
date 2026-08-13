@@ -19,6 +19,7 @@ type RootHandler struct {
 	cfg     *entity.Config
 	rulesFS afero.Fs
 	upsRepo repository.UPSRepository
+	logger  *slog.Logger
 }
 
 type Response struct {
@@ -31,11 +32,12 @@ type Response struct {
 //	@Title			UPSWake
 //	@Version		1.0
 //	@Description	UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers
-func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
+func NewRootHandler(cfg *entity.Config, logger *slog.Logger, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,
 		upsRepo: upsRepo,
+		logger:  logger,
 	}
 }
 

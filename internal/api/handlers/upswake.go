@@ -16,6 +16,7 @@ import (
 
 type UPSWakeHandler struct {
 	cfg      *entity.Config
+	logger   *slog.Logger
 	upsRepo  repository.UPSRepository
 	ruleRepo repository.RuleRepository
 }
@@ -31,11 +32,12 @@ type UpsWakeResponse struct {
 
 // NewUPSWakeHandler creates a UPSWakeHandler configured with the supplied server configuration and repositories.
 // The returned handler holds cfg, upsRepo and ruleRepo for use by its HTTP endpoints.
-func NewUPSWakeHandler(cfg *entity.Config, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *UPSWakeHandler {
+func NewUPSWakeHandler(cfg *entity.Config, logger *slog.Logger, upsRepo repository.UPSRepository, ruleRepo repository.RuleRepository) *UPSWakeHandler {
 	return &UPSWakeHandler{
 		cfg:      cfg,
 		upsRepo:  upsRepo,
 		ruleRepo: ruleRepo,
+		logger:   logger,
 	}
 }
 

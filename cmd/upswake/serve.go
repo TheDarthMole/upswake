@@ -106,17 +106,17 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	if cfg.Profiler.Enabled {
 		j.logger.Warn("Profiler enabled")
-		profilerHandler := handlers.NewProfilerHandler()
+		profilerHandler := handlers.NewProfilerHandler(j.logger)
 		profilerHandler.Register(server.Root().Group("/debug/pprof"))
 	}
 
-	rootHandler := handlers.NewRootHandler(cfg, j.regoFs, cachedUpsRepo)
+	rootHandler := handlers.NewRootHandler(cfg, j.logger, j.regoFs, cachedUpsRepo)
 	rootHandler.Register(server.Root())
 
-	serverHandler := handlers.NewServerHandler()
+	serverHandler := handlers.NewServerHandler(j.logger)
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, cachedUpsRepo, ruleRepo)
+	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, j.logger, cachedUpsRepo, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
 	workerPool, err := worker.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", cliArgs.URL()))
