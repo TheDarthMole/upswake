@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,8 @@ func mockValidBroadcastAddressesFunc() ([]net.IP, error) {
 
 func TestServerHandler_Register(t *testing.T) {
 	e := echo.New()
-	h := NewServerHandler()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
+	h := NewServerHandler(logger)
 
 	g := e.Group("")
 	h.Register(g)
