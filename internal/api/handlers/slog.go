@@ -6,6 +6,6 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-func setSlogAttributes(c *echo.Context, attributes []slog.Attr) {
+func setRequestLoggerAttrs(c *echo.Context, attributes []slog.Attr) {
 	c.Set("request_logger_values", attributes)
 }
