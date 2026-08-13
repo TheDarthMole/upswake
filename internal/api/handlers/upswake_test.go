@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -221,7 +222,9 @@ func TestUPSWakeHandler_RunWakeEvaluation(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewUPSWakeHandler(tt.fields.cfg, upsRepo, ruleRepo)
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
+
+			h := NewUPSWakeHandler(tt.fields.cfg, logger, upsRepo, ruleRepo)
 
 			if assert.NoError(t, h.RunWakeEvaluation(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())
@@ -235,13 +238,14 @@ func TestUPSWakeHandler_Register(t *testing.T) {
 	config := &entity.Config{}
 
 	e := echo.New()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 
 	mock := gomock.NewController(t)
 
 	upsRepo := mocks.NewMockUPSRepository(mock)
 	ruleRepo := mocks.NewMockRuleRepository(mock)
 
-	h := NewUPSWakeHandler(config, upsRepo, ruleRepo)
+	h := NewUPSWakeHandler(config, logger, upsRepo, ruleRepo)
 	h.Register(e.Group("/"))
 
 	expectedRoutes := echo.Routes{
@@ -383,11 +387,12 @@ func TestUPSWakeHandler_ListNutServerMappings(t *testing.T) {
 			ruleRepo.EXPECT().Evaluate(gomock.Any(), gomock.Any()).Times(0)
 
 			e := echo.New()
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 
-			h := NewUPSWakeHandler(tt.fields.cfg, upsRepo, ruleRepo)
+			h := NewUPSWakeHandler(tt.fields.cfg, logger, upsRepo, ruleRepo)
 
 			if assert.NoError(t, h.ListNutServerMappings(c)) {
 				assert.JSONEq(t, tt.wantedResponse.body, rec.Body.String())

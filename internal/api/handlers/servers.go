@@ -29,6 +29,7 @@ const (
 type ServerHandler struct {
 	newTargetServer    func(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*entity.TargetServer, error)
 	broadcastAddresses func() ([]net.IP, error)
+	logger             *slog.Logger
 }
 
 type WakeServerRequest struct {
@@ -54,10 +55,11 @@ func NewBroadcastWakeRequest() *BroadcastWakeRequest {
 	}
 }
 
-func NewServerHandler() *ServerHandler {
+func NewServerHandler(logger *slog.Logger) *ServerHandler {
 	return &ServerHandler{
 		newTargetServer:    entity.NewTargetServer,
 		broadcastAddresses: network.GetAllBroadcastAddresses,
+		logger:             logger,
 	}
 }
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,8 +30,9 @@ func TestPProfRegisterDefaultPrefix(t *testing.T) {
 	for _, tt := range pprofPaths {
 		t.Run(tt.path, func(t *testing.T) {
 			e := echo.New()
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 
-			profilerHandler := NewProfilerHandler()
+			profilerHandler := NewProfilerHandler(logger)
 			profilerHandler.Register(e.Group(""))
 			req, _ := http.NewRequest(http.MethodGet, tt.path, http.NoBody)
 			rec := httptest.NewRecorder()
@@ -61,10 +63,11 @@ func TestPProfRegisterCustomPrefix(t *testing.T) {
 		t.Run(tt.path, func(t *testing.T) {
 			t.Parallel()
 			e := echo.New()
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 
 			prefix := "/test/profiler"
 
-			profilerHandler := NewProfilerHandler()
+			profilerHandler := NewProfilerHandler(logger)
 			profilerHandler.Register(e.Group(prefix))
 			req, _ := http.NewRequest(http.MethodGet, prefix+tt.path, http.NoBody)
 			rec := httptest.NewRecorder()
