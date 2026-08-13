@@ -80,32 +80,36 @@ func (*RootHandler) Root(c *echo.Context) error {
 //	@Failure		500	{object}	Response
 //	@Router			/health [get]
 func (h *RootHandler) Health(c *echo.Context) error {
+	h.logger.Debug("Checking health")
 	if err := h.cfg.Validate(); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if _, err := network.GetAllBroadcastAddresses(); err != nil {
-		c.Logger().Error("Error getting broadcast addresses", slog.Any("error", err))
+		h.logger.Error("Error getting broadcast addresses", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
+	h.logger.Debug("Received broadcast addresses from attached network interfaces")
 
 	g := errgroup.Group{}
 
 	for _, server := range h.cfg.NutServers {
 		g.Go(func() error {
+			h.logger.Debug("Retrieving JSON from NUT server", slog.Any("server", server.Name))
 			if _, err := h.upsRepo.GetJSON(server); err != nil {
-				c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
+				h.logger.Error("Error getting NUT server status", slog.Any("error", err))
 				return err
 			}
+			h.logger.Debug("Retrieved JSON from NUT server", slog.Any("server", server.Name))
 			return nil
 		})
 	}
 
 	if err := g.Wait(); err != nil {
-		c.Logger().Error("Health check failed", slog.Any("error", err))
+		h.logger.Error("Health check failed", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	c.Logger().Debug("Health check OK")
+	h.logger.Debug("Health check OK")
 	return c.JSON(http.StatusOK, Response{Message: "OK"})
 }
