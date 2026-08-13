@@ -18,25 +18,12 @@ test:
     go clean -testcache
     go test -coverpkg=$(go list ./... | grep -v 'internal/domain/repository/mocks' | tr '\n' ',') -coverprofile=coverage.txt -race -v ./...
 
-# Runs all linters
-lint:
-    hk check --all
-
-# Runs all formatters
-fmt:
-    hk fix --all
-
 # Define the container tool with auto-detection, or allow override via CONTAINER_TOOL
 
 container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL") } else if which("podman") != "" { "podman" } else if which("docker") != "" { "docker" } else { "" }
 
 _check-container-tool:
     {{ if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable") } else { "" } }}
-
-# Install development dependencies
-install-deps: && _check-container-tool
-    mise install
-    hk install
 
 # Run upswake with arguments
 run *args:

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export GIT_DESCRIBE=$(git describe --tags --always --long)
+export BUILD_ARGS="-tags \"timetzdata\" -trimpath -ldflags=\"-w -s -X main.Version=${GIT_DESCRIBE}\""
