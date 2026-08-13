@@ -1,6 +1,3 @@
-[settings]
-lockfile = true
-
 [tools]
 go = "1.26.5"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
@@ -8,5 +5,17 @@ golangci-lint = "2.12.2"
 hadolint = "2.15.1"
 hk = "1.54.0"
 just = "1.57.0"
+rumdl = "0.2.55"
 swag = "v1.16.6"
 zizmor = "1.28.0"
+
+[settings]
+lockfile = true
+experimental = true
+
+[env]
+HK_MISE = 1
+
+[hooks]
+# Automatically install/update hooks when tools are installed
+postinstall = "hk install --mise"

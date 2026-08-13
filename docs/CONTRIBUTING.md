@@ -23,18 +23,18 @@ Once you have made a pull request, a maintainer will review your changes and dec
 
 Please ensure that you follow these guidelines:
 
-### Check the license
+### Check the License
 
 By contributing, you agree that your contributions will be licensed under the same license as the
 project, and you assert that you have full power to license your contribution under the [GPL-3.0 License](../LICENSE).
 Please refer to the [LICENSE](../LICENSE) file for more details.
 
-### Write clear commit messages
+### Write Clear Commit Messages
 
 Please write clear and concise commit messages that describe the changes you have made. Generally following the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification is a good idea.
 
-### Setting up your development environment
+### Setting up Your Development Environment
 
 This project uses [Golang](https://go.dev/), [Just](https://github.com/casey/just), [mise](https://mise.jdx.dev/) and your choice of [Docker](https://www.docker.com/) or [Podman](https://podman.io/) for development.
 To install the dependencies, please run the following commands:
@@ -43,7 +43,6 @@ To install the dependencies, please run the following commands:
 # Install 'mise' from https://mise.jdx.dev/
 # Also install podman or docker from their respective websites
 mise install # Install the rest of the dependencies
-hk install # Install hk pre-commit checker
 ```
 
 Just is used to build or run the application along with other useful development commands, you can use the `just` tool
@@ -69,18 +68,18 @@ Available recipes:
     test-local       # Run all Go tests locally
 ```
 
-### Follow the coding style
+### Follow the Coding Style
 
 Please follow the existing coding style and conventions used in the project. [Hk](https://hk.jdx.dev/) is used as a pre-commit checker to
 ensure standards for the project are maintained. Ensure that all checks pass before submitting your pull request.
 You can run the linters using:
 
 ```bash
-just lint
-just fmt # to automatically fix any issues that can be fixed automatically
+hk check --all
+hk fix --all # to automatically fix any issues that can be fixed automatically
 ```
 
-### Write tests
+### Write Tests
 
 Please write tests for any new features or bug fixes you have implemented. Ensure that all tests pass before submitting
 your pull request. You can run the tests using:
@@ -89,7 +88,7 @@ your pull request. You can run the tests using:
 just test
 ```
 
-### Update documentation
+### Update Documentation
 
 Please update the documentation to reflect any changes you have made. This includes updating the README.md file as well
 as the swagger documentation for any API changes.
