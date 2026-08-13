@@ -91,7 +91,7 @@ jobs:
           lookup-only: false
 
       - name: 💉 Inject go-build-cache
-        uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
+        uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Containerfile
