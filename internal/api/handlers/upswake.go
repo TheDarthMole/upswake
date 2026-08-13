@@ -124,9 +124,10 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			slog.String("mac", mac.MAC),
 			slog.String("target", result.Target.Name))
 
-		setSlogAttributes(c, []slog.Attr{
+		setRequestLoggerAttrs(c, []slog.Attr{
 			slog.String("target", result.Target.Name),
 			slog.Bool("evaluation", false),
+			slog.Bool("woken", false),
 		})
 
 		return c.JSON(http.StatusOK, UpsWakeResponse{
@@ -134,11 +135,6 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 			Woken:   false,
 		})
 	}
-
-	setSlogAttributes(c, []slog.Attr{
-		slog.String("target", result.Target.Name),
-		slog.Bool("evaluation", true),
-	})
 
 	ts, err := entity.NewTargetServer(
 		"API Request",
@@ -150,6 +146,13 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	)
 	if err != nil {
 		h.logger.Error("Failed to create target server", slog.Any("error", err))
+
+		setRequestLoggerAttrs(c, []slog.Attr{
+			slog.String("target", result.Target.Name),
+			slog.Bool("evaluation", true),
+			slog.Bool("woken", false),
+		})
+
 		return c.JSON(http.StatusInternalServerError, UpsWakeResponse{
 			Message: fmt.Sprintf("Failed to create target server: %s", err),
 			Woken:   false,
@@ -160,6 +163,13 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 
 	if err = wolClient.Wake(); err != nil {
 		h.logger.Error("Failed to send wake on lan", slog.Any("error", err))
+
+		setRequestLoggerAttrs(c, []slog.Attr{
+			slog.String("target", result.Target.Name),
+			slog.Bool("evaluation", true),
+			slog.Bool("woken", false),
+		})
+
 		return c.JSON(http.StatusInternalServerError, UpsWakeResponse{
 			Message: fmt.Sprintf("Failed to send wake on LAN: %s", err),
 			Woken:   false,
@@ -167,6 +177,13 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	h.logger.Debug("Wake on LAN sent", slog.String("mac", mac.MAC))
+
+	setRequestLoggerAttrs(c, []slog.Attr{
+		slog.String("target", result.Target.Name),
+		slog.Bool("evaluation", true),
+		slog.Bool("woken", true),
+	})
+
 	return c.JSON(http.StatusOK, UpsWakeResponse{
 		Message: "Wake on LAN sent",
 		Woken:   true,
