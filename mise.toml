@@ -4,10 +4,10 @@ go = "1.26.5"
 golangci-lint = "2.12.2"
 hadolint = "2.15.1"
 hk = "1.54.0"
-just = "1.57.0"
+just = "1.58.0"
 rumdl = "0.2.55"
 swag = "v1.16.6"
-zizmor = "1.28.0"
+zizmor = "1.29.0"
 
 [settings]
 lockfile = true
