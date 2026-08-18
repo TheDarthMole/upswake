@@ -1,16 +1,21 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/pprof"
 
 	"github.com/labstack/echo/v5"
 )
 
-type ProfilerHandler struct{}
+type ProfilerHandler struct {
+	logger *slog.Logger
+}
 
-func NewProfilerHandler() *ProfilerHandler {
-	return &ProfilerHandler{}
+func NewProfilerHandler(logger *slog.Logger) *ProfilerHandler {
+	return &ProfilerHandler{
+		logger: logger,
+	}
 }
 
 // Register middleware for net/http/pprof

@@ -19,6 +19,7 @@ type RootHandler struct {
 	cfg     *entity.Config
 	rulesFS afero.Fs
 	upsRepo repository.UPSRepository
+	logger  *slog.Logger
 }
 
 type Response struct {
@@ -31,11 +32,12 @@ type Response struct {
 //	@Title			UPSWake
 //	@Version		1.0
 //	@Description	UPSWake reads data from a UPS Nut Server and uses it to dynamically send Wake on Lan packets to servers
-func NewRootHandler(cfg *entity.Config, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
+func NewRootHandler(cfg *entity.Config, logger *slog.Logger, rulesFS afero.Fs, upsRepo repository.UPSRepository) *RootHandler {
 	return &RootHandler{
 		cfg:     cfg,
 		rulesFS: rulesFS,
 		upsRepo: upsRepo,
+		logger:  logger,
 	}
 }
 
@@ -78,32 +80,36 @@ func (*RootHandler) Root(c *echo.Context) error {
 //	@Failure		500	{object}	Response
 //	@Router			/health [get]
 func (h *RootHandler) Health(c *echo.Context) error {
+	h.logger.Debug("Checking health")
 	if err := h.cfg.Validate(); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
 	if _, err := network.GetAllBroadcastAddresses(); err != nil {
-		c.Logger().Error("Error getting broadcast addresses", slog.Any("error", err))
+		h.logger.Error("Error getting broadcast addresses", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
+	h.logger.Debug("Received broadcast addresses from attached network interfaces")
 
 	g := errgroup.Group{}
 
 	for _, server := range h.cfg.NutServers {
 		g.Go(func() error {
+			h.logger.Debug("Retrieving JSON from NUT server", slog.Any("server", server.Name))
 			if _, err := h.upsRepo.GetJSON(server); err != nil {
-				c.Logger().Error("Error getting NUT server status", slog.Any("error", err))
+				h.logger.Error("Error getting NUT server status", slog.Any("error", err))
 				return err
 			}
+			h.logger.Debug("Retrieved JSON from NUT server", slog.Any("server", server.Name))
 			return nil
 		})
 	}
 
 	if err := g.Wait(); err != nil {
-		c.Logger().Error("Health check failed", slog.Any("error", err))
+		h.logger.Error("Health check failed", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: err.Error()})
 	}
 
-	c.Logger().Debug("Health check OK")
+	h.logger.Debug("Health check OK")
 	return c.JSON(http.StatusOK, Response{Message: "OK"})
 }

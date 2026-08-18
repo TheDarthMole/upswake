@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,8 @@ func mockValidBroadcastAddressesFunc() ([]net.IP, error) {
 
 func TestServerHandler_Register(t *testing.T) {
 	e := echo.New()
-	h := NewServerHandler()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
+	h := NewServerHandler(logger)
 
 	g := e.Group("")
 	h.Register(g)
@@ -218,12 +220,14 @@ func TestServerHandler_BroadcastWakeServer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/broadcastwake", strings.NewReader(tt.fields.body))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			h := &ServerHandler{
 				newTargetServer:    tt.fields.mockNewTargetServer,
 				broadcastAddresses: tt.fields.mockBroadcastAddresses,
+				logger:             logger,
 			}
 
 			if assert.NoError(t, h.BroadcastWakeServer(c)) {
@@ -348,8 +352,10 @@ func TestServerHandler_WakeServer(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
+			logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 			h := &ServerHandler{
 				newTargetServer: tt.fields.mockNewTargetServer,
+				logger:          logger,
 			}
 
 			if assert.NoError(t, h.WakeServer(c)) {

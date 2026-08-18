@@ -29,6 +29,7 @@ const (
 type ServerHandler struct {
 	newTargetServer    func(name, mac, broadcast string, interval time.Duration, port int, rules []string) (*entity.TargetServer, error)
 	broadcastAddresses func() ([]net.IP, error)
+	logger             *slog.Logger
 }
 
 type WakeServerRequest struct {
@@ -54,10 +55,11 @@ func NewBroadcastWakeRequest() *BroadcastWakeRequest {
 	}
 }
 
-func NewServerHandler() *ServerHandler {
+func NewServerHandler(logger *slog.Logger) *ServerHandler {
 	return &ServerHandler{
 		newTargetServer:    entity.NewTargetServer,
 		broadcastAddresses: network.GetAllBroadcastAddresses,
+		logger:             logger,
 	}
 }
 
@@ -81,12 +83,12 @@ func (s *ServerHandler) Register(g *echo.Group) {
 func (s *ServerHandler) WakeServer(c *echo.Context) error {
 	wsRequest := NewWakeServerRequest()
 	if err := c.Bind(wsRequest); err != nil {
-		c.Logger().Error("failed to bind wake server request", slog.Any("error", err))
+		s.logger.Error("failed to bind wake server request", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorBindingRequest.Error()})
 	}
 
 	if err := c.Validate(wsRequest); err != nil {
-		c.Logger().Error("failed to validate wake server request", slog.Any("error", err))
+		s.logger.Error("failed to validate wake server request", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorValidatingRequest.Error()})
 	}
 
@@ -99,18 +101,18 @@ func (s *ServerHandler) WakeServer(c *echo.Context) error {
 		[]string{},
 	)
 	if err != nil {
-		c.Logger().Error("failed to create target server", slog.Any("error", err))
+		s.logger.Error("failed to create target server", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorCreatingTargetServer.Error()})
 	}
 
 	wolClient := wol.NewWoLClient(ts)
 
 	if err = wolClient.Wake(); err != nil {
-		c.Logger().Error("failed to send wake on lan", slog.Any("error", err))
+		s.logger.Error("failed to send wake on lan", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 	}
 
-	c.Logger().Info("wake on lan packet sent", slog.String("mac", sanitizeString(wsRequest.Mac)))
+	s.logger.Info("wake on lan packet sent", slog.String("mac", sanitizeString(wsRequest.Mac)))
 	return c.JSON(http.StatusCreated, Response{Message: WoLSentMessage})
 }
 
@@ -129,28 +131,28 @@ func (s *ServerHandler) WakeServer(c *echo.Context) error {
 func (s *ServerHandler) BroadcastWakeServer(c *echo.Context) error {
 	wsRequest := NewBroadcastWakeRequest()
 	if err := c.Bind(wsRequest); err != nil {
-		c.Logger().Error("failed to bind wake server request", slog.Any("error", err))
+		s.logger.Error("failed to bind wake server request", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorBindingRequest.Error()})
 	}
 
 	if err := c.Validate(wsRequest); err != nil {
-		c.Logger().Error("failed to validate wake server request", slog.Any("error", err))
+		s.logger.Error("failed to validate wake server request", slog.Any("error", err))
 		return c.JSON(http.StatusBadRequest, Response{Message: ErrorValidatingRequest.Error()})
 	}
 	broadcasts, err := s.broadcastAddresses()
 	if err != nil {
-		c.Logger().Error("failed to get broadcast addresses", slog.Any("error", err))
+		s.logger.Error("failed to get broadcast addresses", slog.Any("error", err))
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorBroadcastAddress.Error()})
 	}
 
 	if len(broadcasts) == 0 {
-		c.Logger().Error("no broadcast addresses available", slog.Any("broadcasts", broadcasts))
+		s.logger.Error("no broadcast addresses available", slog.Any("broadcasts", broadcasts))
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorBroadcastAddress.Error()})
 	}
 
 	for _, broadcast := range broadcasts {
 		if broadcast == nil {
-			c.Logger().Error("invalid broadcast address")
+			s.logger.Error("invalid broadcast address")
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorBroadcastAddress.Error()})
 		}
 
@@ -163,16 +165,16 @@ func (s *ServerHandler) BroadcastWakeServer(c *echo.Context) error {
 			[]string{},
 		)
 		if err != nil {
-			c.Logger().Error("failed to create new target server", slog.Any("error", err))
+			s.logger.Error("failed to create new target server", slog.Any("error", err))
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorCreatingTargetServer.Error()})
 		}
 
 		wolClient := wol.NewWoLClient(ts)
 		if err = wolClient.Wake(); err != nil {
-			c.Logger().Error("failed to send wake on lan", slog.Any("error", err))
+			s.logger.Error("failed to send wake on lan", slog.Any("error", err))
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 		}
-		c.Logger().Info("sent wake on lan",
+		s.logger.Info("sent wake on lan",
 			slog.String("mac", sanitizeString(wsRequest.Mac)),
 			slog.Int("port", wsRequest.Port),
 			slog.String("broadcast", broadcast.String()))
