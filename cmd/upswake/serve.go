@@ -94,6 +94,9 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
+	j.logger.Info("setting logging level", slog.String("level", cfg.Logging.Level.String()))
+	LogLevel.Set(cfg.Logging.Level)
+
 	ruleRepo, err := rules.NewPreparedRepository(j.regoFs)
 	if err != nil {
 		return fmt.Errorf("error compiling rego rules: %w", err)
