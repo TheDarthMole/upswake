@@ -3,6 +3,7 @@ package viper
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
@@ -20,9 +21,15 @@ func FromFileConfig(config *Config) (*entity.Config, error) {
 		nutServers[i] = entityNutServer
 	}
 
+	logLevel, err := FromFileLogging(config.Logging)
+	if err != nil {
+		return nil, err
+	}
+
 	return &entity.Config{
 		NutServers: nutServers,
 		Profiler:   FromFileProfiler(config.Profiler),
+		Logging:    logLevel,
 	}, nil
 }
 
@@ -35,6 +42,7 @@ func ToFileConfig(entityConfig *entity.Config) *Config {
 	return &Config{
 		NutServers: nutServers,
 		Profiler:   ToFileProfiler(entityConfig.Profiler),
+		Logging:    ToFileLogging(entityConfig.Logging),
 	}
 }
 
@@ -117,4 +125,44 @@ func ToFileProfiler(entityProfiler *entity.Profiler) *Profiler {
 		return &Profiler{Enabled: false}
 	}
 	return &Profiler{Enabled: entityProfiler.Enabled}
+}
+
+func FromFileLogging(logging *Logging) (*entity.Logging, error) {
+	if logging == nil {
+		return &entity.Logging{
+			Level: slog.LevelInfo,
+		}, nil
+	}
+	logLevel, err := fromFileLogLevel(logging.Level)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.Logging{
+		Level: logLevel,
+	}, nil
+}
+
+func ToFileLogging(entityLogging *entity.Logging) *Logging {
+	if entityLogging == nil {
+		return &Logging{
+			Level: toFileLogLevel(slog.LevelInfo),
+		}
+	}
+	return &Logging{
+		Level: toFileLogLevel(entityLogging.Level),
+	}
+}
+
+func fromFileLogLevel(level string) (slog.Level, error) {
+	lvl := slog.LevelInfo
+	err := lvl.UnmarshalText([]byte(level))
+	if err != nil {
+		return slog.LevelDebug, err
+	}
+	return lvl, nil
+}
+
+func toFileLogLevel(level slog.Level) string {
+	return level.String()
 }
