@@ -1,9 +1,9 @@
 [tools]
-go = "1.26.5"
+go = "1.26.6"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
 golangci-lint = "2.12.2"
 hadolint = "2.15.1"
-hk = "1.54.0"
+hk = "1.55.0"
 just = "1.58.0"
 rumdl = "0.2.55"
 swag = "v1.16.6"
