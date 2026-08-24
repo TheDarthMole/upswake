@@ -19,11 +19,7 @@ type wakeCMD struct {
 }
 
 func NewWakeCmd(logger *slog.Logger, broadcasts []net.IP) *cobra.Command {
-	childLogger := logger.With(
-		slog.String("cmd", "wake"),
-	)
-
-	wc := &wakeCMD{logger: childLogger}
+	wc := &wakeCMD{logger: logger}
 	wakeCmd := &cobra.Command{
 		Use:   "wake",
 		Short: "Manually wake a computer",

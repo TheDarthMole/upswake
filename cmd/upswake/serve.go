@@ -40,10 +40,6 @@ type serveCMD struct {
 }
 
 func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
-	// childLogger := logger.With(
-	//	slog.String("cmd", "serve"),
-	//)
-
 	sc := &serveCMD{
 		logger: logger,
 		fs:     fs,
@@ -95,8 +91,8 @@ func (j *serveCMD) persistentPreRunE(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	j.logger.Info("setting logging level", slog.String("new_level", cfg.Logging.Level.String()))
 	charmlogger.SetLevel(cfg.Logging.Level.String())
+	charmlogger.SetJSONFormat(cfg.Logging.JSONFormat)
 	j.cfg = cfg
 	j.cliArgs = cliArgs
 	return nil

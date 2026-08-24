@@ -130,7 +130,8 @@ func ToFileProfiler(entityProfiler *entity.Profiler) *Profiler {
 func FromFileLogging(logging *Logging) (*entity.Logging, error) {
 	if logging == nil {
 		return &entity.Logging{
-			Level: slog.LevelInfo,
+			Level:      slog.LevelInfo,
+			JSONFormat: false,
 		}, nil
 	}
 	logLevel, err := fromFileLogLevel(logging.Level)
@@ -139,18 +140,21 @@ func FromFileLogging(logging *Logging) (*entity.Logging, error) {
 	}
 
 	return &entity.Logging{
-		Level: logLevel,
+		Level:      logLevel,
+		JSONFormat: logging.JSONFormat,
 	}, nil
 }
 
 func ToFileLogging(entityLogging *entity.Logging) *Logging {
 	if entityLogging == nil {
 		return &Logging{
-			Level: toFileLogLevel(slog.LevelInfo),
+			Level:      toFileLogLevel(slog.LevelInfo),
+			JSONFormat: false,
 		}
 	}
 	return &Logging{
-		Level: toFileLogLevel(entityLogging.Level),
+		Level:      toFileLogLevel(entityLogging.Level),
+		JSONFormat: entityLogging.JSONFormat,
 	}
 }
 

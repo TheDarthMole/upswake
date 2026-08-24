@@ -72,7 +72,8 @@ func (c *Config) Validate() error {
 }
 
 type Logging struct {
-	Level slog.Level
+	Level      slog.Level
+	JSONFormat bool
 }
 
 func (l *Logging) Validate() error {

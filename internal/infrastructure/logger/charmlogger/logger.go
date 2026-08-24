@@ -16,17 +16,11 @@ var handler *charmlog.Logger
 func Setup(level string, destination io.Writer, jsonFormat bool) *slog.Logger {
 	handler = charmlog.New(destination)
 	SetLevel(level)
+	SetJSONFormat(jsonFormat)
 
 	handler.SetReportTimestamp(true)
 
-	if jsonFormat {
-		handler.SetFormatter(charmlog.JSONFormatter)
-	} else {
-		handler.SetFormatter(charmlog.TextFormatter)
-	}
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
-	return logger
+	return setLogger(handler)
 }
 
 func SetLevel(level string) {
@@ -35,6 +29,22 @@ func SetLevel(level string) {
 		lvl = charmlog.InfoLevel
 	}
 	handler.SetLevel(lvl)
+}
+
+func SetJSONFormat(json bool) {
+	if json {
+		handler.SetFormatter(charmlog.JSONFormatter)
+		setLogger(handler)
+		return
+	}
+	handler.SetFormatter(charmlog.TextFormatter)
+	setLogger(handler)
+}
+
+func setLogger(handle *charmlog.Logger) *slog.Logger {
+	logger := slog.New(handle)
+	slog.SetDefault(logger)
+	return logger
 }
 
 // GetLogger returns the global logger instance.

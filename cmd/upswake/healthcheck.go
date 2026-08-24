@@ -22,11 +22,7 @@ type healthCheck struct {
 }
 
 func NewHealthCheckCommand(logger *slog.Logger) *cobra.Command {
-	childLogger := logger.With(
-		slog.String("cmd", "healthcheck"),
-	)
-
-	hc := healthCheck{logger: childLogger}
+	hc := healthCheck{logger: logger}
 
 	healthcheckCmd := &cobra.Command{
 		Use:   "healthcheck",

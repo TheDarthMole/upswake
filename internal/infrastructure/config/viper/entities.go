@@ -7,7 +7,8 @@ type Config struct {
 }
 
 type Logging struct {
-	Level string
+	Level      string `mapstructure:"level"`
+	JSONFormat bool   `mapstructure:"json_format"`
 }
 
 type Profiler struct {
