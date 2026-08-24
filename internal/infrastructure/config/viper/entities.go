@@ -2,7 +2,13 @@ package viper
 
 type Config struct {
 	Profiler   *Profiler    `mapstructure:"profiler"`
+	Logging    *Logging     `mapstructure:"logging"`
 	NutServers []*NutServer `mapstructure:"nut_servers"`
+}
+
+type Logging struct {
+	Level      string `mapstructure:"level"`
+	JSONFormat bool   `mapstructure:"json_format"`
 }
 
 type Profiler struct {

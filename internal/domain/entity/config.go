@@ -23,6 +23,7 @@ var (
 	ErrInvalidBroadcast  = errors.New("broadcast is invalid, must be an IP address")
 	ErrIntervalRequired  = errors.New("interval is required")
 	ErrInvalidInterval   = errors.New("interval is invalid, must be a duration")
+	ErrInvalidLogLevel   = errors.New("log level is invalid")
 	validate             *validator.Validate
 )
 
@@ -57,6 +58,7 @@ func duration(fl validator.FieldLevel) bool {
 
 type Config struct {
 	Profiler   *Profiler
+	Logging    *Logging
 	NutServers []*NutServer
 }
 
@@ -65,6 +67,22 @@ func (c *Config) Validate() error {
 		if err := target.Validate(); err != nil {
 			return err
 		}
+	}
+	err := c.Logging.Validate()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type Logging struct {
+	Level      slog.Level
+	JSONFormat bool
+}
+
+func (l *Logging) Validate() error {
+	if l.Level < slog.LevelDebug || l.Level > slog.LevelInfo {
+		return ErrInvalidLogLevel
 	}
 	return nil
 }

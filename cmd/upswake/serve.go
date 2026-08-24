@@ -12,6 +12,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/api/handlers"
 	config "github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/logger/charmlogger"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/rules"
 	cachedups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/cached"
 	directups "github.com/TheDarthMole/UPSWake/internal/infrastructure/ups/direct"
@@ -24,35 +25,36 @@ import (
 const (
 	defaultListenHost = "0.0.0.0"
 	defaultListenPort = "8080"
+	serveExample      = `  upswake serve --port 8080
+  upswake serve -p 8080 -H 192.168.1.10
+  upswake serve --port 8443 --ssl --certFile /path/to/cert.pem --keyFile /path/to/key.pem
+  upswake serve -p 8443 -s -c /path/to/cert.pem -k /path/to/key.pem`
 )
 
 type serveCMD struct {
-	logger *slog.Logger
-	fs     afero.Fs
-	regoFs afero.Fs
+	logger  *slog.Logger
+	fs      afero.Fs
+	regoFs  afero.Fs
+	cfg     *config.Config
+	cliArgs *config.CLIArgs
 }
 
 func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.Fs) *cobra.Command {
-	childLogger := logger.With(
-		slog.String("cmd", "serve"),
-	)
-
 	sc := &serveCMD{
-		logger: childLogger,
+		logger: logger,
 		fs:     fs,
 		regoFs: regoFs,
 	}
 
 	serveCmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Run the UPSWake server",
-		Long:  `Run the UPSWake server and API on the specified port`,
-		Example: `  upswake serve --port 8080
-  upswake serve -p 8080 -H 192.168.1.10
-  upswake serve --port 8443 --ssl --certFile /path/to/cert.pem --keyFile /path/to/key.pem
-  upswake serve -p 8443 -s -c /path/to/cert.pem -k /path/to/key.pem`,
-		RunE: sc.serveCmdRunE,
+		Use:               "serve",
+		Short:             "Run the UPSWake server",
+		Long:              `Run the UPSWake server and API on the specified port`,
+		Example:           serveExample,
+		PersistentPreRunE: sc.persistentPreRunE,
+		RunE:              sc.serveCmdRunE,
 	}
+
 	serveCmd.SetContext(ctx)
 	serveCmd.Flags().StringP("port", "p", defaultListenPort, "Port to listen on")
 	serveCmd.Flags().StringP("host", "H", defaultListenHost, "Interface to listen on")
@@ -67,11 +69,7 @@ func NewServeCommand(ctx context.Context, logger *slog.Logger, fs, regoFs afero.
 	return serveCmd
 }
 
-func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
-	ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-	cmd.SetContext(ctx)
-
+func (j *serveCMD) persistentPreRunE(cmd *cobra.Command, _ []string) error {
 	cfgPath, _ := cmd.Flags().GetString("config")
 	certFile, _ := cmd.Flags().GetString("certFile")
 	keyFile, _ := cmd.Flags().GetString("keyFile")
@@ -88,11 +86,22 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	configRepo := viper.NewConfigLoader(j.fs, cliArgs.ConfigFile)
-
 	cfg, err := configRepo.Load()
 	if err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
+
+	charmlogger.SetLevel(cfg.Logging.Level.String())
+	charmlogger.SetJSONFormat(cfg.Logging.JSONFormat)
+	j.cfg = cfg
+	j.cliArgs = cliArgs
+	return nil
+}
+
+func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
+	ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+	cmd.SetContext(ctx)
 
 	ruleRepo, err := rules.NewPreparedRepository(j.regoFs)
 	if err != nil {
@@ -104,22 +113,22 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	server := api.NewServer(cmd.Context(), j.logger)
 
-	if cfg.Profiler.Enabled {
+	if j.cfg.Profiler.Enabled {
 		j.logger.Warn("Profiler enabled")
-		profilerHandler := handlers.NewProfilerHandler()
+		profilerHandler := handlers.NewProfilerHandler(j.logger)
 		profilerHandler.Register(server.Root().Group("/debug/pprof"))
 	}
 
-	rootHandler := handlers.NewRootHandler(cfg, j.regoFs, cachedUpsRepo)
+	rootHandler := handlers.NewRootHandler(j.cfg, j.logger, j.regoFs, cachedUpsRepo)
 	rootHandler.Register(server.Root())
 
-	serverHandler := handlers.NewServerHandler()
+	serverHandler := handlers.NewServerHandler(j.logger)
 	serverHandler.Register(server.API().Group("/servers"))
 
-	upsWakeHandler := handlers.NewUPSWakeHandler(cfg, cachedUpsRepo, ruleRepo)
+	upsWakeHandler := handlers.NewUPSWakeHandler(j.cfg, j.logger, cachedUpsRepo, ruleRepo)
 	upsWakeHandler.Register(server.API().Group("/upswake"))
 
-	workerPool, err := worker.NewWorkerPool(ctx, cfg, cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", cliArgs.URL()))
+	workerPool, err := worker.NewWorkerPool(ctx, j.cfg, j.cliArgs.TLSConfig, j.logger, fmt.Sprintf("%s/api/upswake", j.cliArgs.URL()))
 	if err != nil {
 		return fmt.Errorf("error creating worker pool: %w", err)
 	}
@@ -127,10 +136,10 @@ func (j *serveCMD) serveCmdRunE(cmd *cobra.Command, _ []string) error {
 
 	err = server.Start(
 		j.fs,
-		cliArgs.ListenAddress(),
-		cliArgs.UseSSL,
-		cliArgs.CertFile,
-		cliArgs.KeyFile,
+		j.cliArgs.ListenAddress(),
+		j.cliArgs.UseSSL,
+		j.cliArgs.CertFile,
+		j.cliArgs.KeyFile,
 	)
 
 	j.logger.Info("Server stopped, waiting for workers to finish")
