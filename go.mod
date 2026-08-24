@@ -1,6 +1,6 @@
 module github.com/TheDarthMole/UPSWake
 
-go 1.26.5
+go 1.26.6
 
 require (
 	charm.land/log/v2 v2.0.0
