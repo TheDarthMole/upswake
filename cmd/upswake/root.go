@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/TheDarthMole/UPSWake/internal/infrastructure/logger/charmlogger"
 	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -37,10 +38,7 @@ func NewRootCommand() *cobra.Command {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer, args []string) int {
-	handler := slog.NewJSONHandler(logDestination, &slog.HandlerOptions{
-		Level: LogLevel.Level(),
-	})
-	logger := slog.New(handler)
+	logger := charmlogger.Setup("INFO", logDestination, true)
 
 	bc, err := network.GetAllBroadcastAddresses()
 	if err != nil {
