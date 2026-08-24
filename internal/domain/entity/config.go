@@ -68,6 +68,10 @@ func (c *Config) Validate() error {
 			return err
 		}
 	}
+	err := c.Logging.Validate()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
