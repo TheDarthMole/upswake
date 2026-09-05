@@ -1,11 +1,11 @@
 [tools]
-go = "1.26.6"
+go = "1.27.0"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
-golangci-lint = "2.12.2"
+golangci-lint = "2.13.2"
 hadolint = "2.15.1"
-hk = "1.55.0"
+hk = "1.56.1"
 just = "1.58.0"
-rumdl = "0.2.55"
+rumdl = "v0.2.62"
 swag = "v1.16.6"
 zizmor = "1.29.0"
 
