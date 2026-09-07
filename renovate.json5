@@ -63,7 +63,18 @@
       matchUpdateTypes: ["minor", "patch"],
       groupName: "mise dependencies (non-major)",
     },
-
+    {
+      groupName: "golang version updates (non-major)",
+      matchPackageNames: [
+        "go",
+        "golang",
+      ],
+      matchDatasources: [
+        "docker",
+        "go",
+        "golang-version"
+      ],
+    },
     // Major updates get individual PRs for careful review
     {
       matchManagers: ["gomod"],
@@ -87,21 +98,5 @@
       "matchPackageNames": ["reproducible-containers/buildkit-cache-dance"],
       "groupName": null,
     },
-    {
-      "groupName": "Go toolchain",
-      "matchPackageNames": [
-        "go",
-        "golang",
-      ],
-      "matchDatasources": [
-        "docker",
-        "go",
-        "golang-version"
-      ],
-      "addLabels": [
-        "go",
-        "dependencies"
-      ]
-    }
   ],
 }
