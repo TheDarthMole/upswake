@@ -84,7 +84,7 @@
     // Bundle golang updates together
     {
       groupName: "golang version updates (non-major)",
-      matchPackageNames: ["go", "golang"],
+      matchPackageNames: ["go", "golang", "golang/go"],
       matchDatasources: ["docker", "go", "golang-version", "github-tags"],
     },
 
