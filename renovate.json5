@@ -44,8 +44,11 @@
 
     // Group all non-major dependency updates
     {
-      "matchPackageNames": ["go", "golang"],
       "matchDepTypes": ["golang"],
+      "groupName": "golang version dependencies (non-major)",
+    },
+    {
+      "matchPackageNames": ["go", "golang"],
       "groupName": "golang version dependencies (non-major)",
     },
     {
