@@ -72,7 +72,9 @@
       matchDatasources: [
         "docker",
         "go",
-        "golang-version"
+        "golang-version",
+        "mise",
+        "dockerfile"
       ],
     },
     // Major updates get individual PRs for careful review
