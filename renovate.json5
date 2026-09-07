@@ -9,12 +9,12 @@
   ],
 
   // Wait 7 days after publish before creating PRs to avoid compromised packages
-  minimumReleaseAge: "7 days",
+  "minimumReleaseAge": "7 days",
 
   "postUpdateOptions": ["gomodTidy"],
 
-  lockFileMaintenance: {
-    enabled: true,
+  "lockFileMaintenance": {
+    "enabled": true,
   },
 
   "docker-compose": {
@@ -38,54 +38,55 @@
       "semanticCommitScope": "docker-compose"
     },
     {
-      matchManagers: ["mise"],
-      semanticCommitScope: "mise",
+      "matchManagers": ["mise"],
+      "semanticCommitScope": "mise",
     },
 
     // Group all non-major dependency updates
     {
-      matchManagers: ["gomod"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "gomod dependencies (non-major)",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "gomod dependencies (non-major)",
     },
     {
-      matchManagers: ["github-actions"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "github-actions dependencies (non-major)",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "github-actions dependencies (non-major)",
     },
     {
-      matchManagers: ["docker-compose"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "docker-compose dependencies (non-major)",
+      "matchManagers": ["docker-compose"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "docker-compose dependencies (non-major)",
     },
     {
-      matchManagers: ["mise"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "mise dependencies (non-major)",
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "mise dependencies (non-major)",
     },
     // Major updates get individual PRs for careful review
     {
-      matchManagers: ["gomod"],
-      matchUpdateTypes: ["major"],
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["major"],
     },
     {
-      matchManagers: ["github-actions"],
-      matchUpdateTypes: ["major"],
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
     },
     {
-      matchManagers: ["docker-compose"],
-      matchUpdateTypes: ["major"],
+      "matchManagers": ["docker-compose"],
+      "matchUpdateTypes": ["major"],
     },
     {
-      matchManagers: ["mise"],
-      matchUpdateTypes: ["major"],
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["major"],
     },
 
     // Bundle golang updates together
     {
-      groupName: "golang version updates (non-major)",
-      matchPackageNames: ["go", "golang", "golang/go"],
-      matchDatasources: ["docker", "go", "golang-version", "github-tags"],
+      "groupName": "golang version updates (non-major)",
+      "matchPackageNames": ["go", "golang", "golang/go"],
+      "matchDatasources": ["docker", "go", "golang-version", "github-tags"],
+      "rangeStrategy": "bump"
     },
 
     // Separate buildkit-cache-dance due to issues with breaking change in update requiring sudo
