@@ -63,20 +63,6 @@
       matchUpdateTypes: ["minor", "patch"],
       groupName: "mise dependencies (non-major)",
     },
-    {
-      groupName: "golang version updates (non-major)",
-      matchPackageNames: [
-        "go",
-        "golang",
-      ],
-      matchDatasources: [
-        "docker",
-        "go",
-        "golang-version",
-        "mise",
-        "dockerfile"
-      ],
-    },
     // Major updates get individual PRs for careful review
     {
       matchManagers: ["gomod"],
@@ -93,6 +79,13 @@
     {
       matchManagers: ["mise"],
       matchUpdateTypes: ["major"],
+    },
+
+    // Bundle golang updates together
+    {
+      groupName: "golang version updates (non-major)",
+      matchPackageNames: ["go", "golang"],
+      matchDatasources: ["docker", "go", "golang-version", "github-tags"],
     },
 
     // Separate buildkit-cache-dance due to issues with breaking change in update requiring sudo
