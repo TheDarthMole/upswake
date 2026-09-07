@@ -44,14 +44,6 @@
 
     // Group all non-major dependency updates
     {
-      "matchDepTypes": ["golang"],
-      "groupName": "golang version dependencies (non-major)",
-    },
-    {
-      "matchPackageNames": ["go", "golang"],
-      "groupName": "golang version dependencies (non-major)",
-    },
-    {
       matchManagers: ["gomod"],
       matchUpdateTypes: ["minor", "patch"],
       groupName: "gomod dependencies (non-major)",
@@ -94,6 +86,22 @@
     {
       "matchPackageNames": ["reproducible-containers/buildkit-cache-dance"],
       "groupName": null,
+    },
+    {
+      "groupName": "Go toolchain",
+      "matchPackageNames": [
+        "go",
+        "golang",
+      ],
+      "matchDatasources": [
+        "docker",
+        "go",
+        "golang-version"
+      ],
+      "addLabels": [
+        "go",
+        "dependencies"
+      ]
     }
   ],
 }
