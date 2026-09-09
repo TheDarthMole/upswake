@@ -12,8 +12,10 @@ formatters:
         - default
         - prefix(github.com/TheDarthMole/upswake)
     gofumpt:
-      # Choose whether to use the extra rules.
-      extra-rules: true
+      extra:
+        group-params: true
+        clothe-returns: true
+        balance-calls: true
 
 issues:
   # Maximum issues count per one linter.
