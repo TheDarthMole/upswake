@@ -37,6 +37,7 @@ func Test_Load(t *testing.T) {
 				Profiler: &entity.Profiler{
 					Enabled: true,
 				},
+				Logging: &entity.Logging{},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "nut_server_1",
@@ -69,6 +70,7 @@ func Test_Load(t *testing.T) {
 			wantErr: nil,
 			want: &entity.Config{
 				Profiler: &entity.Profiler{},
+				Logging:  &entity.Logging{},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "nut_server_1",

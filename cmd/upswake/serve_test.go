@@ -108,7 +108,7 @@ nut_servers:
 				`"msg":"Starting worker","cmd":"serve","type":"serveJob","worker_name":"test-target-server"`,
 				`"status":200`,
 				`"level":"INFO"`,
-				`"msg":"REQUEST","cmd":"serve","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200}`,
+				`"msg":"REQUEST","cmd":"serve","remote_ip":"127.0.0.1","host":"127.0.0.1:8082","method":"POST","uri":"/api/upswake","user_agent":"Go-http-client/1.1","status":200`,
 			},
 			notWantOutputs: []string{
 				`"level":"ERROR"`,
