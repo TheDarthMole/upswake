@@ -2,6 +2,7 @@
 
 set shell := ["bash", "-cu"]
 set unstable
+set lists
 
 export GIT_DESCRIBE := `git describe --tags --always --long`
 BUILD_ARGS := '-tags "timetzdata" -trimpath -ldflags="-w -s -X main.Version=${GIT_DESCRIBE}"'
@@ -28,7 +29,7 @@ fmt:
 
 # Define the container tool with auto-detection, or allow override via CONTAINER_TOOL
 
-container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL") } else if which("podman") != "" { "podman" } else if which("docker") != "" { "docker" } else { "" }
+container-tool := if env("CONTAINER_TOOL", "") != "" { env("CONTAINER_TOOL") } else if which("podman") != [] { "podman" } else if which("docker") != [] { "docker" } else { "" }
 
 _check-container-tool:
     {{ if container-tool == "" { error("Neither podman nor docker was found in PATH. Please install one or set the CONTAINER_TOOL environment variable") } else { "" } }}
