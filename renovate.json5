@@ -86,6 +86,7 @@
       "groupName": "golang version updates (non-major)",
       "matchPackageNames": ["go", "golang", "golang/go"],
       "matchDatasources": ["docker", "go", "golang-version", "github-tags"],
+      "semanticCommitScope": "go-version"
     },
 
     // Separate buildkit-cache-dance due to issues with breaking change in update requiring sudo
