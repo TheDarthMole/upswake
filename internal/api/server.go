@@ -48,7 +48,7 @@ func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 		LogURI:    true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			slogAttrs := []slog.Attr{
-				slog.String("remote_ip", c.RealIP()),
+				slog.String("remote_ip", logging.SanitizeString(c.RealIP())),
 				slog.String("host", logging.SanitizeString(c.Request().Host)),
 				slog.String("method", c.Request().Method),
 				slog.String("uri", logging.SanitizeString(v.URI)),
