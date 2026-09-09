@@ -1,6 +1,7 @@
 package viper
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -57,6 +58,7 @@ func TestFromFileConfig(t *testing.T) {
 				Profiler: &entity.Profiler{
 					Enabled: true,
 				},
+				Logging: &entity.Logging{},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -88,6 +90,109 @@ func TestFromFileConfig(t *testing.T) {
 			},
 			want: &entity.Config{
 				Profiler:   &entity.Profiler{},
+				Logging:    &entity.Logging{},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "profiler enabled",
+			args: args{
+				config: &Config{
+					Profiler: &Profiler{
+						Enabled: true,
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{
+					Enabled: true,
+				},
+				Logging:    &entity.Logging{},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "profiler disabled",
+			args: args{
+				config: &Config{
+					Profiler: &Profiler{
+						Enabled: false,
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{
+					Enabled: false,
+				},
+				Logging:    &entity.Logging{},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "logging debug",
+			args: args{
+				config: &Config{
+					Logging: &Logging{
+						Level: "DEBUG",
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{},
+				Logging: &entity.Logging{
+					Level: slog.LevelDebug,
+				},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "logging info",
+			args: args{
+				config: &Config{
+					Logging: &Logging{
+						Level: "INFO",
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{},
+				Logging: &entity.Logging{
+					Level: slog.LevelInfo,
+				},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "logging warn",
+			args: args{
+				config: &Config{
+					Logging: &Logging{
+						Level: "WARN",
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{},
+				Logging: &entity.Logging{
+					Level: slog.LevelWarn,
+				},
+				NutServers: []*entity.NutServer{},
+			},
+		},
+		{
+			name: "logging error",
+			args: args{
+				config: &Config{
+					Logging: &Logging{
+						Level: "ERROR",
+					},
+				},
+			},
+			want: &entity.Config{
+				Profiler: &entity.Profiler{},
+				Logging: &entity.Logging{
+					Level: slog.LevelError,
+				},
 				NutServers: []*entity.NutServer{},
 			},
 		},
@@ -95,6 +200,10 @@ func TestFromFileConfig(t *testing.T) {
 			name: "valid nut server no target servers",
 			args: args{
 				config: &Config{
+					Profiler: &Profiler{},
+					Logging: &Logging{
+						Level: "INFO",
+					},
 					NutServers: []*NutServer{
 						{
 							Name:     "TestServer",
@@ -109,6 +218,9 @@ func TestFromFileConfig(t *testing.T) {
 			},
 			want: &entity.Config{
 				Profiler: &entity.Profiler{},
+				Logging: &entity.Logging{
+					Level: slog.LevelInfo,
+				},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -172,6 +284,9 @@ func TestToFileConfig(t *testing.T) {
 			args: args{
 				entityConfig: &entity.Config{
 					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
 					NutServers: []*entity.NutServer{
 						{
 							Name:     "TestServer",
@@ -195,6 +310,9 @@ func TestToFileConfig(t *testing.T) {
 			},
 			want: &Config{
 				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
 				NutServers: []*NutServer{
 					{
 						Name:     "TestServer",
@@ -220,12 +338,18 @@ func TestToFileConfig(t *testing.T) {
 			name: "nil profiler",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler:   nil,
+					Profiler: nil,
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
 					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
-				Profiler:   &Profiler{},
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
 				NutServers: []*NutServer{},
 			},
 		},
@@ -233,12 +357,18 @@ func TestToFileConfig(t *testing.T) {
 			name: "empty profiler",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler:   &entity.Profiler{},
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
 					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
-				Profiler:   &Profiler{},
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
 				NutServers: []*NutServer{},
 			},
 		},
@@ -249,12 +379,130 @@ func TestToFileConfig(t *testing.T) {
 					Profiler: &entity.Profiler{
 						Enabled: true,
 					},
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
 					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
 				Profiler: &Profiler{
 					Enabled: true,
+				},
+				Logging: &Logging{
+					Level: "INFO",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "nil logging",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler:   &entity.Profiler{},
+					Logging:    nil,
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "empty logging",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "logging level info",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelInfo,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "INFO",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "logging level debug",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelDebug,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "DEBUG",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "logging level warning",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelWarn,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "WARN",
+				},
+				NutServers: []*NutServer{},
+			},
+		},
+		{
+			name: "logging level error",
+			args: args{
+				entityConfig: &entity.Config{
+					Profiler: &entity.Profiler{},
+					Logging: &entity.Logging{
+						Level: slog.LevelError,
+					},
+					NutServers: []*entity.NutServer{},
+				},
+			},
+			want: &Config{
+				Profiler: &Profiler{},
+				Logging: &Logging{
+					Level: "ERROR",
 				},
 				NutServers: []*NutServer{},
 			},
