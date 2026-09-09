@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
+	"github.com/TheDarthMole/UPSWake/internal/logging"
 	"github.com/TheDarthMole/UPSWake/internal/network"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v5"
@@ -112,7 +113,7 @@ func (s *ServerHandler) WakeServer(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 	}
 
-	s.logger.Info("wake on lan packet sent", slog.String("mac", sanitizeString(wsRequest.Mac)))
+	s.logger.Info("wake on lan packet sent", slog.String("mac", logging.SanitizeString(wsRequest.Mac)))
 	return c.JSON(http.StatusCreated, Response{Message: WoLSentMessage})
 }
 
@@ -175,7 +176,7 @@ func (s *ServerHandler) BroadcastWakeServer(c *echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, Response{Message: ErrorSendingWoLPacket.Error()})
 		}
 		s.logger.Info("sent wake on lan",
-			slog.String("mac", sanitizeString(wsRequest.Mac)),
+			slog.String("mac", logging.SanitizeString(wsRequest.Mac)),
 			slog.Int("port", wsRequest.Port),
 			slog.String("broadcast", broadcast.String()))
 	}

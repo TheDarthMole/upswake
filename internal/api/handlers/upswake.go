@@ -10,6 +10,7 @@ import (
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
 	"github.com/TheDarthMole/UPSWake/internal/evaluator"
 	"github.com/TheDarthMole/UPSWake/internal/infrastructure/config/viper"
+	"github.com/TheDarthMole/UPSWake/internal/logging"
 	"github.com/TheDarthMole/UPSWake/internal/wol"
 	"github.com/labstack/echo/v5"
 )
@@ -112,7 +113,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 	}
 
 	if !result.Found {
-		h.logger.Error("mac address not found in the config", slog.String("mac", mac.MAC))
+		h.logger.Error("mac address not found in the config", slog.String("mac", logging.SanitizeString(mac.MAC)))
 		return c.JSON(http.StatusConflict, UpsWakeResponse{
 			Message: "MAC address not found in the config",
 			Woken:   false,
@@ -121,7 +122,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 
 	if !result.Allowed {
 		h.logger.Debug("no rule evaluated to true",
-			slog.String("mac", mac.MAC),
+			slog.String("mac", logging.SanitizeString(mac.MAC)),
 			slog.String("target", result.Target.Name))
 
 		setRequestLoggerAttrs(c, []slog.Attr{
@@ -176,7 +177,7 @@ func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {
 		})
 	}
 
-	h.logger.Debug("Wake on LAN sent", slog.String("mac", mac.MAC))
+	h.logger.Debug("Wake on LAN sent", slog.String("mac", logging.SanitizeString(mac.MAC)))
 
 	setRequestLoggerAttrs(c, []slog.Attr{
 		slog.String("target", result.Target.Name),

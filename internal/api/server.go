@@ -6,6 +6,7 @@ import (
 	"time"
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
+	"github.com/TheDarthMole/UPSWake/internal/logging"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -48,10 +49,10 @@ func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			slogAttrs := []slog.Attr{
 				slog.String("remote_ip", c.RealIP()),
-				slog.String("host", c.Request().Host),
+				slog.String("host", logging.SanitizeString(c.Request().Host)),
 				slog.String("method", c.Request().Method),
-				slog.String("uri", v.URI),
-				slog.String("user_agent", c.Request().UserAgent()),
+				slog.String("uri", logging.SanitizeString(v.URI)),
+				slog.String("user_agent", logging.SanitizeString(c.Request().UserAgent())),
 				slog.Int("status", v.Status),
 			}
 

@@ -3,8 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
@@ -39,15 +37,6 @@ func NewRootHandler(cfg *entity.Config, logger *slog.Logger, rulesFS afero.Fs, u
 		upsRepo: upsRepo,
 		logger:  logger,
 	}
-}
-
-func sanitizeString(input string) string {
-	// Replace any non-printable characters with an empty string
-	sanitised := strconv.QuoteToASCII(input)
-	sanitised = strings.TrimSpace(sanitised)
-	sanitised = strings.ReplaceAll(sanitised, "\n", "")
-	sanitised = strings.ReplaceAll(sanitised, "\r", "")
-	return sanitised
 }
 
 func (h *RootHandler) Register(g *echo.Group) {
