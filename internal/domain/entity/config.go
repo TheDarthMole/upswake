@@ -76,7 +76,7 @@ type Logging struct {
 }
 
 func (l *Logging) Validate() error {
-	if l.Level < slog.LevelDebug || l.Level > slog.LevelInfo {
+	if l.Level < slog.LevelDebug || l.Level > slog.LevelError {
 		return ErrInvalidLogLevel
 	}
 	return nil
