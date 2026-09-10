@@ -6,6 +6,7 @@ import (
 	"time"
 
 	_ "github.com/TheDarthMole/UPSWake/internal/api/docs" // swaggo docs
+	"github.com/TheDarthMole/UPSWake/internal/logging"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -46,27 +47,32 @@ func NewServer(ctx context.Context, logger *slog.Logger) *Server {
 		LogStatus: true,
 		LogURI:    true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			slogAttrs := []slog.Attr{
+				slog.String("remote_ip", logging.SanitizeString(c.RealIP())),
+				slog.String("host", logging.SanitizeString(c.Request().Host)),
+				slog.String("method", c.Request().Method),
+				slog.String("uri", logging.SanitizeString(v.URI)),
+				slog.String("user_agent", logging.SanitizeString(c.Request().UserAgent())),
+				slog.Int("status", v.Status),
+			}
+
+			if additionalValues := c.Get("request_logger_values"); additionalValues != nil {
+				if attrs, ok := additionalValues.([]slog.Attr); ok {
+					slogAttrs = append(slogAttrs, attrs...)
+				}
+			}
+
 			if v.Error != nil {
+				slogAttrs = append(slogAttrs, slog.String("error", v.Error.Error()))
 				c.Logger().LogAttrs(
 					context.Background(), slog.LevelError, "REQUEST_ERROR",
-					slog.String("remote_ip", c.RealIP()),
-					slog.String("host", c.Request().Host),
-					slog.String("method", c.Request().Method),
-					slog.String("uri", v.URI),
-					slog.String("user_agent", c.Request().UserAgent()),
-					slog.Int("status", v.Status),
-					slog.Any("error", v.Error),
+					slogAttrs...,
 				)
 				return nil
 			}
 			c.Logger().LogAttrs(
 				context.Background(), slog.LevelInfo, "REQUEST",
-				slog.String("remote_ip", c.RealIP()),
-				slog.String("host", c.Request().Host),
-				slog.String("method", c.Request().Method),
-				slog.String("uri", v.URI),
-				slog.String("user_agent", c.Request().UserAgent()),
-				slog.Int("status", v.Status),
+				slogAttrs...,
 			)
 			return nil
 		},

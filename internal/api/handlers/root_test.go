@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -65,13 +66,14 @@ func newMemFS(t *testing.T, data map[string][]byte) afero.Fs {
 
 func TestRootHandlerRoot(t *testing.T) {
 	e := echo.New()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 	e.Validator = api.NewCustomValidator(t.Context())
 	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(testConfig(t), rulesFS, &countingUPSRepo{})
+	h := NewRootHandler(testConfig(t), logger, rulesFS, &countingUPSRepo{})
 
 	if assert.NoError(t, h.Root(c)) {
 		assert.Equal(t, http.StatusMovedPermanently, rec.Code)
@@ -187,13 +189,14 @@ func TestRootHandler_Health(t *testing.T) {
 		// 		    and test when the GetAllBroadcastAddresses fails
 	}
 	e := echo.New()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 	e.Validator = api.NewCustomValidator(t.Context())
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			h := NewRootHandler(tt.fields.cfg, tt.fields.rulesFS, tt.fields.upsRepo)
+			h := NewRootHandler(tt.fields.cfg, logger, tt.fields.rulesFS, tt.fields.upsRepo)
 
 			if assert.NoError(t, h.Health(c)) {
 				assert.Equal(t, tt.wantedResponse.statusCode, rec.Code)
@@ -205,9 +208,10 @@ func TestRootHandler_Health(t *testing.T) {
 
 func TestRootHandler_Register(t *testing.T) {
 	e := echo.New()
+	logger := slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{}))
 	e.Validator = api.NewCustomValidator(t.Context())
 	rulesFS := newMemFS(t, map[string][]byte{})
-	h := NewRootHandler(testConfig(t), rulesFS, &countingUPSRepo{})
+	h := NewRootHandler(testConfig(t), logger, rulesFS, &countingUPSRepo{})
 
 	g := e.Group("")
 	h.Register(g)
@@ -239,6 +243,7 @@ func TestNewRootHandler(t *testing.T) {
 		cfg     *entity.Config
 		rulesFS afero.Fs
 		upsRepo repository.UPSRepository
+		logger  *slog.Logger
 	}
 	emptyFS := newMemFS(t, map[string][]byte{})
 	ruleOneFS := newMemFS(t, map[string][]byte{
@@ -258,6 +263,7 @@ default wake := true`),
 				upsRepo: &countingUPSRepo{
 					json: `[{"Name":"ups1"}]`,
 				},
+				logger: slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{})),
 			},
 			want: &RootHandler{
 				cfg:     testConfig(t),
@@ -265,6 +271,7 @@ default wake := true`),
 				upsRepo: &countingUPSRepo{
 					json: `[{"Name":"ups1"}]`,
 				},
+				logger: slog.New(slog.NewTextHandler(httptest.NewRecorder(), &slog.HandlerOptions{})),
 			},
 		},
 		{
@@ -321,7 +328,7 @@ default wake := true`),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, NewRootHandler(tt.args.cfg, tt.args.rulesFS, tt.args.upsRepo), "NewRootHandler(%v, %v)", tt.args.cfg, tt.args.rulesFS)
+			assert.Equalf(t, tt.want, NewRootHandler(tt.args.cfg, tt.args.logger, tt.args.rulesFS, tt.args.upsRepo), "NewRootHandler(%v, %v)", tt.args.cfg, tt.args.rulesFS)
 		})
 	}
 }

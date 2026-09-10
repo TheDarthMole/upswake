@@ -19,7 +19,10 @@ It uses the status of a UPS to determine which servers to wake
 using a set of Rego rules defined and the servers in the config file`
 )
 
-var Version string
+var (
+	Version  string
+	LogLevel slog.LevelVar
+)
 
 func NewRootCommand() *cobra.Command {
 	// represents the base command when called without any subcommands
@@ -34,7 +37,9 @@ func NewRootCommand() *cobra.Command {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(ctx context.Context, fs, regoFs afero.Fs, logDestination io.Writer, args []string) int {
-	handler := slog.NewJSONHandler(logDestination, nil)
+	handler := slog.NewJSONHandler(logDestination, &slog.HandlerOptions{
+		Level: LogLevel.Level(),
+	})
 	logger := slog.New(handler)
 
 	bc, err := network.GetAllBroadcastAddresses()

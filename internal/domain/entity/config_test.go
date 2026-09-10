@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -607,4 +608,66 @@ func TestCreateDefaultConfig(t *testing.T) {
 		assert.Equal(t, DefaultWoLPort, config.NutServers[0].Targets[0].Port)
 		assert.Equal(t, 15*time.Minute, config.NutServers[0].Targets[0].Interval)
 	})
+}
+
+func TestLogging_Validate(t *testing.T) {
+	type fields struct {
+		Level slog.Level
+	}
+	tests := []struct {
+		err    error
+		name   string
+		fields fields
+	}{
+		{
+			name: "debug level",
+			fields: fields{
+				Level: slog.LevelDebug,
+			},
+			err: nil,
+		},
+		{
+			name: "info level",
+			fields: fields{
+				Level: slog.LevelInfo,
+			},
+			err: nil,
+		},
+		{
+			name: "warning level",
+			fields: fields{
+				Level: slog.LevelWarn,
+			},
+			err: nil,
+		},
+		{
+			name: "error level",
+			fields: fields{
+				Level: slog.LevelError,
+			},
+			err: nil,
+		},
+		{
+			name: "level too big",
+			fields: fields{
+				Level: 1000,
+			},
+			err: ErrInvalidLogLevel,
+		},
+		{
+			name: "level too small",
+			fields: fields{
+				Level: -1000,
+			},
+			err: ErrInvalidLogLevel,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := &Logging{
+				Level: tt.fields.Level,
+			}
+			assert.ErrorIs(t, l.Validate(), tt.err)
+		})
+	}
 }
