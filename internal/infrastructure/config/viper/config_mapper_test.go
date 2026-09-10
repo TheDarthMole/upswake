@@ -30,6 +30,9 @@ func TestFromFileConfig(t *testing.T) {
 					Profiler: &Profiler{
 						Enabled: true,
 					},
+					Logging: &Logging{
+						Level: "DEBUG",
+					},
 					NutServers: []*NutServer{
 						{
 							Name:     "TestServer",
@@ -58,7 +61,9 @@ func TestFromFileConfig(t *testing.T) {
 				Profiler: &entity.Profiler{
 					Enabled: true,
 				},
-				Logging: &entity.Logging{},
+				Logging: &entity.Logging{
+					Level: slog.LevelDebug,
+				},
 				NutServers: []*entity.NutServer{
 					{
 						Name:     "TestServer",
@@ -200,10 +205,6 @@ func TestFromFileConfig(t *testing.T) {
 			name: "valid nut server no target servers",
 			args: args{
 				config: &Config{
-					Profiler: &Profiler{},
-					Logging: &Logging{
-						Level: "INFO",
-					},
 					NutServers: []*NutServer{
 						{
 							Name:     "TestServer",
@@ -283,10 +284,6 @@ func TestToFileConfig(t *testing.T) {
 			name: "full entity config with one nut server and one target server",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
-					Logging: &entity.Logging{
-						Level: slog.LevelInfo,
-					},
 					NutServers: []*entity.NutServer{
 						{
 							Name:     "TestServer",
@@ -339,10 +336,6 @@ func TestToFileConfig(t *testing.T) {
 			args: args{
 				entityConfig: &entity.Config{
 					Profiler: nil,
-					Logging: &entity.Logging{
-						Level: slog.LevelInfo,
-					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -358,10 +351,6 @@ func TestToFileConfig(t *testing.T) {
 			args: args{
 				entityConfig: &entity.Config{
 					Profiler: &entity.Profiler{},
-					Logging: &entity.Logging{
-						Level: slog.LevelInfo,
-					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -379,10 +368,6 @@ func TestToFileConfig(t *testing.T) {
 					Profiler: &entity.Profiler{
 						Enabled: true,
 					},
-					Logging: &entity.Logging{
-						Level: slog.LevelInfo,
-					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -399,9 +384,7 @@ func TestToFileConfig(t *testing.T) {
 			name: "nil logging",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler:   &entity.Profiler{},
-					Logging:    nil,
-					NutServers: []*entity.NutServer{},
+					Logging: nil,
 				},
 			},
 			want: &Config{
@@ -416,11 +399,7 @@ func TestToFileConfig(t *testing.T) {
 			name: "empty logging",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
-					Logging: &entity.Logging{
-						Level: slog.LevelInfo,
-					},
-					NutServers: []*entity.NutServer{},
+					Logging: &entity.Logging{},
 				},
 			},
 			want: &Config{
@@ -435,11 +414,9 @@ func TestToFileConfig(t *testing.T) {
 			name: "logging level info",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
 					Logging: &entity.Logging{
 						Level: slog.LevelInfo,
 					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -454,11 +431,9 @@ func TestToFileConfig(t *testing.T) {
 			name: "logging level debug",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
 					Logging: &entity.Logging{
 						Level: slog.LevelDebug,
 					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -473,11 +448,9 @@ func TestToFileConfig(t *testing.T) {
 			name: "logging level warning",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
 					Logging: &entity.Logging{
 						Level: slog.LevelWarn,
 					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
@@ -492,11 +465,9 @@ func TestToFileConfig(t *testing.T) {
 			name: "logging level error",
 			args: args{
 				entityConfig: &entity.Config{
-					Profiler: &entity.Profiler{},
 					Logging: &entity.Logging{
 						Level: slog.LevelError,
 					},
-					NutServers: []*entity.NutServer{},
 				},
 			},
 			want: &Config{
