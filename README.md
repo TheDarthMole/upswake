@@ -84,6 +84,9 @@ Create a `config.yaml` file in the same directory as the application.
 If a config is not provided, the application will attempt to create a default config.
 
 ```yaml
+logging:
+  level: INFO # can be DEBUG, INFO, WARN or ERROR
+
 nut_servers:
   - name: raspberrypi
     host: 192.168.13.37
