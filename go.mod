@@ -1,6 +1,8 @@
 module github.com/TheDarthMole/UPSWake
 
-go 1.26.5
+go 1.26.0
+
+toolchain go1.26.6
 
 require (
 	github.com/go-playground/validator/v10 v10.30.4
