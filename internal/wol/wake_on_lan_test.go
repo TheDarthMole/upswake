@@ -179,7 +179,7 @@ func Test_wakeInternal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := wakeInternal(tt.args.dst, tt.args.mac)
+			err := sendMagicPacket(tt.args.dst, tt.args.mac)
 			assert.ErrorIs(t, err, tt.wantErr)
 
 			if tt.wantErr != nil {
