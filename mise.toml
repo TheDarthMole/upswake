@@ -5,10 +5,10 @@ golangci-lint = "2.13.2"
 hadolint = "2.15.1"
 hk = "1.58.1"
 just = "1.58.0"
-rumdl = "v0.2.67"
+rumdl = "v0.2.70"
 #swag = "v1.16.6"
 "go:github.com/swaggo/swag/cmd/swag" = "v1.16.6" # Builds with go 1.27 which has generic methods to fix swagger linting issues
-zizmor = "1.30.0"
+zizmor = "1.30.1"
 
 [settings]
 lockfile = true
