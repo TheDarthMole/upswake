@@ -32,6 +32,10 @@ url = "https://dl.google.com/go/go1.26.6.darwin-amd64.tar.gz"
 checksum = "sha256:5b6c5b556525810463b5c897b50dc7a82d6a3dc0bfaf55d990a7e9f31d6b2318"
 url = "https://dl.google.com/go/go1.26.6.windows-amd64.zip"
 
+[[tools."go:github.com/swaggo/swag/cmd/swag"]]
+version = "1.16.6"
+backend = "go:github.com/swaggo/swag/cmd/swag"
+
 [[tools."go:go.uber.org/mock/mockgen"]]
 version = "0.6.0"
 backend = "go:go.uber.org/mock/mockgen"
@@ -246,40 +250,6 @@ checksum = "sha256:d1d39c470e8910dfb625482c99d8cf4b976a3e7ea465a7dc8f123955ff7cc
 url = "https://github.com/rvben/rumdl/releases/download/v0.2.67/rumdl-v0.2.67-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/rvben/rumdl/releases/assets/547491379"
 provenance = "github-attestations"
-
-[[tools.swag]]
-version = "v1.16.6"
-backend = "aqua:swaggo/swag"
-
-[tools.swag."platforms.linux-arm64"]
-checksum = "sha256:0a2890b2ab31f37da92a45d27b4cc78501bb74720b1df0932d59377527c366e9"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315823"
-
-[tools.swag."platforms.linux-arm64-musl"]
-checksum = "sha256:0a2890b2ab31f37da92a45d27b4cc78501bb74720b1df0932d59377527c366e9"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315823"
-
-[tools.swag."platforms.linux-x64"]
-checksum = "sha256:90bdf19e817001b17f5f91a1eefb2d2dd9631b88a85712f195f44b220848c8bb"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Linux_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315962"
-
-[tools.swag."platforms.linux-x64-musl"]
-checksum = "sha256:90bdf19e817001b17f5f91a1eefb2d2dd9631b88a85712f195f44b220848c8bb"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Linux_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315962"
-
-[tools.swag."platforms.macos-arm64"]
-checksum = "sha256:b8a96c65827da71be18bf47ea212b14df17f6cd6726651834a08749e78cad2ad"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315776"
-
-[tools.swag."platforms.macos-x64"]
-checksum = "sha256:dbc9b62561ba922c1a7703d985b5ddf3fc8387807c895ea37091393931559135"
-url = "https://github.com/swaggo/swag/releases/download/v1.16.6/swag_1.16.6_Darwin_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/swaggo/swag/releases/assets/277315783"
 
 [[tools.zizmor]]
 version = "1.30.0"
