@@ -31,6 +31,8 @@ jobs:
             golang.org:443
             ingest.codecov.io:443
             keybase.io:443
+            mise-versions.jdx.dev:443
+            mise.jdx.dev:443
             objects.githubusercontent.com:443
             production.cloudflare.docker.com:443
             production.cloudfront.docker.com:443
