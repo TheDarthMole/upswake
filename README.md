@@ -48,13 +48,13 @@ A Wake on Lan application that dynamically wakes servers based on the status of 
 
 ```bash
 cosign verify docker.io/thedarthmole/upswake:latest \
-    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
+    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/.github/workflows/release.yml \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ```bash
 cosign verify ghcr.io/thedarthmole/upswake:latest \
-    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/ \
+    --certificate-identity-regexp https://github.com/TheDarthMole/upswake/.github/workflows/release.yml \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
