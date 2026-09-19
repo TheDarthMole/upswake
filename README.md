@@ -47,13 +47,13 @@ A Wake on Lan application that dynamically wakes servers based on the status of 
 <details><summary><em>Click to expand:</em> ✍️ You can verify the Docker images were built from this repository using the cosign tool.</summary>
 
 ```bash
-cosign verify docker.io/thedarthmole/upswake:latest \
+cosign verify ghcr.io/thedarthmole/upswake:latest \
     --certificate-identity-regexp https://github.com/TheDarthMole/upswake/.github/workflows/release.yml \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ```bash
-cosign verify ghcr.io/thedarthmole/upswake:latest \
+cosign verify docker.io/thedarthmole/upswake:latest \
     --certificate-identity-regexp https://github.com/TheDarthMole/upswake/.github/workflows/release.yml \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -132,8 +132,8 @@ services:
     # - "1" for the latest stable version whose major version is 1
     # - "1.x" for the latest stable version whose major.minor version is 1.x
     # - "1.x.y" to pin the specific version 1.x.y
-    image: thedarthmole/upswake:latest
-    # image: ghcr.io/thedarthmole/upswake:latest # Use this if you prefer the GitHub Container Registry
+    image: ghcr.io/thedarthmole/upswake:latest
+    # image: docker.io/thedarthmole/upswake:latest # Use this if you prefer the Docker.io Container Registry
     container_name: upswake
     # Required to allow the container to access the host's network interface to send Wake-on-LAN packets
     network_mode: host
@@ -171,7 +171,7 @@ docker run \
   -v ${PWD}/config.yaml:/config.yaml:ro \
   -v ${PWD}/rules:/rules/:ro \
   --name upswake \
-  thedarthmole/upswake:latest
+  ghcr.io/thedarthmole/upswake:latest
 ```
 
 > Note: The `--network host` flag is required to allow the container to access the host's network interface to send
