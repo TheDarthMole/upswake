@@ -11,6 +11,7 @@ local linters = new Mapping<String, Step> {
     ["check-merge-conflict"] = Builtins.check_merge_conflict
     ["fix-smart-quotes"] = Builtins.fix_smart_quotes
 
+    ["yamlfmt"] = Builtins.yamlfmt
     ["zizmor"] = Builtins.zizmor
     ["mise"] = Builtins.mise
     ["rumdl"] = Builtins.rumdl
