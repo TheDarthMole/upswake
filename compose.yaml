@@ -18,9 +18,9 @@ services:
     # Make the container filesystem read-only (optional but recommended)
     read_only: true
     # Drop all Linux capabilities (optional but recommended)
-    cap_drop: [ all ]
+    cap_drop: [all]
     # Another protection to restrict superuser privileges (optional but recommended)
-    security_opt: [no-new-privileges:true]
+    security_opt: ['no-new-privileges:true']
     command: ["serve"]
     # Mount the configuration file and the rules folder as read-only volumes
     volumes:

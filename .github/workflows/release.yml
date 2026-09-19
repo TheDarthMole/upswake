@@ -24,7 +24,7 @@ jobs:
       cancel-in-progress: false
     permissions:
       id-token: write # This is required for requesting the JWT for CoSign
-      contents: read  # This is required for actions/checkout
+      contents: read # This is required for actions/checkout
       packages: write # This is required for pushing Docker images to ghcr.io
     steps:
       - name: 🛡️ Harden Runner

@@ -14,9 +14,9 @@ services:
     restart: always
     user: "1000:1000"
     read_only: true
-    cap_drop: [ all ]
-    security_opt: [ no-new-privileges:true ]
-    command: [ "serve" ]
+    cap_drop: [all]
+    security_opt: ['no-new-privileges:true']
+    command: ["serve"]
     volumes:
       - "./fixtures/config/dev-config.yaml:/config.yaml:ro"
       - "./rules/:/rules/:ro"
