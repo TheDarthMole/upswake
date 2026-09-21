@@ -42,6 +42,12 @@ local linters = new Mapping<String, Step> {
         //glob = List("**/*.go")
         fix = "swag init --parseDependency --parseInternal --parseDepth=1 --dir=./internal/api/handlers --generalInfo=./root.go --output=./internal/api/docs"
     }
+
+    ["regal"] {
+        glob = List("**/*.rego")
+        check = "regal lint {{ files }}"
+        fix = "regal fix {{ files }}"
+    }
 }
 
 hooks {

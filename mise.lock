@@ -205,6 +205,45 @@ checksum = "sha256:759f16fb7aa17c5c8b9594b6d4a8c1a6630dfd042cf2b3ff84841454d3d18
 url = "https://github.com/casey/just/releases/download/1.58.0/just-1.58.0-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/casey/just/releases/assets/500511374"
 
+[[tools.regal]]
+version = "0.42.0"
+backend = "aqua:open-policy-agent/regal"
+
+[tools.regal."platforms.linux-arm64"]
+checksum = "sha256:13a2ba4a049fa8f3f64ed602a56bad1378eec253d36a977799ff51e694e47c77"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Linux_arm64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238684"
+
+[tools.regal."platforms.linux-arm64-musl"]
+checksum = "sha256:13a2ba4a049fa8f3f64ed602a56bad1378eec253d36a977799ff51e694e47c77"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Linux_arm64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238684"
+
+[tools.regal."platforms.linux-x64"]
+checksum = "sha256:2ebd3c93e4b325b735dbc4851a033e4d7830e88a79c47c8d087ea75c061cec67"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Linux_x86_64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238713"
+
+[tools.regal."platforms.linux-x64-musl"]
+checksum = "sha256:2ebd3c93e4b325b735dbc4851a033e4d7830e88a79c47c8d087ea75c061cec67"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Linux_x86_64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238713"
+
+[tools.regal."platforms.macos-arm64"]
+checksum = "sha256:c3ee16c956b8cd5b3aeb53414afbd2a11b0dff1aa1e726fc91e33e7adef31845"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Darwin_arm64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238681"
+
+[tools.regal."platforms.macos-x64"]
+checksum = "sha256:b8fe86028a9730ab6c6fbdf2ef292596b1a0037c3c1accbd0dd00a8724935ff7"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Darwin_x86_64"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238686"
+
+[tools.regal."platforms.windows-x64"]
+checksum = "sha256:d113463872746511276983575322c5b6706479fd231e865d3584ed98e777c50f"
+url = "https://github.com/open-policy-agent/regal/releases/download/v0.42.0/regal_Windows_x86_64.exe"
+url_api = "https://api.github.com/repos/open-policy-agent/regal/releases/assets/479238685"
+
 [[tools.rumdl]]
 version = "v0.2.73"
 backend = "aqua:rvben/rumdl"

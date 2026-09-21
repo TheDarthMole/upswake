@@ -1,0 +1,5 @@
+rules:
+  idiomatic:
+    directory-package-mismatch:
+      # one of "error", "warning", "ignore"
+      level: ignore
