@@ -78,10 +78,9 @@ func (h *UPSWakeHandler) ListNutServerMappings(c *echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request			body		WakeEvaluationRequest	true	"the mac address of the target to wake"
-//	@Success		200				{object}	UpsWakeResponse			"Wake on LAN sent"
-//	@Success		304				{object}	UpsWakeResponse			"No rule evaluated to true"
+//	@Success		200				{object}	UpsWakeResponse			"Successful request"
 //	@Failure		400				{object}	UpsWakeResponse			"Bad request"
-//	@Failure		404				{object}	UpsWakeResponse			"MAC address not found in the config"
+//	@Failure		409				{object}	UpsWakeResponse			"MAC address not found in the config"
 //	@Failure		500				{object}	UpsWakeResponse			"Internal server error"
 //	@Router			/api/upswake	[post]
 func (h *UPSWakeHandler) RunWakeEvaluation(c *echo.Context) error {

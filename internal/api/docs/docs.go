@@ -173,13 +173,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Wake on LAN sent",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpsWakeResponse"
-                        }
-                    },
-                    "304": {
-                        "description": "No rule evaluated to true",
+                        "description": "Successful request",
                         "schema": {
                             "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
@@ -190,7 +184,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.UpsWakeResponse"
                         }
                     },
-                    "404": {
+                    "409": {
                         "description": "MAC address not found in the config",
                         "schema": {
                             "$ref": "#/definitions/handlers.UpsWakeResponse"
