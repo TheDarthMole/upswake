@@ -1,11 +1,11 @@
 [tools]
 go = "1.27.1"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
-golangci-lint = "2.13.2"
+golangci-lint = "2.14.0"
 hadolint = "2.15.1"
-hk = "2.0.1"
+hk = "2.2.0"
 just = "1.58.0"
-rumdl = "v0.2.76"
+rumdl = "v0.2.77"
 #swag = "v1.16.6"
 "go:github.com/swaggo/swag/cmd/swag" = "v1.16.6" # Builds with go 1.27 which has generic methods to fix swagger linting issues
 zizmor = "1.30.1"
