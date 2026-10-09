@@ -8,8 +8,8 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/google/uuid v1.6.0
 	github.com/ka-weihe/fast-levenshtein v0.0.0-20201227151214-4c99ee36a1ba
-	github.com/labstack/echo/v5 v5.3.1
-	github.com/open-policy-agent/opa v1.21.0
+	github.com/labstack/echo/v5 v5.4.0
+	github.com/open-policy-agent/opa v1.21.1
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20250815165103-eaddd4c17972
 	github.com/spf13/afero v1.15.0
@@ -21,7 +21,7 @@ require (
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260908180501-3f62bf119e84
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.24.0
 )
 
 require (
