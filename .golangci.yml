@@ -113,11 +113,9 @@ linters:
       # Presence of "default" case in switch statements satisfies exhaustiveness,
       # even if all enum members are not listed.
       default-signifies-exhaustive: true
-      # Only run exhaustive check on switches with "//exhaustive:enforce" comment.
-      explicit-exhaustive-switch: true
       # Enum members matching the supplied regex do not have to be listed in
       # switch statements to satisfy exhaustiveness.
-      ignore-enum-members: pmetric.MetricTypeEmpty
+      ignore-constants: [pmetric.MetricTypeEmpty]
 
     gocritic:
       disabled-checks:
