@@ -1,5 +1,5 @@
 [tools]
-go = "1.27.2"
+go = "1.27.3"
 "go:go.uber.org/mock/mockgen" = "0.6.0"
 golangci-lint = "2.15.0"
 hadolint = "2.15.1"
