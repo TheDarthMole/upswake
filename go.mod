@@ -9,12 +9,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/ka-weihe/fast-levenshtein v0.0.0-20201227151214-4c99ee36a1ba
 	github.com/labstack/echo/v5 v5.4.4
-	github.com/open-policy-agent/opa v1.22.0
+	github.com/open-policy-agent/opa v1.22.2
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
 	github.com/sabhiram/go-wol v0.0.0-20250815165103-eaddd4c17972
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/swaggo/echo-swagger/v2 v2.0.1
