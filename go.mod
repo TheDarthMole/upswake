@@ -5,9 +5,9 @@ go 1.26.0
 toolchain go1.27.4
 
 require (
+	github.com/agnivade/levenshtein v1.2.2
 	github.com/go-playground/validator/v10 v10.30.6
 	github.com/google/uuid v1.6.0
-	github.com/ka-weihe/fast-levenshtein v0.0.0-20201227151214-4c99ee36a1ba
 	github.com/labstack/echo/v5 v5.4.5
 	github.com/open-policy-agent/opa v1.22.4
 	github.com/robbiet480/go.nut v0.0.0-20240622015809-60e196249c53
@@ -26,7 +26,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/agnivade/levenshtein v1.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
