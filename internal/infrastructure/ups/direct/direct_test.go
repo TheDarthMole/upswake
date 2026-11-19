@@ -5,8 +5,8 @@ import (
 
 	"github.com/TheDarthMole/UPSWake/internal/domain/entity"
 	"github.com/TheDarthMole/UPSWake/internal/domain/repository"
+	levenshtein "github.com/agnivade/levenshtein"
 	"github.com/google/uuid"
-	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -99,7 +99,7 @@ func TestDirectRepository_GetJSON(t *testing.T) {
 
 			if err == nil {
 				// usage of Levenshtein distance as NUT server may return slightly different JSON, depending on state of the UPS
-				levenshteinDistPercent := (float64(levenshtein.Distance(tt.want, got)) / float64(len(tt.want))) * 100
+				levenshteinDistPercent := (float64(levenshtein.ComputeDistance(tt.want, got)) / float64(len(tt.want))) * 100
 				assert.LessOrEqualf(t, levenshteinDistPercent, float64(4), "Levenshtein distance between expected and got JSON is too high, indicating a significant difference.\nexpected	(%s), \ngot			(%s).", tt.want, got)
 			}
 		})
