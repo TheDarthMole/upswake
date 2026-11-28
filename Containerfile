@@ -23,5 +23,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=${TARGETOS}${TARGETARCH}$
 
 FROM scratch AS minimal
 COPY --from=build /opt/upswake/upswake /bin/
+USER 1000:1000
 HEALTHCHECK --timeout=10s CMD ["/bin/upswake", "serve", "healthcheck"]
 ENTRYPOINT ["/bin/upswake"]
