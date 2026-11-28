@@ -135,6 +135,7 @@ provenance = "github-attestations"
 [[tools.hk]]
 version = "2.12.0"
 backend = "packslip:github.com/jdx/hk"
+unsupported_platforms = ["macos-x64"]
 
 [tools.hk."platforms.linux-arm64"]
 checksum = "sha256:0f4e44802c3fcf98461b6608281353ae1944b82fd12f4a683f8e2e6683e562f3"
