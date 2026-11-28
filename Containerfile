@@ -25,3 +25,4 @@ FROM scratch AS minimal
 COPY --from=build /opt/upswake/upswake /bin/
 HEALTHCHECK --timeout=10s CMD ["/bin/upswake", "serve", "healthcheck"]
 ENTRYPOINT ["/bin/upswake"]
+CMD ["serve"]
